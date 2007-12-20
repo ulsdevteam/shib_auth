@@ -1,0 +1,132 @@
+<?php
+
+/**
+* Perform the webserver-based user authentication 
+* 
+* Log the user in if it's account already exists or create a new one with the given datas
+*/
+function shib_auth_init() {
+  global $user, $account;
+
+  if ($user->uid) {
+    //do nothing because user is already logged into Drupal
+  }
+  else {
+    if ($name = $_SERVER["REMOTE_USER"]) {
+      // user is logged into webserver.
+      $account->name = $name;
+      //modules get to change the user bits before saving. use a global $account to do so.
+      // only loaded modules will see this hook
+      module_invoke_all("shib_auth");
+      // if we are in bootstrap, load user.module ourselves
+      if (!module_exists('user')) {
+       drupal_load('module', 'user');
+      }
+      $shib_mail = $_SERVER["HTTP_SHIB_MAIL"];
+      $user_shib = array("name" => $account->name, "pass" => "", "mail" => $shib_mail, "status" => 1);
+      // try to log into Drupal. if unsuccessful, use anonymous
+      if ($user = user_load($array = $account)) {
+          watchdog("user", "Session opened for $user->name.", WATCHDOG_NOTICE);
+	  $user = user_save($user, array_merge((array)$user, $user_shib));
+          watchdog("user", "$user->name($user->mail) updated from Shibboleth attributes.", WATCHDOG_NOTICE);
+	  user_multiple_role_edit(array($user->uid), 'add_role', 2);
+          watchdog("user", "$user->name($user->mail) added to role authenticated users.", WATCHDOG_NOTICE);
+      }
+      else {
+	  $user = user_save($account, $user_shib);
+          watchdog("user", "new user: $user->name.", WATCHDOG_NOTICE);
+          user_multiple_role_edit(array($user->uid), 'add_role', 2);
+          watchdog("user", "$user->name($user->mail) added to role autheticated users.", WATCHDOG_NOTICE);
+      }
+    }
+  }
+}
+
+/**
+* Implementation of hook_help()
+*/
+function shib_auth_help($section) {
+  switch($section) {
+    case 'admin/help#shib_auth':
+      return "TODO";
+    case 'admin/shib_auth':
+      return "What can you to do here?";
+  }
+}
+
+/**
+* Implementation of hook_block()
+*/
+function shib_auth_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks[0] = array('info' => t('Shibboleth authentication'),
+      'weight' => 0, 'status' => 1, 'region' => 'left');
+    return $blocks;
+ } else if ($op == 'configure' && $delta == 0) {
+    $form['wayf'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Set the WAYF\'s location on the server (par example: <i>/Shibboleth.sso/WAYF/NIIF-WAYF</i>)'),
+      '#default_value' => variable_get('shib_auth_wayf_uri', ''),
+    );
+    return $form;
+  }
+  else if ($op == 'save' && $delta == 0) {
+    variable_set('shib_auth_wayf_uri', $edit['wayf']);
+  }
+  else if ($op == 'view') {
+    switch($delta) {
+      case 0:
+        $block_content = '';
+
+        global $base_url;
+
+        $myServer = 'https://' . $_SERVER['HTTP_HOST'];
+        $SessionInitiator = $myServer . variable_get('shib_auth_wayf_uri', '"/Shibboleth.sso/WAYF/NIIF-WAYF"');
+        $siteBaseURL = $base_url;
+        //$myUrl = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $myUrl = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $myLogoutUrl = $siteBaseURL . '/?q=logout';
+        //$myUrl: ahova vissza kell majd juttatnia a Shibboleth-nek
+
+        if (!$_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'])
+        // igy dontjuk el, hogy van-e session
+        {
+          $block_content .= "<p><b><a href=\"$SessionInitiator?target=$myUrl\">" . t('Click here to login via Shibboleth!') .
+                            "</a></b></p>";
+        }
+        else
+        {
+          $LogoutUrl = $myServer . "/Shibboleth.sso/Logout";
+          $block_content .= "<p><a href=\"$LogoutUrl?return=$myLogoutUrl\">" .t('Click here to logout from this Service Provider').
+                "</a></p>";
+        }
+
+        $block = array('subject' => t('Shibboleth login'),
+          'content' => $block_content);
+        break;
+    }
+    return $block;
+  }
+}
+
+/*
+function shib_auth_form_alter($form_id, &$form) {
+  switch ($form_id) {
+    case 'user_login_block':
+      $tmp = $form;
+      $form = array();
+      foreach ($tmp as $k => $v) {
+        if ($k != 'pass' && $k != 'name' && $k != 'links' && $k != 'submit') {
+          $form[$k] = $v;
+        } else if ($k == 'name') {
+        $element = array(
+          '#value' => t('Hello')."<a href=\"http://www.google.com\">".t('Google')."</a>" );
+        $form['shib_auth'] = $element;
+        }
+      }
+      break;
+  }
+} 
+*/
+?>
+
