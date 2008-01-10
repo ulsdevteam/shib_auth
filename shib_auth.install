@@ -48,6 +48,9 @@ function shib_auth_uninstall() {
   variable_set("user_register",$original);
   variable_del("shib_auth_user_register_original");
 
+  //Remove the created system variables
+  variable_del("shib_auth_wayf_uri");
+
   if ($query1 && $query2) {
     drupal_set_message('The Shibboleth authentication module was uninstalled successfully.');
   } else {
