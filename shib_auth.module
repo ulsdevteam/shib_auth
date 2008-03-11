@@ -1,140 +1,251 @@
 <?php
+// $Id$
 
 /**
-* Perform the webserver-based user authentication 
-* 
-* Log the user in if it's account already exists or create a new one with the given datas
+* Display help and module information
+* @param path which path of the site we're displaying help
+* @param arg array that holds the current path as would be returned from arg() function
+* @return help text for the path
+*/
+function shib_auth_help($path, $arg) {
+  $output = '';
+  switch ($path) {
+    case 'admin/help#shib_auth':
+      //TODO
+      $output = '<p>' . t("The Shibboleth authentication module let you utilize the advantages of the Single Sign On (SSO) methods.") .'</p>';
+      break;
+  }
+  return $output;
+} // function shib_auth_help
+
+/**
+* Create a new user based on informations from the Shibboleth handler if it's necessary or log in.
 */
 function shib_auth_init() {
-  global $user, $account;
-  
-  if ($user->uid) {
-    //do nothing because user is already logged into Drupal
-  }
-  else {
-    if ($name = $_SERVER["REMOTE_USER"]) {
-      // modules get to change the user bits before saving. use a global $account to do so.
-      // only loaded modules will see this hook
-      module_invoke_all("shib_auth");
-      // if we are in bootstrap, load user.module ourselves
-      if (!module_exists('user')) {
-       drupal_load('module', 'user');
-      }
-      $account = isset($account->name) ? $account : array('name' => $name);
-      $userinfo = user_load($account);
-	  if (!isset($userinfo->uid)) {
-		// Register this new user.
-        $shib_mail = $_SERVER["HTTP_SHIB_MAIL"];
-		$userinfo = array('name' => $name, 'pass' => user_password(17), 'init' => $name, "mail" => $shib_mail, 'status' => 1);
-		$user = user_save($account, $userinfo);
-		// watchdog("user", "new user: $user->name.", WATCHDOG_NOTICE);
-	  } else $user = $userinfo;
+  global $user;
+
+  $unameVar = variable_get('shib_auth_username_variable', 'REMOTE_USER');
+  $umailVar = variable_get('shib_auth_username_email', 'HTTP_SHIB_MAIL');
+
+  // If
+  // - The user isn't logged in
+  // - There is Shibboleth authentication in the background
+  // - The settings are fine and there has been a valid username setted up
+  // - The settings are fine and there has been a valid user email address setted up
+  if (!$user->uid && $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']) {
+    if ($_SERVER[$unameVar] && $_SERVER[$umailVar]) {
+      user_external_login_register($_SERVER[$unameVar], "shib_auth");
+    }
+    else {
+      drupal_set_message(t("Username or e-mail address is missing. Maybe the Shibboleth configuration is not perfect."),"error");
     }
   }
-}
-
-function generate_login_text() {
-        $block_content = '';
-        global $base_url;
-
-        $myServer = 'https://' . $_SERVER['HTTP_HOST'];
-        $SessionInitiator = $myServer . variable_get('shib_auth_wayf_uri', '"/Shibboleth.sso/WAYF/NIIF-WAYF"');
-        $siteBaseURL = $base_url;
-        //$myUrl = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-        $myUrl = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-        $myLogoutUrl = $siteBaseURL . '/?q=logout';
-        //$myUrl: ahova vissza kell majd juttatnia a Shibboleth-nek
-
-        if (!$_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'])
-        // igy dontjuk el, hogy van-e session
-        {
-          $block_content .= "<p><b><a href=\"$SessionInitiator?target=$myUrl\">" . t('Click here to login via Shibboleth!') .
-                            "</a></b></p>";
-        }
-        else
-        {
-          $LogoutUrl = $myServer . "/Shibboleth.sso/Logout";
-          $block_content .= "<p><a href=\"$LogoutUrl?return=$myLogoutUrl\">" .t('Click here to logout from this Service Provider').
-                "</a></p>";
-        }
-        
-        return $block_content;
-}
-
-/**
-* Implementation of hook_help()
-*/
-function shib_auth_help($section) {
-  switch($section) {
-    case 'admin/help#shib_auth':
-      return "TODO";
-    case 'admin/user/shib_auth':
-      return "What can you do here?";
-    case 'user':
-    case 'user/login':
-      return generate_login_text();
+  if ($user->uid && $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']) {
+    $account = user_save($user,array('mail' => $_SERVER[$umailVar]));
+    // Terminate if an error occured during user_save().
+    if (!$account) {
+      drupal_set_message(t("Error saving user account."), 'error');
+      return;
+    }
+    $user = $account;
   }
-}
-
-function shib_auth_admin() {
-  $form['shib_auth_wayf_uri'] = array(
-    '#type' => 'textfield',
-    '#title' => t('The WAYFs location on the server'),
-    '#default_value' => variable_get('shib_auth_wayf_uri', ''),
-    '#description' => t('par example: <i>/Shibboleth.sso/WAYF/NIIF-WAYF</i>'),
-  );
-  return system_settings_form($form);
-}
+} // function shib_auth_init()
 
 /**
-* Implementation of hook_menu()
+* Let the user exit from the Shibboleth authority when he/she log out from the actual Drupal site.
+* @param op What kind of action is being performed.
+* @param edit The array of form values submitted by the user.
+* @param account The user object on which the operation is being performed.
+* @param category The active category of user information being edited.
 */
-function shib_auth_menu($may_cache) {
-  $items = array();
-  $items[] = array(
-    'path' => 'admin/user/shib_auth',
-    'title' => t('Shibboleth authentication module settings'),
-    'description' => t('Control the various settings of the shibboleth authentication module'),
-    'callback' => 'drupal_get_form',
-    'callback arguments' => 'shib_auth_admin',
-    'access' => user_access('administer shibboleth authentication'),
-    'type' => MENU_NORMAL_ITEM,
-   );
-  return $items;
-}
+function shib_auth_user($op, &$edit, &$account, $category = NULL) {
+  global $base_url, $user;
+
+  if ($op == "logout") {
+    $handlerURL = variable_get('shib_auth_handler_url', '/Shibboleth.sso');
+    $handlerProtocol = variable_get('shib_auth_handler_protocol', 'https');
+    if (ereg("^http[s]{0,1}://", $handlerURL) ) {
+      // If handlerURL is an absolute path
+      $logoutHandler = $handlerURL . "/Logout";
+    }
+    else {
+      // Else, if the handlerURL is a relative path
+      // If the WAYF's URI doesn't start with slash then extend it
+      if ( !ereg("^/", $handlerURL) ) $handlerURL = "/" . $handlerURL;
+      $logoutHandler = $handlerProtocol . "://" . $_SERVER['HTTP_HOST'] . $handlerURL . "/Logout";
+    }
+    drupal_goto("$logoutHandler?return=$base_url");
+  }
+} // function shib_auth_user(logout)
 
 /**
-* Impelementation of hook_perm()
+* Valid permissions for this module
+* @return array An array of valid permissions for the shib_auth module
 */
+
 function shib_auth_perm() {
   return array('administer shibboleth authentication');
-}
-
+} // function shib_auth_perm()
 
 /**
-* Implementation of hook_block()
+* Generate the login text in HTML format using the 't' function
+* @returns HTML text of the login form
 */
-function shib_auth_block($op = 'list', $delta = 0, $edit = array()) {
-  if ($op == 'list') {
-    $blocks[0] = array('info' => t('Shibboleth authentication'),
-      'weight' => 0, 'status' => 1, 'region' => 'left');
-    return $blocks;
-  } else if ($op == 'view') {
-    switch($delta) {
-      case 0:
-        $block = array('subject' => t('Shibboleth login'),
+function generate_login_text() {
+  global $base_url, $user;
+  
+  if (!$user->uid) {
+    $handlerURL = variable_get('shib_auth_handler_url', '/Shibboleth.sso');
+    $handlerProtocol = variable_get('shib_auth_handler_protocol', 'https');
+    $wayfURI = variable_get('shib_auth_wayf_uri', '/WAYF/HREF');
+
+    // If the WAYF's URI doesn't start with slash then extend it
+    if ( !ereg("^/", $wayfURI) ) $wayfURI = "/" . $wayfURI;
+  
+    $handler = '';
+    $block_content = '';
+  
+    if (ereg("^http[s]{0,1}://", $handlerURL) ) {
+      // If handlerURL is an absolute path
+      $handler = $handlerURL . $wayfURI;
+    }
+    else {
+      // Else, if the handlerURL is a relative path
+      // If the WAYF's URI doesn't start with slash then extend it
+      if ( !ereg("^/", $handlerURL) ) $handlerURL = "/" . $handlerURL;
+      $handler = $handlerProtocol . "://" . $_SERVER['HTTP_HOST'] . $handlerURL . $wayfURI;
+    }
+    //$actualLocation: the path where the Shibboleth should return
+    $actualLocation = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+    // If there is no session yet then we should put the login text into the block
+    $block_content .= "<p><b><a href=\"$handler?target=$actualLocation\">" . t('Click here to login via Shibboleth!') . "</a></b></p>";
+
+    return $block_content;
+  }
+} // function generate_login_text()
+
+/**
+* Generate the HTML text for the shib_auth login block
+* @param op the operation from the URL
+* @param delta offset
+* @returns block HTML 
+*/
+function shib_auth_block($op='list', $delta=0, $edit = array()) {
+  // listing of blocks, such as on the admin/block page
+  switch ($op) {
+    case "list":
+      $blocks[0] = array(
+        'info'       => t('Shibboleth authentication'),
+        'status'     => TRUE,
+        'visibility' => 1,
+        'weight'     => 0,
+        'region'     => 'left'
+      );
+      return $blocks;
+    case "view": default:
+      switch($delta) {
+        case 0:
+          $block = array(
+          'subject' => t('Shibboleth login'),
           'content' => generate_login_text() );
         break;
-    }
-    return $block;
+      }
+      return $block;
+  }
+} // function shib_auth_block()
+
+/**
+* Generate the administration form of the Shibboleth authentication module
+* @returns HTML text of the administration form
+*/
+function shib_auth_admin() {
+  $form = array();
+
+  $form['shib_handler_settings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Shibboleth handler settings'),
+    '#weight'      => 0,
+    '#collapsible' => FALSE,
+  );
+
+  $form['shib_attribute_settings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Attribute settings'),
+    '#weight'      => 0,
+    '#collapsible' => FALSE,
+  );
+
+
+  $form['shib_handler_settings']['shib_auth_handler_url'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('The Shibboleth handler\'s URL:'),
+    '#default_value' => variable_get('shib_auth_handler_url', '/Shibboleth.sso'),
+    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
+  );
+
+  $form['shib_handler_settings']['shib_auth_handler_protocol'] = array(
+    '#type'          => 'select',
+    '#title'         => t('The Shibboleth handler\'s protocol:'),
+    '#default_value' => variable_get('shib_auth_handler_protocol', 'https'),
+    '#options'       => array(
+      'http'  => t('HTTP'),
+      'https' => t('HTTPS'),
+    ),
+    '#description'   => t('This option will be effective just if the handler URL is a relative path.'),
+  );
+
+  $form['shib_handler_settings']['shib_auth_wayf_uri'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('The WAYF\'s location:'),
+    '#default_value' => variable_get('shib_auth_wayf_uri', '/WAYF/HREF'),
+  );
+
+  $form['shib_attribute_settings']['shib_auth_username_variable'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Server variable whick stores the username:'),
+    '#default_value' => variable_get('shib_auth_username_variable', 'REMOTE_USER'),
+  );
+
+  $form['shib_attribute_settings']['shib_auth_username_email'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Server variable whick stores the e-mail address:'),
+    '#default_value' => variable_get('shib_auth_username_email', 'HTTP_SHIB_MAIL'),
+  );
+
+  return system_settings_form($form);
+} // function shib_auth_admin()
+
+/**
+* Generate the menu element to access the Shibboleth authentication module's administration page
+* @returns HTML text of the administer menu element
+*/
+function shib_auth_menu() {
+  $items = array();
+  $items['admin/user/shib_auth'] = array(
+    'title'            => t('Shibboleth settings'),
+    'description'      => t('Control the various settings of the shibboleth authentication module'),
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('shib_auth_admin'),
+    'access arguments' => array('administer shibboleth authentication'),
+    'type'             => MENU_NORMAL_ITEM,
+  );
+  return $items;
+} // function shib_auth_menu()
+
+/**
+ * Alters forms for the shibboleth authentication module.
+ *
+ * @param $form_id The form ID.
+ * @param $form The form.
+ */
+function shib_auth_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'user_login') {
+    $form['shibboleth'] = array(
+      '#type' => 'hidden', 
+      '#weight' => -1,
+      '#prefix' => generate_login_text(), 
+      '#suffix' => '', 
+    );
   }
 }
-/**
-* Implementation of hook_form_alter()
-*/
-//function shib_auth_form_alter($form_id, &$form) {
-//  if ($form_id == 'user_login') {
-//  }
-//}
-?>
-

@@ -1,5 +1,4 @@
-name = "Shibboleth authentication"
-description = "Allows user to using the 'Shibboleth' named Single Sign On solution as the authentication method."
-dependencies = userprotect
-package = NIIF
-version = "5.x-0.1" 
+; $Id$
+name = Shibboleth authentication
+description = Shibboleth authentication module.
+core = 6.x
