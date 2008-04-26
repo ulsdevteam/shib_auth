@@ -2,6 +2,35 @@
 // $Id$
 
 /**
+ * Impelemtation of hook_requirements()
+ */
+function shib_auth_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+    
+  if($phase == 'runtime') {
+    // Check the shibboleth
+    
+    if(!isset($_SERVER['HTTP_SHIB_APPLICATION_ID'])) {
+      $requirements['shibboleth'] = array(
+                                      'value'        =>  $t('There isn\'t shibboleth support!'),
+                                      'description'  =>  $t('Probably your shibboleth configuration is wrong, or you didn\'t restart your webserver!'),
+                                      'severity'     =>   REQUIREMENT_ERROR,
+                                    );
+      watchdog('shibboleth', 'Probably your shibboleth configuration is wrong, or you didn\'t restart your webserver!', WATCHDOG_ERROR);
+    }
+    else {
+      $requirements['shibboleth'] = array(
+                                      'value'        =>  $t('There is shibboleth support.'),
+                                      'severity'     =>   REQUIREMENT_OK,
+                                    );
+    }
+    $requirements['shibboleth']['title'] = $t('Shibboleth');
+  }
+  return $requirements;
+}
+
+/**
  * Implementation of hook_install().
  */
 function shib_auth_install() {

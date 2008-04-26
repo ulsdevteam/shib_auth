@@ -1,4 +1,10 @@
 ; $Id$
 name = Shibboleth authentication
 description = Shibboleth authentication module.
-core = 6.x
+core = 5.x
+; Information added by drupal.org packaging script on 2008-03-17
+version = "5.x-1.1-dev"
+core = "5.x"
+project = "shib_auth"
+datestamp = "1205712720"
+
