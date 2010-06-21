@@ -435,12 +435,13 @@ function shib_auth_custom_form($umail_single) {
           else if (isset($accept) && $accept && $shib_auth_config['req_consent']) {          
               shib_login_save_authmap($uname, $uname, $umail_single);
           }
+// ****** SHOW FORM, AND REDIRECT ********
           //We want to show the custom mail input form, and then redirect the user to the node, he wanted to go
           else if ($_GET['q']!='shib_auth/get_custom_data') {
           
-          $_SESSION['redirected_to_custom_data_form'] = TRUE;
+							$_SESSION['redirected_to_custom_data_form'] = TRUE;
               $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
-             drupal_goto('shib_auth/get_custom_data'); 
+							drupal_goto('shib_auth/get_custom_data'); 
           }
           
             //then the user is redirected to the page, which she wanted to open before the auth process had been initiatedd
