@@ -75,9 +75,9 @@ function shib_auth_help($path, $arg) {
   * 	if (something_bad_happens())
   *		return shib_auth_error("Something bad happened");
   */
-function shib_auth_error($msg='') {
-  drupal_set_message(t($msg) . '.','error');
-  return FALSE
+function shib_auth_error($msg = '') {
+  drupal_set_message(t($msg) . t(' [Shibboleth authentication]'),'error');
+  return FALSE;
 }
 
 function shib_auth_terminate_session() {
@@ -96,7 +96,7 @@ function shib_auth_session_check($uname) {
   // if the user IS logged in as non-admin, but we're missing Shibboleth identity
   if (!shib_auth_session_valid() && $_SESSION['authentication'] == 'shib_auth' &&
       $shib_auth_config['destroy_session'] && $user->uid > 1) {
-    drupal_set_message(t('Your session is expired. Please log in again'), "error");
+    shib_auth_error('Your session is expired. Please log in again');
     shib_auth_terminate_session();
   }
   if (isset($_SESSION['uname'])) {
@@ -266,7 +266,7 @@ function XXX_shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   $email_already_used = db_fetch_object($email_already_used_query);
   // If the mail address is used, give an error
   if ($email_already_used) {
-    drupal_set_message(t("Error saving user account. E-mail address is already used."), 'error');
+    shib_auth_error("Error saving user account. E-mail address is already used.");
   }
   //else register the user with the given information
   else {
@@ -299,7 +299,7 @@ function XXX_shib_login_authmap($uname, $umail_single, $uid) {
       db_query("SELECT * FROM {users} WHERE mail='%s' AND name <> '%s'", $umail_single, $uname );
     $email_for_other_user = db_fetch_object($username_and_email_query);
     if ($email_for_other_user) {
-      drupal_set_message(t("Error saving user account. E-mail address is already used."), 'error');
+      shib_auth_error("Error saving user account. E-mail address is already used.");
     }
     //if everything is allright, modify the mail address of the user.
     else {
@@ -438,7 +438,7 @@ function shib_auth_init() {
             if (isset($custom_mail) && $custom_mail) {
               if (($accept && $shib_auth_config['req_consent']) || !$shib_auth_config['req_consent']) {
 		if (!valid_email_address($custom_mail)) {
-		  drupal_set_message(t("Please enter a valid e-mail address"), 'error');
+		  shib_auth_error("Please enter a valid e-mail address");
 		}
 		// if custom username not enabled
 		else if (variable_get('shib_auth_define_username', 0)==0)  {
@@ -448,7 +448,7 @@ function shib_auth_init() {
 		//if the username is also enabled
 		else if ((variable_get('shib_auth_define_username', 0)==1)&&isset($custom_username) && $custom_username) {
 		  if ($error = user_validate_name($custom_username)) 
-		    drupal_set_message($error, 'error');
+		    shib_auth_error($error);
 		  else {
 		    // and it isn't used by another registered drupal user
                 
@@ -456,7 +456,7 @@ function shib_auth_init() {
                 $un_already_used = db_fetch_object($un_already_used_query);
                 
                 if ($un_already_used) {
-                  drupal_set_message(t("Error saving user account. User name is already used."), 'error');
+                  shib_auth_error("Error saving user account. User name is already used.");
                 }
                 //register the user with the given address, and the shib provided username
                 else {
@@ -464,19 +464,19 @@ function shib_auth_init() {
                 }
               }
             }
-           } else drupal_set_message(t("You have to accept Terms and conditions to proceed"), 'error');
+           } else shib_auth_error("You have to accept Terms and conditions to proceed");
           }
           //if there is no custom email option, but the user can define custom username
           else if ($shib_auth_config['override_username'] && isset($custom_username) && $custom_username)        {
           if (($accept && $shib_auth_config['req_consent']) || !$shib_auth_config['req_consent']) {
           //validate it
             if ($error = user_validate_name($custom_username)) 
-              drupal_set_message($error, 'error');
+              shib_auth_error($error);
             else {
               $un_already_used_query = db_query("SELECT * FROM {users} WHERE name='%s'", $custom_username);
               $un_already_used = db_fetch_object($un_already_used_query);
               if ($un_already_used) {
-                drupal_set_message(t("Error saving user account. User name is already used."), 'error');
+                shib_auth_error("Error saving user account. User name is already used.");
               }
               //register the user with the given username, and the shib provided e-mail address
               else {
@@ -484,7 +484,7 @@ function shib_auth_init() {
                 }
             }
           }
-          else drupal_set_message(t("You have to accept Terms and conditions to proceed"), 'error');
+          else shib_auth_error("You have to accept Terms and conditions to proceed");
           }
           
           else if (isset($accept) && $accept && $shib_auth_config['req_consent'] {          
@@ -507,7 +507,7 @@ function shib_auth_init() {
             }
         }
         else {
-        drupal_set_message(t("E-mail address is missing. Please contact your site administrator!"), 'error');}
+        shib_auth_error("E-mail address is missing. Please contact your site administrator!");}
         }
       }
     }
