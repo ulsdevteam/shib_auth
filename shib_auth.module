@@ -35,6 +35,7 @@ function shib_auth_get_config () {
   $config['logout_return'] = variable_get('shib_logout_url', $base_url);
   // XXX where do we use these values?
   // A: We are inserting these into the login/logout link after Shibboleth.sso, should we make these unmodifiable?
+  // By the way, this method will disable using function-specific default value, need to check if we use it somewhere
   $config['session_initiator'] = variable_get('shib_session_initiator', shib_auth_get_handler_base()."/Login");
   $config['logout_initiator'] = variable_get('shib_logout_initiator', 
 	(isset ($_SERVER["HTTP_SHIB_SHIBLOGOUT"] ) ? $_SERVER["HTTP_SHIB_SHIBLOGOUT"] 
@@ -74,6 +75,8 @@ function shib_auth_help($path, $arg) {
   * Example usage:
   * 	if (something_bad_happens())
   *		return shib_auth_error("Something bad happened");
+  * A: I wouldn't use return, because there could be cases, when the error doesn't exists from function / statement
+  *    This need to be checked though, because in other cases, it would delete an 'else'
   */
 function shib_auth_error($msg = '') {
   drupal_set_message(t($msg) . t(' [Shibboleth authentication]'),'error');
@@ -259,6 +262,8 @@ function shib_auth_authmap_get_user ($fed_id) {
  * TODO: remove -- CAN BE REMOVED
  * XXX
  * refactor: shib_login_save_authmap -> shib_auth_register_user ???
+ * Yes, we should merge these two functions into one, but these are not the same 
+ * authmap_save is only for this module, while login_register is doing it in drupal.
  */
 function XXX_shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   global $user;
