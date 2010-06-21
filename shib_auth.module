@@ -92,7 +92,7 @@ function shib_auth_terminate_session() {
   global $user;
   // unset all session variables and destroy session
   if (isset($user->uid))
-    sess_destroy_uid($user->uid));
+    sess_destroy_uid($user->uid);
   $_SESSION = array();
   session_destroy();
   $user = drupal_anonymous_user();
@@ -167,7 +167,7 @@ function shib_auth_add_authmap($uid,$federated_id,$consentver='') {
  * @return true if there is a valid Shibboleth session
  */
 function shib_auth_session_valid() {
-  return (!empty(shib_auth_get_idp()));
+  return ((shib_auth_get_idp()));
 }
 
 /**
@@ -175,7 +175,7 @@ function shib_auth_session_valid() {
  */
 function shib_auth_session_isShib2x() {
   if (shib_auth_session_valid())
-    return (isset($_SERVER['Shib-Identity-Provider']) || isset ($_SERVER['Shib_Identity_Provider']);
+    return (isset($_SERVER['Shib-Identity-Provider']) || isset ($_SERVER['Shib_Identity_Provider']));
   return false;
 }
 
@@ -193,7 +193,7 @@ function shib_auth_link_account ($federated_id,$consentver='') {
   // Assert some basic security requirements
   if (!$user) 
     return shib_auth_error("You must be logged in for account linking");
-  if ($user->uid <= 1))
+  if ($user->uid <= 1)
     return shib_auth_error("It is not allowed to link federated login to a system account");
   
   if ($shib_auth_config['account_linking']) 
@@ -261,7 +261,7 @@ function shib_auth_authmap_save($fed_id,$uid,$terms) {
 }
 
 function shib_auth_authmap_get_user ($fed_id) {
-  if ( db_fetch_object( db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $fed_id) ) )
+  return ( db_fetch_object( db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $fed_id) ) );
 }
 /**
  * TODO: remove -- CAN BE REMOVED
@@ -270,7 +270,7 @@ function shib_auth_authmap_get_user ($fed_id) {
  * Yes, we should merge these two functions into one, but these are not the same 
  * authmap_save is only for this module, while login_register is doing it in drupal.
  */
-function XXX_shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
+function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   global $user;
   $email_already_used_query = db_query("SELECT * FROM {users} WHERE mail='%s'", $umail_single );
   $email_already_used = db_fetch_object($email_already_used_query);
@@ -296,7 +296,7 @@ function XXX_shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
 /**
  * TODO: remove
 */
-function XXX_shib_login_authmap($uname, $umail_single, $uid) {
+function shib_login_authmap($uname, $umail_single, $uid) {
   global $user;
   $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid='%s'", $uid);
   $authmap_username = db_fetch_array($auth_map_un_query);
@@ -350,7 +350,7 @@ function shib_auth_load_from_authmap($uname) {
   return db_fetch_array($auth_map_query); 
 }
 /**
- * This footer part executes isPassive script, if this option was checked
+ * This footer part executes isPassive script, if the option was checked on the configuration page
  */
 function shib_auth_footer() {
   global $user;
@@ -362,8 +362,11 @@ function shib_auth_footer() {
     drupal_add_js($base.'/isPassive.js','module','footer');
   }
 }
-
-function shib_auth_custom_form($umail_single,) {
+/**
+ * If any customization or consent option is checked, the custom form will show up before registering.
+ * 
+ */
+function shib_auth_custom_form($umail_single) {
   global $shib_auth_config;
     if ($shib_auth_config['override_email'] || 
 				($umail_single && $shib_auth_config['override_username']) ||
@@ -393,10 +396,8 @@ function shib_auth_custom_form($umail_single,) {
 		    shib_auth_error($error);
 		  else {
 		    // and it isn't used by another registered drupal user
-                
                 $un_already_used_query = db_query("SELECT * FROM {users} WHERE name='%s'", $custom_username);
                 $un_already_used = db_fetch_object($un_already_used_query);
-                
                 if ($un_already_used) {
                   shib_auth_error("Error saving user account. User name is already used.");
                 }
@@ -431,7 +432,7 @@ function shib_auth_custom_form($umail_single,) {
           else shib_auth_error("You have to accept Terms and conditions to proceed");
           }
 // ****** USER CONSENT **********
-          else if (isset($accept) && $accept && $shib_auth_config['req_consent'] {          
+          else if (isset($accept) && $accept && $shib_auth_config['req_consent']) {          
               shib_login_save_authmap($uname, $uname, $umail_single);
           }
           //We want to show the custom mail input form, and then redirect the user to the node, he wanted to go
@@ -514,6 +515,8 @@ function shib_auth_init() {
       else {
 	$old_user = shib_auth_load_from_authmap($uname);
         
+//********Check whether CONSENT VERSION is CHANGED, if so, users have to accept it again *******************
+
         if ($_POST['form_id'] == 'shib_auth_custom_form' && $_POST['accept'])
               $accept = $_POST['accept'];
         //drupal_set_message("Old user, accept, consentver: ".(int)$old_user.",".(int)$accept.",".(int)$old_user['consentver'], 'error');
@@ -539,9 +542,9 @@ function shib_auth_init() {
               shib_login_save_authmap($uname, $uname, $umail_single);
            }
             //if one of the customizing options enabled
-            else { 
-	      shib_auth_custom_form($umail_single);
-	    }
+            else if (shib_auth_custom_form($umail_single)) { 
+						//TODO
+						}
         else {
         shib_auth_error("E-mail address is missing. Please contact your site administrator!");}
         }
