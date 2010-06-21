@@ -34,6 +34,7 @@ function shib_auth_get_config () {
   $config['wayf_location'] = variable_get('shib_auth_wayf_uri', "/DS");
   $config['logout_return'] = variable_get('shib_logout_url', $base_url);
   // XXX where do we use these values?
+  // A: We are inserting these into the login/logout link after Shibboleth.sso, should we make these unmodifiable?
   $config['session_initiator'] = variable_get('shib_session_initiator', shib_auth_get_handler_base()."/Login");
   $config['logout_initiator'] = variable_get('shib_logout_initiator', 
 	(isset ($_SERVER["HTTP_SHIB_SHIBLOGOUT"] ) ? $_SERVER["HTTP_SHIB_SHIBLOGOUT"] 
@@ -213,6 +214,7 @@ function shib_auth_user_register ($fed_id,$uname,$mail,$terms='') {
     return shib_auth_error("Internal error while saving account: missing Shibboleth session");
   
   // XXX szerintem az ellenorzes nem kell ide.
+  // A: AFAIR These are here to avoid logging in an existing user with the same name instead of the creating one (because of the use of login_register func)
   /*
   // Ensure that $uname is not in use
   if ( db_fetch_object( db_query("SELECT * FROM {users} WHERE name='%s'", $uname) ) ) 
@@ -370,7 +372,7 @@ function shib_auth_init() {
     drupal_add_js($base.'/ispassive.js','module','footer');
   }
 
-  
+  // A: this variable determines whether the user consent was accepted. Used as custom_mail, custom_username
   $accept = FALSE; //XXX ezmiez. TODO doc
   
   // necessary variables: user identifier, email
@@ -590,6 +592,7 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
     // If the logout_redirect URL was relative extension is needed.
     if (!ereg("^http[s]{0,1}://", $logout_redirect) ) {
       $logout_redirect = $base_url .'/'. $logout_redirect; // XXX url("<front>") kell helyette? XXX dupla / check
+    // A: probably yes, the output will be the same, but we won't use the global variable
     }
     drupal_goto("$logouthandler?return=$logout_redirect");
   }
