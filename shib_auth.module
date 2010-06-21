@@ -344,7 +344,19 @@ function shib_auth_load_from_authmap($uname) {
   $auth_map_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $uname);
   return db_fetch_array($auth_map_query); 
 }
-
+/**
+ * This footer part executes isPassive script, if this option was checked
+ */
+function shib_auth_footer() {
+  global $user;
+  if (!shib_auth_session_valid() && $shib_auth_config['ispassive'] && !$user->uid) {
+    $base = drupal_get_path('module', 'shib_auth');
+    //TODO
+    //A lot of parameterizing stuff, the script is pretty general now, the urls need to be generated based on handler/wayf/login/logout configs
+    //Any1 good at that? ;)
+    drupal_add_js($base.'/isPassive.js','module','footer');
+  }
+}
 /**
  * Create a new user based on informations from the Shibboleth handler if it's necessary or log in.
  *
@@ -370,12 +382,15 @@ function shib_auth_init() {
   //call isDebug function to determine if we want to display debug information or not
   shib_auth_debug();
 
-  // XXX -> shib_auth_footer()
-  // dev:/shib2
-  if (!shib_auth_session_valid() && $shib_auth_config['ispassive'] && !$user->uid) {
-    $base = drupal_get_path('module', 'shib_auth');
-    drupal_add_js($base.'/ispassive.js','module','footer');
-  }
+  // dev:/shib2 -- the script is up here now from https://spaces.internet2.edu/display/SHIB2/isPassive, inserting to repo
+  //TODO according to i2 ispassive page: are they ready?
+  //In your Service Provider 2.x shibboleth.xml file, add redirectErrors="#THIS PAGE#" to the Error element.
+  //Make sure #THIS PAGE# is protected with a lazy session (no Shibboleth session is enforced but attribute are made available to application in case a user has a session)
+  //footer currently contains only ispassive script, if it was enabled
+  shib_auth_footer();
+
+  
+
 
   // A: this variable determines whether the user consent was accepted. Used as custom_mail, custom_username
   $accept = FALSE; //XXX ezmiez. TODO doc
