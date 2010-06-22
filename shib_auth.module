@@ -366,7 +366,7 @@ function shib_auth_footer() {
  * If any customization or consent option is checked, the custom form will show up before registering.
  * 
  */
-function shib_auth_custom_form($umail_single) {
+function shib_auth_custom_form($umail_single, $uname) {
   global $shib_auth_config;
     if ($shib_auth_config['override_email'] || 
 				($umail_single && $shib_auth_config['override_username']) ||
@@ -497,42 +497,53 @@ function shib_auth_init() {
   $umail = $_SERVER[$shib_auth_config['email_variable']];
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
   
-  /* If the user is not logged in to Drupal (or is doing an account linking)
-   * but has a Shibboleth session
+  /* If the user is not logged in to Drupal (or she/he is doing an account linking)
+   * but has a Shibboleth session: start login or register process
    */
-  if ((!$user->uid || (strstr($_GET['q'],"shib") && $shib_auth_config['account_linking']) ) 
-	&& $shib_auth_session_valid()) {
+  if (shib_auth_session_valid() && 
+				(!$user->uid ||
+					(strstr($_GET['q'],"shib") && $shib_auth_config['account_linking'])	) ) {
  
-    //If custom mail form will be generated, generate it only once
+    //If custom mail/name/user consent form will be generated, generate it only once
     if ( isset($_SESSION['redirected_to_custom_data_form']) && $_SESSION['redirected_to_custom_data_form']) {
       unset($_SESSION['redirected_to_custom_data_form']); 
     }
+		// Else start the login/registering process
     else {
-      
+      //check identifier if it exists, and not too long
       if(!shib_auth_check_identifier($uname)) {
-	//XXX ?
+				$message = t('Shibboleth authentication process can\'t continue');
+        shib_auth_error($message);
       }
       
       else {
-	$old_user = shib_auth_load_from_authmap($uname);
+			//check if the old user exists in the shibboleth authmap
+			$old_user = shib_auth_load_from_authmap($uname);
         
-//********Check whether CONSENT VERSION is CHANGED, if so, users have to accept it again *******************
+			//Check whether CONSENT VERSION is CHANGED, if so, users have to accept it again
 
         if ($_POST['form_id'] == 'shib_auth_custom_form' && $_POST['accept'])
               $accept = $_POST['accept'];
         //drupal_set_message("Old user, accept, consentver: ".(int)$old_user.",".(int)$accept.",".(int)$old_user['consentver'], 'error');
-        
-	//XXX
+  
+//*********** LOGIN EXISTING USER ***************      
+	//The user exists in the authmap, and the consent version check is switched off, or she/he had accepted the newest consent version
+	//Then let the user log in
 	if ($old_user && 
 	    (!$shib_auth_config['req_consent'] || ($old_user['consentver']==$shib_auth_config['terms_ver']))) {
+					
           shib_login_authmap($uname, $umail_single, $old_user['uid']);
         }
+				//The user exists in the authmap, and she had just accepted the new consent version
+				//Write the new version number into the her authmap row, and log her in
         else if ($old_user && $accept ) { 
           $sql="UPDATE {shib_authmap} SET consentver='%s' WHERE targeted_id='%s'";
           $result = db_query($sql, variable_get('shib_auth_terms_ver', ''),$uname);
           shib_login_authmap($uname, $umail_single, $old_user['uid']);
         }
-        
+//********* END OF LOGIN CASE *************
+
+//********* REGISTER NEW USER *************
         //The user doesn't exists in the database, starting registering process
         else {
         //If it is account linking and the terms are accepted or forcing an existing user to accept termsandconditions
@@ -542,13 +553,14 @@ function shib_auth_init() {
 	      !$shib_auth_config['req_consent']) {       
               shib_login_save_authmap($uname, $uname, $umail_single);
            }
-            //if one of the customizing options enabled
-            else if (shib_auth_custom_form($umail_single)) { 
+            //if one of the customizing options enabled, ask for these values, then register her
+            else if (shib_auth_custom_form($umail_single, $uname)) { 
 						//TODO
 						}
         else {
         shib_auth_error("E-mail address is missing. Please contact your site administrator!");}
         }
+//********* END OF REGISTERING *************
       }
     }
  
