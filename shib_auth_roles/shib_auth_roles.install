@@ -10,7 +10,7 @@
  *
  * Hook to install module, and enable it as a block
  */
-function shib_auth_install() {
+function shib_auth_roles_install() {
   drupal_install_schema('shib_auth');
   drupal_set_message(t('Shibboleth authentication module installed successfully.'));
 }
