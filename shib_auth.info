@@ -2,3 +2,4 @@
 name = Shibboleth authentication
 description = Shibboleth authentication module.
 core = 6.x
+package = Shibboleth

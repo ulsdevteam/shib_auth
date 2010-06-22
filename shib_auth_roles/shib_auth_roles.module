@@ -1,0 +1,115 @@
+<?php
+// $Id: shib_auth.module,v 1.3.4.5.2.31 2009/09/30 17:00:49 bajnokk Exp $
+/**
+ * @file
+ * This is a Shibboleth authentication module.
+ *
+ * This module allow administrators to enable Shibboleth based authentication on their drupal installation.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function shib_auth_roles_menu() {
+  $items = array();
+
+    $items['admin/user/shib_auth/rules'] = array(
+    'title'            => t('Shibboleth group rules'),
+    'description'      => t('Administer attribute-based role assignment'),
+    'page callback'    => '_shib_auth_list_rules',
+    'page arguments'   => array('shib_auth_list_rules'),
+    'access arguments' => array('administer permissions'),
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => -8,
+    'file' => 'shib_auth_roles_forms.inc',
+  );
+
+  $items['admin/user/shib_auth/new'] = array(
+    'title'            => t('Add new rule'),
+    'description'      => t('Add new attribute-based role assignment rule'),
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('shib_auth_new_rule'),
+    'access arguments' => array('administer permissions'),
+    'type'             => MENU_LOCAL_TASK,
+    'weight'           => -7,
+    'file' => 'shib_auth_roles_forms.inc',
+  );
+
+  $items['admin/user/shib_auth/delete/%'] = array(
+    'title'            => 'Delete rule',
+    'page callback'    => '_shib_auth_delete_rule',
+    'page arguments'   => array(4),
+    'access arguments' => array('administer permissions'),
+    'type'             => MENU_CALLBACK,
+    'file' => 'shib_auth_roles_forms.inc',
+  );
+
+  $items['admin/user/shib_auth/edit/%'] = array(
+    'title'            => 'Edit rule',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('shib_auth_edit_rule', 4),
+    'access arguments' => array('administer permissions'),
+    'type'             => MENU_NORMAL_ITEM,
+    'file' => 'shib_auth_roles_forms.inc',
+  );
+
+  $items['admin/user/shib_auth/clone/%'] = array(
+    'title'            => 'Edit rule',
+    'page callback'    => '_shib_auth_clone_rule',
+    'page arguments'   => array(4),
+    'access arguments' => array('administer permissions'),
+    'type'             => MENU_CALLBACK,
+    'file' => 'shib_auth_roles_forms.inc',
+  );
+
+
+  return $items;
+} // function shib_auth_roles_menu()
+
+/**
+ * The admin can define authorization rules based on the server variables 
+ * (possibly provided by Shibboleth IdP) to give roles to users.
+ * The rules can be defined as a [server field - Regexp - role(s)] triplet
+ */
+function shib_auth_assignroles() {
+  global $user;
+  // Store rules for further examination
+  $former_rules = serialize($user->roles);
+
+  // Examine all previously saved rule
+  $rules = db_query("SELECT * FROM {shib_auth}");
+  while ($rule = db_fetch_array($rules)) {
+    $fieldname = $rule['field'];
+    $expression = '/'. urldecode($rule['regexpression']) .'/';
+    // if the given server field exists
+    if (isset($_SERVER[$fieldname])) {
+      foreach (explode(';', $_SERVER[$fieldname]) as $value) {
+	//check if the RegEx fits to one of the value of the server field
+        if (preg_match($expression, trim($value))) {
+          $roles = unserialize(urldecode($rule['role']));
+          // there is a match, so give this user the specified role(s)
+          if (!empty($roles)) 
+	    foreach ($roles as $key => $value) 
+	      $user->roles[$key] = $value;
+        }
+      }
+    }
+  }
+  $user->roles = array_filter($user->roles);
+
+  // If the user roles array has been changed then reset the permission cache
+  if (serialize($user->roles) != $former_rules) {
+    // Hack to reset the permissions
+    user_access('access content', $account, TRUE);
+  }
+}
+
+/**
+ * This function also gives roles to the user, if certain server fields were provided by the Shibboleth server
+ */
+function shib_auth_roles_init() {
+	if (shib_auth_session_valid())
+		shib_auth_assignroles();
+} // function shib_auth_roles_init()
+
+
