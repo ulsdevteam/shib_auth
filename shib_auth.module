@@ -19,7 +19,7 @@
  */
 function shib_auth_get_config () {
   global $base_url;
-  
+  // Q: This method will disable using function-specific default value, need to check if we use it somewhere
   $config = array();
   $config['auth_link_text'] = variable_get('auth_link_text', t('Shibboleth Login'));
   $config['account_linking'] = variable_get('shib_auth_account_linking', FALSE);
@@ -39,12 +39,16 @@ function shib_auth_get_config () {
   $config['wayf_location'] = variable_get('shib_auth_wayf_uri', "/DS");
   $config['logout_return'] = variable_get('shib_logout_url', $base_url);
   // XXX where do we use these values?
-  // A: We are inserting these into the login/logout link after Shibboleth.sso, should we make these unmodifiable?
-  // By the way, this method will disable using function-specific default value, need to check if we use it somewhere
+  // A: Now, I know what are we talking about here. Did you just rename full_handler/logout_url variables to these?
+	/*
   $config['session_initiator'] = variable_get('shib_session_initiator', shib_auth_get_handler_base()."/Login");
   $config['logout_initiator'] = variable_get('shib_logout_initiator', 
 	(isset ($_SERVER["HTTP_SHIB_SHIBLOGOUT"] ) ? $_SERVER["HTTP_SHIB_SHIBLOGOUT"] 
 						   : shib_auth_get_handler_base()."/Logout"));
+	*/
+	//They were named and meant to be used like these (see forms.inc) Should we rename them to sg else?
+ 	$config['full_handler_url'] = variable_get('shib_auth_full_handler_url', shib_auth_get_handler_base(). variable_get('shib_auth_wayf_uri', '/DS'));
+	$config['full_logout_url'] = variable_get('shib_auth_full_logout_url', shib_auth_get_handler_base() ."/Logout");
  
   return $config;
 }
@@ -339,6 +343,7 @@ function shib_auth_check_identifier($uname) {
         watchdog('shib_auth', $message, WATCHDOG_CRITICAL);
 	return FALSE;
   }
+	return TRUE;
 }
 
 /**
@@ -469,7 +474,7 @@ function shib_auth_init() {
   
   module_load_include('inc', 'shib_auth', 'forms');
   global $user;
-  
+  global $shib_auth_config;
   // Make sure that the user module is already loaded.
   drupal_load('module', 'user');
   
@@ -638,7 +643,7 @@ function shib_auth_get_handler_base() {
 function shib_auth_user($op, &$edit, &$account, $category = NULL) {
   global $base_url, $user;
    if ($op == "logout") {
-    $logouthandler = $shib_auth_config['logout_initiator'];
+    $logouthandler = $shib_auth_config['full_logout_url'];
     unset($_SESSION['authentication']);
     $logout_redirect = $shib_auth_config['logout_return'];
     // If the logout_redirect URL was relative extension is needed.
@@ -675,7 +680,7 @@ function generate_login_text($inform) {
   global $shib_auth_config;
 
   if (!$user->uid||$shib_auth_config['account_linking']) {
-    $sessioninitiator = $shib_auth_config['session_initiator'];
+    $sessioninitiator = $shib_auth_config['full_handler_url'];
     
     $block_content = '';
 
