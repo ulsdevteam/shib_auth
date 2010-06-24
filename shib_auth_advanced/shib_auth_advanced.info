@@ -1,0 +1,11 @@
+; $Id$
+name = Advaced Shibboleth options
+description = Advaced Shibboleth Authentication options
+core = 6.x
+configure = admin/user/shib_auth/advanced
+package = Shibboleth
+
+files[] = shib_auth_advanced.module
+files[] = shib_auth_advanced.install
+
+dependencies[] = shib_auth

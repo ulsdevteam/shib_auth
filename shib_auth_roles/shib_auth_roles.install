@@ -8,7 +8,7 @@
 /**
  * Implementation of hook_install().
  *
- * Hook to install module, and enable it as a block
+ * Hook to install module
  */
 function shib_auth_roles_install() {
   drupal_install_schema('shib_auth');

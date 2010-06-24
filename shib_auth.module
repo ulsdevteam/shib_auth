@@ -701,15 +701,6 @@ function shib_auth_menu() {
     'file' => 'shib_auth_forms.inc',
   );
   
-  $items['admin/user/shib_auth/advanced'] = array(
-    'title'            => t('Advanced settings'),
-    'type'             => MENU_LOCAL_TASK,
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('shib_auth_admin_advanced'),
-    'access arguments' => array('administer shibboleth authentication'),
-    'weight'           => -6,
-    'file' => 'shib_auth_forms.inc',
-  );
 
   $items['shib_auth/get_custom_data'] = array(
     'title'            => t('Customize drupal user attributes'),
