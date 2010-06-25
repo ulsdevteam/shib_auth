@@ -108,6 +108,7 @@ function shib_auth_assignroles() {
  * This function also gives roles to the user, if certain server fields were provided by the Shibboleth server
  */
 function shib_auth_roles_init() {
+	module_load_include('inc', 'shib_auth_roles', 'forms');
 	if (shib_auth_session_valid())
 		shib_auth_assignroles();
 } // function shib_auth_roles_init()
