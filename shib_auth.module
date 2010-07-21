@@ -83,6 +83,7 @@ function shib_auth_help($path, $arg) {
   * Example usage:
   * 	if (something_bad_happens())
   *		return shib_auth_error("Something bad happened");
+	* EXEPTION WORKAROUND for php4
   * A: I wouldn't use return, because there could be cases, when the error doesn't exists from function / statement
   *    This need to be checked though, because in other cases, it would delete an 'else'
   */
@@ -449,7 +450,7 @@ function shib_auth_init() {
           //If we have an e-mail address from the shib server, and there isn't any user with this address, create an account with these infos
           if ($umail_single && !$shib_auth_config['override_email'] && !$shib_auth_config['override_username'] && 
 	      !$shib_auth_config['req_consent']) {       
-              shib_login_save_authmap($uname, $uname, $umail_single);
+              shib_auth_save_authmap($uname, $uname, $umail_single);
            }
             //if one of the customizing options enabled, ask for these values, then register her
             else if (module_invoke("shib_auth_advanced","custom_form", $umail_single, $uname)) { 

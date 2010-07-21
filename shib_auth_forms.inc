@@ -80,30 +80,6 @@ function shib_auth_admin_general() {
     '#default_value' => variable_get('shib_auth_account_linking', FALSE),
   );
 
-  $form['shib_terms_conditions_settings']['shib_auth_terms_accept'] = array(
-     '#type'          => 'checkbox',
-    '#title'         => t('Force users to accept Terms and conditions'),
-    '#description'   => t('Require acceptance of Terms and conditions every time, it changes'),
-    '#default_value' => variable_get('shib_auth_terms_accept', FALSE),
-  );
-
-  $form['shib_terms_conditions_settings']['shib_auth_terms_url'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('URL of the document'),
-    '#default_value' => variable_get('shib_auth_terms_url', '/'),
-    '#description'   => t('If it is a node, it won\'t be accessible throughout the registration process'),
-    '#prefix' => '<table border= \'0\'><tr><td>',
-    '#suffix' => '</td>',
-  );
-
-  $form['shib_terms_conditions_settings']['shib_auth_terms_ver'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Document version'),
-    '#default_value' => variable_get('shib_auth_terms_ver', ''),
-    '#prefix' => '<td valign=top>',
-    '#suffix' => '</td></tr></table>',
-  );
-
   $form['shib_attribute_debug'] = array(
     '#type'          => 'fieldset',
     '#title'         => 'Debugging options',
