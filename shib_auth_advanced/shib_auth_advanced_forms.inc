@@ -1,24 +1,11 @@
 <?php
 // $Id: shib_auth_forms.inc,v 1.6.2.23 2009/02/14 06:26:23 shafter Exp $
 
-function shib_auth_admin_general() {
+function shib_auth_advanced_admin_general() {
   global $base_url;
 
   $form = array();
 
-  $form['shib_handler_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Shibboleth handler settings'),
-    '#weight'      => -10, 
-    '#collapsible' => FALSE,
-  );
-
-  $form['shib_attribute_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Attribute settings'),
-    '#weight'      => -5,
-    '#collapsible' => FALSE,
-  );
 
   $form['shib_terms_conditions_settings'] = array(
     '#type'        => 'fieldset',
@@ -27,58 +14,6 @@ function shib_auth_admin_general() {
     '#collapsible' => FALSE,
   );
 
-  $form['shib_handler_settings']['shib_auth_full_handler_url'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Shibboleth login handler URL'),
-    '#default_value' => variable_get('shib_auth_full_handler_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') . variable_get('shib_auth_wayf_uri', '/DS')),
-    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
-  );
-
-  $form['shib_handler_settings']['shib_auth_full_logout_url'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Shibboleth logout handler URL'),
-    '#default_value' => variable_get('shib_auth_full_logout_url',  variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') .'/Logout'),
-    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
-  );
-
-  $form['shib_attribute_settings']['shib_auth_username_variable'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Server variable for username'),
-    '#default_value' => variable_get('shib_auth_username_variable', 'REMOTE_USER'),
-  );
-
-  $form['shib_attribute_settings']['shib_auth_username_email'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Server variable for e-mail address'),
-    '#default_value' => variable_get('shib_auth_username_email', 'HTTP_SHIB_MAIL'),
-  );
-
-  $form['shib_attribute_settings']['shib_auth_define_username'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('User-defined usernames'),
-    '#description'   => t('Allow users to set their Drupal usernames at first Shibboleth login. Note 
-    that disabling this option only prevents new users from registering their 
-    own username. Existing user-defined usernames will remain valid.'),
-    '#default_value' => variable_get('shib_auth_define_username', FALSE),
-  );
-  
-  $form['shib_attribute_settings']['shib_auth_enable_custom_mail'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('User-defined e-mail addresses'),
-    '#description'   => t('Ask users to set their contact email address at first login.
-    Disabling this option will override contact address with the one, which was received from IdP.
-    (In this case, missing e-mail address will result in fatal error.)'),
-    '#default_value' => variable_get('shib_auth_enable_custom_mail', FALSE),
-  );
-
-  $form['shib_attribute_settings']['shib_auth_account_linking'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Account linking'),
-    '#description'   => t('Allow locally authenticated users to link their Drupal accounts to 
-    federated logins. Note that disabling this option only prevents from 
-    creating/removing associations, existing links will remain valid.'),
-    '#default_value' => variable_get('shib_auth_account_linking', FALSE),
-  );
 
   $form['shib_terms_conditions_settings']['shib_auth_terms_accept'] = array(
      '#type'          => 'checkbox',
@@ -104,24 +39,6 @@ function shib_auth_admin_general() {
     '#suffix' => '</td></tr></table>',
   );
 
-  $form['shib_attribute_debug'] = array(
-    '#type'          => 'fieldset',
-    '#title'         => 'Debugging options',
-    '#weight'      => -1,
-  );
-
-  $form['shib_attribute_debug']['shib_auth_debug_state'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Enable DEBUG mode.'),
-    '#default_value' => variable_get('shib_auth_debug_state', FALSE),
-  );
-
-  $form['shib_attribute_debug']['shib_auth_debug_url'] = array(
-    '#type' => 'textfield',
-    '#title'         => t('DEBUG path prefix'),
-    '#default_value' => variable_get('shib_auth_debug_url', ''),
-    '#description'   => t('For example use \'user/\' for display DEBUG messages on paths \'user/*\'!')
-  );
 
   return system_settings_form($form);
 } // function shib_auth_admin_general()
@@ -129,7 +46,7 @@ function shib_auth_admin_general() {
  * Generate the administration form of the Shibboleth authentication module
  * @returns HTML text of the administration form
  */
-function shib_auth_admin_advanced() {
+function shib_auth_advanced_admin_advanced() {
   global $base_url;
 
   $form = array();
@@ -186,7 +103,7 @@ function shib_auth_admin_advanced() {
  * Generate the custom e-mail and username provider form
  * @returns HTML text of the custom data form
  */
-function shib_auth_custom_email() {
+function shib_auth_advanced_custom_email() {
   global $user;
   $form = array();
 $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')]);
@@ -253,7 +170,7 @@ else {
  * @param form form identifier
  * @param form_state $form_state contains all of the data of the form
  */
-function shib_auth_custom_email_validate($form, &$form_state) {
+function shib_auth_advanced_custom_email_validate($form, &$form_state) {
   IF (variable_get('shib_auth_enable_custom_mail', FALSE))
     if ($form_state['values']['custom_mail'] == '') {
       form_set_error('', t('You have to fill the \'E-mail\' field.'));
@@ -275,7 +192,7 @@ function shib_auth_custom_email_validate($form, &$form_state) {
  * @param $options contains the data, we want to fill the form with
  * @returns the edit form, with the fields already filled in with the elements of the options array
  */
-function shib_auth_edit_form($options) {
+function shib_auth_advanced_edit_form($options) {
 
   $form['shib_auth_new_id'] = array(
     '#title'          => t('Entry id'),

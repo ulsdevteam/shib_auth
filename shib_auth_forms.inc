@@ -20,12 +20,6 @@ function shib_auth_admin_general() {
     '#collapsible' => FALSE,
   );
 
-  $form['shib_terms_conditions_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Terms and condition acception settings'),
-    '#weight'      => -2,
-    '#collapsible' => FALSE,
-  );
 
   $form['shib_handler_settings']['shib_auth_full_handler_url'] = array(
     '#type'          => 'textfield',
