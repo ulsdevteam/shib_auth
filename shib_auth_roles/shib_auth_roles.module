@@ -90,6 +90,8 @@ function shib_auth_assignroles() {
           // there is a match, so give this user the specified role(s)
           if (!empty($roles)) 
 	    foreach ($roles as $key => $value) 
+				if ($user->roles[$key] != $value)
+					watchdog('shib_grant_role', 'Role @id has been granted to @name.', array('@name' => $user->name, '@id' => $key), WATCHDOG_NOTICE);
 	      $user->roles[$key] = $value;
         }
       }
