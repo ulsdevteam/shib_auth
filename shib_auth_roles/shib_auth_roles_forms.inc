@@ -374,6 +374,7 @@ function _shib_auth_list_rules() {
     $retval .= t('There is no rule in the database') .'</td></tr>'."\n";
   }
   $retval .= '</table>';
+	$retval .= '<a href="'. url('admin/user/shib_auth/new') .'">'. t('Add new rule') .'</a>';
 
   return $retval;
 } // function _shib_auth_list_rules()

@@ -30,7 +30,7 @@ function shib_auth_roles_menu() {
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('shib_auth_new_rule'),
     'access arguments' => array('administer permissions'),
-    'type'             => MENU_LOCAL_TASK,
+    'type'             => MENU_NORMAL_ITEM,
     'weight'           => -7,
     'file' => 'shib_auth_roles_forms.inc',
   );
