@@ -23,22 +23,6 @@ function shib_auth_advanced_menu() {
     'file' => 'shib_auth_advanced_forms.inc',
   );
 
-  $items['admin/user/shib_auth'] = array(
-    'title'            => t('Shibboleth settings'),
-    'description'      => t('Settings of the Shibboleth authentication module'),
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('shib_auth_admin_general'),
-    'access arguments' => array('administer shibboleth authentication'),
-    'file' => 'shib_auth_forms.inc',
-  );
-
-  $items['admin/user/shib_auth/general'] = array(
-    'title'            => t('General settings'),
-    'type'             => MENU_DEFAULT_LOCAL_TASK,
-    'access arguments' => array('administer shibboleth authentication'),
-    'weight'           => -10,
-    'file' => 'shib_auth_forms.inc',
-  );
   return $items;
 } // function shib_auth_roles_menu()
 /**

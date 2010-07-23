@@ -1,47 +1,6 @@
 <?php
 // $Id: shib_auth_forms.inc,v 1.6.2.23 2009/02/14 06:26:23 shafter Exp $
 
-function shib_auth_advanced_admin_general() {
-  global $base_url;
-
-  $form = array();
-
-
-  $form['shib_terms_conditions_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Terms and condition acception settings'),
-    '#weight'      => -2,
-    '#collapsible' => FALSE,
-  );
-
-
-  $form['shib_terms_conditions_settings']['shib_auth_terms_accept'] = array(
-     '#type'          => 'checkbox',
-    '#title'         => t('Force users to accept Terms and conditions'),
-    '#description'   => t('Require acceptance of Terms and conditions every time, it changes'),
-    '#default_value' => variable_get('shib_auth_terms_accept', FALSE),
-  );
-
-  $form['shib_terms_conditions_settings']['shib_auth_terms_url'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('URL of the document'),
-    '#default_value' => variable_get('shib_auth_terms_url', '/'),
-    '#description'   => t('If it is a node, it won\'t be accessible throughout the registration process'),
-    '#prefix' => '<table border= \'0\'><tr><td>',
-    '#suffix' => '</td>',
-  );
-
-  $form['shib_terms_conditions_settings']['shib_auth_terms_ver'] = array(
-    '#type'          => 'textfield',
-    '#title'         => t('Document version'),
-    '#default_value' => variable_get('shib_auth_terms_ver', ''),
-    '#prefix' => '<td valign=top>',
-    '#suffix' => '</td></tr></table>',
-  );
-
-
-  return system_settings_form($form);
-} // function shib_auth_admin_general()
 /**
  * Generate the administration form of the Shibboleth authentication module
  * @returns HTML text of the administration form
@@ -96,6 +55,37 @@ function shib_auth_advanced_admin_advanced() {
     '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL.")
   );
 
+ $form['shib_terms_conditions_settings'] = array(
+    '#type'        => 'fieldset',
+    '#title'       => t('Terms and condition acception settings'),
+    '#weight'      => -2,
+    '#collapsible' => FALSE,
+  );
+
+
+  $form['shib_terms_conditions_settings']['shib_auth_terms_accept'] = array(
+     '#type'          => 'checkbox',
+    '#title'         => t('Force users to accept Terms and conditions'),
+    '#description'   => t('Require acceptance of Terms and conditions every time, it changes'),
+    '#default_value' => variable_get('shib_auth_terms_accept', FALSE),
+  );
+
+  $form['shib_terms_conditions_settings']['shib_auth_terms_url'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('URL of the document'),
+    '#default_value' => variable_get('shib_auth_terms_url', '/'),
+    '#description'   => t('If it is a node, it won\'t be accessible throughout the registration process'),
+    '#prefix' => '<table border= \'0\'><tr><td>',
+    '#suffix' => '</td>',
+  );
+
+  $form['shib_terms_conditions_settings']['shib_auth_terms_ver'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Document version'),
+    '#default_value' => variable_get('shib_auth_terms_ver', ''),
+    '#prefix' => '<td valign=top>',
+    '#suffix' => '</td></tr></table>',
+  );
   return system_settings_form($form);
 } // function shib_auth_admin_advanced()
 
