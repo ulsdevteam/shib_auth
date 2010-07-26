@@ -66,6 +66,20 @@ function shib_auth_roles_menu() {
   return $items;
 } // function shib_auth_roles_menu()
 
+function noc_alap_get_role_by_id ($id) {
+    // Create query parameters
+    
+    $params = sprintf("SELECT name FROM {role} WHERE rid = '%s'", $id);   
+    // retrieve roles from system
+    $result = db_query($params);
+
+    while ($row = db_fetch_array ($result)) {
+      $role = $row ['name'];
+    }
+    
+    return $role;
+}
+
 /**
  * The admin can define authorization rules based on the server variables 
  * (possibly provided by Shibboleth IdP) to give roles to users.
@@ -89,10 +103,11 @@ function shib_auth_assignroles() {
           $roles = unserialize(urldecode($rule['role']));
           // there is a match, so give this user the specified role(s)
           if (!empty($roles)) 
-	    foreach ($roles as $key => $value) 
-				if ($user->roles[$key] != $value)
-					watchdog('shib_grant_role', 'Role @id has been granted to @name.', array('@name' => $user->name, '@id' => $key), WATCHDOG_NOTICE);
-	      $user->roles[$key] = $value;
+				foreach ($roles as $key => $value) {
+					if ($user->roles[$key] != $value)
+						watchdog('shib_grant_role', 'Role @id has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
+					$user->roles[$key] = $value;
+					}
         }
       }
     }
