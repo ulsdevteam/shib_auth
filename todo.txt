@@ -27,3 +27,5 @@ Van-e blokkolva - user_ex_lo_reg ellenorzi?
 		Ezt lehet, hogy a D6-ba is hasznositani lehetne
 
 Coder modullal megnezni, hogy milyen api valtozasok vannak, erdemes-e d6+d7-t csinalni
+
+Feature Req: Blokk betöltése .tpl.php -ból
