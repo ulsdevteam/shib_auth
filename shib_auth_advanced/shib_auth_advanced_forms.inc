@@ -52,7 +52,7 @@ function shib_auth_advanced_admin_advanced() {
     '#type' => 'textfield',
     '#title' => t("URL to redirect to after logout"),
     '#default_value' => variable_get('shib_logout_url', ''),
-    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL.")
+    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. Please note that, this won't work, if you are using SLO.")
   );
 
  $form['shib_terms_conditions_settings'] = array(
