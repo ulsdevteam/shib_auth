@@ -6,7 +6,20 @@
  *
  * This module allow administrators to enable Shibboleth based authentication on their drupal installation.
  */
-
+function shib_auth_advanced_get_config () {
+  global $base_url;
+  // Q: This method will disable using function-specific default value, need to check if we use it somewhere
+  $config = array();
+  $config['destroy_session'] = variable_get('shib_auth_auto_destroy_session', FALSE);
+  $config['forceauthn'] = variable_get('shib_auth_forceauthn', FALSE);
+  $config['ispassive'] = variable_get('shib_auth_is_passive', FALSE);
+  $config['req_consent'] = variable_get('shib_auth_terms_accept', FALSE);
+  $config['shib_auth_terms_url'] = variable_get('shib_auth_terms_url', '/');
+  $config['terms_ver'] = variable_get('shib_auth_terms_ver', '');
+  $config['logout_return'] = variable_get('shib_logout_url', $base_url);
+ 
+  return $config;
+}
 /**
  * Implements hook_menu().
  */
