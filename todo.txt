@@ -29,3 +29,8 @@ Van-e blokkolva - user_ex_lo_reg ellenorzi?
 Coder modullal megnezni, hogy milyen api valtozasok vannak, erdemes-e d6+d7-t csinalni
 
 Feature Req: Blokk betöltése .tpl.php -ból
+
+--
+
+Role logolás szűrése egy session tömb segítségével
+

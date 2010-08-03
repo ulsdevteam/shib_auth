@@ -40,10 +40,10 @@ function shib_auth_edit_form($options) {
     '#options' => $roles,
   );
 
-	$form['shib_auth_sticky'] = array(
+	$form['shib_auth_new_sticky'] = array(
     '#type' => 'checkbox',
     '#title' => t('Sticky'),
-    '#default_value' => 0,
+    '#default_value' => $options[5],
     '#description'    => t('Set role to be sticky, if you want the role to be saved permanently to the users'),
   );
 
@@ -87,13 +87,14 @@ function _shib_auth_delete_rule($id) {
  */
 function _shib_auth_list_rules() {
   $rules = db_query("SELECT * FROM {shib_auth}");
-  $retval = '<table style="width: 100%;"><tr><th>Attribute</th><th>RegExp</th><th>Role(s)</th><th>Actions</th></tr>'."\n";
+  $retval = '<table style="width: 100%;"><tr><th>Attribute</th><th>RegExp</th><th>Role(s)</th><th>Sticky</th><th>Actions</th></tr>'."\n";
   $counter = 0;
   while ($rule = db_fetch_array($rules)) {
     $roles = unserialize(urldecode($rule['role']));
     $roles_list = '';
     if (!empty($roles)) $roles_list = implode(', ', $roles);
-    $retval .= '<tr><td>'. $rule['field'] .'</td><td>'. urldecode($rule['regexpression']) .'</td><td>'. $roles_list .'</td>';
+		$rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
+    $retval .= '<tr><td>'. $rule['field'] .'</td><td>'. urldecode($rule['regexpression']) .'</td><td>'. $roles_list .'</td><td>'. $sticky  .'</td>';
     $retval .= '<td stype="text-align: right;">';
     $retval .= '<a href="'. url('admin/user/shib_auth/clone/'. $rule['id']) .'">'. t('Clone') .'</a> | ';
     $retval .= '<a href="'. url('admin/user/shib_auth/edit/'. $rule['id']) .'">'. t('Edit') .'</a> | ';
@@ -148,7 +149,9 @@ function shib_auth_new_rule($received_form) {
         'field'         => urlencode($received_form['post']['shib_auth_new_attrib']),
         'regexpression' => urlencode($received_form['post']['shib_auth_new_regexp']),
         'role'          => urlencode(serialize($roles)),
+				'sticky'        => urlencode($received_form['post']['shib_auth_new_sticky']),
       );
+			var_dump($new_element);
       //write it in a record
       $ret = drupal_write_record('shib_auth', $new_element, $update);
       // if it wasn't an error
@@ -166,7 +169,7 @@ function shib_auth_new_rule($received_form) {
     }
   }
   // if something was wrang, print the edit form again
-  return shib_auth_edit_form(array(0, '', '', '', 'Add rule'));
+  return shib_auth_edit_form(array(0, '', '', '', 'Add rule', 0));
 }//function shib_auth_new_rule()
 
 /**
@@ -182,7 +185,7 @@ function shib_auth_edit_rule($form_state, $id) {
     $rule = db_query("SELECT * FROM {shib_auth} WHERE id = %d", array($id));
     $db_entry = db_fetch_array($rule);
     return shib_auth_edit_form(
-      array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize(urldecode($db_entry['role'])), 'Apply')
+      array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize(urldecode($db_entry['role'])), 'Apply', $db_entry['sticky'])
     );
   }
 

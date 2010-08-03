@@ -47,6 +47,12 @@ function shib_auth_roles_schema() {
         'default' => '',
         'description' => t("The assigned role."),
       ),
+      'sticky' => array(
+        'type' => 'int',
+        'length' => 1,
+        'default' => 0,
+        'description' => t("Sticky status"),
+      ),
     ),
     'primary key' => array('id'),
   );
