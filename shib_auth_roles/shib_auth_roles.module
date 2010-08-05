@@ -102,13 +102,15 @@ function shib_auth_assignroles() {
         if (preg_match($expression, trim($value))) {
           $roles = unserialize(urldecode($rule['role']));
           // there is a match, so give this user the specified role(s)
-          if (!empty($roles)) 
+          if (!empty($roles)) {
+					if ($rule['sticky']) $sticky = 'Sticky';
 				foreach ($roles as $key => $value) {
 					if ($user->roles[$key] != $value)
-						watchdog('shib_grant_role', 'Role @id has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
+						watchdog('shib_grant_'.$sticky.'role', $sticky.' Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
 					$user->roles[$key] = $value;
 					}
         }
+			}
       }
     }
   }
