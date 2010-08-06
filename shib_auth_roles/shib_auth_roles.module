@@ -79,7 +79,18 @@ function noc_alap_get_role_by_id ($id) {
     
     return $role;
 }
+function install_add_user_to_role($uid, $rid) {
+  if ($uid <= 0 || $rid <= 0) {
+    return FALSE;
+  }
 
+  $count = db_result(db_query("SELECT COUNT(uid) FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid));
+  if ($count == 0) {
+    return db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $uid, $rid);
+  }
+
+  return FALSE;
+}
 /**
  * The admin can define authorization rules based on the server variables 
  * (possibly provided by Shibboleth IdP) to give roles to users.
@@ -103,11 +114,14 @@ function shib_auth_assignroles() {
           $roles = unserialize(urldecode($rule['role']));
           // there is a match, so give this user the specified role(s)
           if (!empty($roles)) {
-					if ($rule['sticky']) $sticky = 'Sticky';
+					
 				foreach ($roles as $key => $value) {
-					if ($user->roles[$key] != $value)
+					if ($rule['sticky']) {$sticky = 'Sticky';
+					install_add_user_to_role($user->uid, $key);
+					}
+					else if ($user->roles[$key] != $value) {
 						watchdog('shib_grant_'.$sticky.'role', $sticky.' Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
-					$user->roles[$key] = $value;
+					$user->roles[$key] = $value;}
 					}
         }
 			}
