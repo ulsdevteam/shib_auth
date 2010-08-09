@@ -587,7 +587,7 @@ function shib_auth_get_handler_base() {
  * @param category The active category of user information being edited.
  */
 function shib_auth_user($op, &$edit, &$account, $category = NULL) {
-  global $base_url, $user;
+  global $base_url, $user, $shib_auth_config;
    if ($op == "logout") {
     $logouthandler = $shib_auth_config['full_logout_url'];
     unset($_SESSION['authentication']);

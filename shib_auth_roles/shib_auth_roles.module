@@ -98,6 +98,7 @@ function install_add_user_to_role($uid, $rid) {
  */
 function shib_auth_assignroles() {
   global $user;
+	
   // Store rules for further examination
   $former_rules = serialize($user->roles);
 
@@ -116,18 +117,21 @@ function shib_auth_assignroles() {
           if (!empty($roles)) {
 					
 				foreach ($roles as $key => $value) {
-					if ($rule['sticky']) {$sticky = 'Sticky';
-					install_add_user_to_role($user->uid, $key);
+				if ($user->roles[$key] != $value) {
+					if ($rule['sticky']) {
+						install_add_user_to_role($user->uid, $key);
+						if (!isset($_SESSION['rolelog'])) watchdog('shib_grant_stick', $sticky.'Sticky Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
 					}
-					else if ($user->roles[$key] != $value) {
-						watchdog('shib_grant_'.$sticky.'role', $sticky.' Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
-					$user->roles[$key] = $value;}
+					else {
+						if (!isset($_SESSION['rolelog'])) watchdog('shib_grant_role','Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
+						$user->roles[$key] = $value;}
 					}
         }
 			}
       }
     }
   }
+	}
   $user->roles = array_filter($user->roles);
 
   // If the user roles array has been changed then reset the permission cache
@@ -135,6 +139,7 @@ function shib_auth_assignroles() {
     // Hack to reset the permissions
     user_access('access content', $account, TRUE);
   }
+	$_SESSION['rolelog'] = '1';
 }
 
 /**
@@ -147,3 +152,9 @@ function shib_auth_roles_init() {
 } // function shib_auth_roles_init()
 
 
+function shib_auth_roles_user($op, &$edit, &$account, $category = NULL) {
+  global $base_url, $user;
+   if ($op == "logout") {
+    unset($_SESSION['rolelog']);
+}
+}
