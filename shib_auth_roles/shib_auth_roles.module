@@ -1,5 +1,6 @@
 <?php
 // $Id: shib_auth.module,v 1.3.4.5.2.31 2009/09/30 17:00:49 bajnokk Exp $
+
 /**
  * @file
  * This is a Shibboleth authentication module.
@@ -10,85 +11,109 @@
 /**
  * Implements hook_menu().
  */
-function shib_auth_roles_menu() {
+function shib_auth_roles_menu()
+{
   $items = array();
-
-    $items['admin/user/shib_auth/rules'] = array(
-    'title'            => t('Shibboleth group rules'),
-    'description'      => t('Administer attribute-based role assignment'),
-    'page callback'    => '_shib_auth_list_rules',
-    'page arguments'   => array('shib_auth_list_rules'),
-    'access arguments' => array('administer permissions'),
-    'type'             => MENU_LOCAL_TASK,
-    'weight'           => -8,
-    'file' => 'shib_auth_roles_forms.inc',
+  
+  $items['admin/user/shib_auth/rules'] = array(
+    'title' => t('Shibboleth group rules'),
+    'description' => t('Administer attribute-based role assignment'),
+    'page callback' => '_shib_auth_list_rules',
+    'page arguments' => array(
+      'shib_auth_list_rules'
+    ),
+    'access arguments' => array(
+      'administer permissions'
+    ),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => -8,
+    'file' => 'shib_auth_roles_forms.inc'
   );
-
+  
   $items['admin/user/shib_auth/new'] = array(
-    'title'            => t('Add new rule'),
-    'description'      => t('Add new attribute-based role assignment rule'),
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('shib_auth_new_rule'),
-    'access arguments' => array('administer permissions'),
-    'type'             => MENU_NORMAL_ITEM,
-    'weight'           => -7,
-    'file' => 'shib_auth_roles_forms.inc',
+    'title' => t('Add new rule'),
+    'description' => t('Add new attribute-based role assignment rule'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'shib_auth_new_rule'
+    ),
+    'access arguments' => array(
+      'administer permissions'
+    ),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -7,
+    'file' => 'shib_auth_roles_forms.inc'
   );
-
+  
   $items['admin/user/shib_auth/delete/%'] = array(
-    'title'            => 'Delete rule',
-    'page callback'    => '_shib_auth_delete_rule',
-    'page arguments'   => array(4),
-    'access arguments' => array('administer permissions'),
-    'type'             => MENU_CALLBACK,
-    'file' => 'shib_auth_roles_forms.inc',
+    'title' => 'Delete rule',
+    'page callback' => '_shib_auth_delete_rule',
+    'page arguments' => array(
+      4
+    ),
+    'access arguments' => array(
+      'administer permissions'
+    ),
+    'type' => MENU_CALLBACK,
+    'file' => 'shib_auth_roles_forms.inc'
   );
-
+  
   $items['admin/user/shib_auth/edit/%'] = array(
-    'title'            => 'Edit rule',
-    'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('shib_auth_edit_rule', 4),
-    'access arguments' => array('administer permissions'),
-    'type'             => MENU_NORMAL_ITEM,
-    'file' => 'shib_auth_roles_forms.inc',
+    'title' => 'Edit rule',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array(
+      'shib_auth_edit_rule',
+      4
+    ),
+    'access arguments' => array(
+      'administer permissions'
+    ),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'shib_auth_roles_forms.inc'
   );
-
+  
   $items['admin/user/shib_auth/clone/%'] = array(
-    'title'            => 'Edit rule',
-    'page callback'    => '_shib_auth_clone_rule',
-    'page arguments'   => array(4),
-    'access arguments' => array('administer permissions'),
-    'type'             => MENU_CALLBACK,
-    'file' => 'shib_auth_roles_forms.inc',
+    'title' => 'Edit rule',
+    'page callback' => '_shib_auth_clone_rule',
+    'page arguments' => array(
+      4
+    ),
+    'access arguments' => array(
+      'administer permissions'
+    ),
+    'type' => MENU_CALLBACK,
+    'file' => 'shib_auth_roles_forms.inc'
   );
-
-
+  
+  
   return $items;
 } // function shib_auth_roles_menu()
 
-function noc_alap_get_role_by_id ($id) {
-    // Create query parameters
-    
-    $params = sprintf("SELECT name FROM {role} WHERE rid = '%s'", $id);   
-    // retrieve roles from system
-    $result = db_query($params);
-
-    while ($row = db_fetch_array ($result)) {
-      $role = $row ['name'];
-    }
-    
-    return $role;
+function noc_alap_get_role_by_id($id)
+{
+  // Create query parameters
+  
+  $params = sprintf("SELECT name FROM {role} WHERE rid = '%s'", $id);
+  // retrieve roles from system
+  $result = db_query($params);
+  
+  while ($row = db_fetch_array($result)) {
+    $role = $row['name'];
+  }
+  
+  return $role;
 }
-function install_add_user_to_role($uid, $rid) {
+function install_add_user_to_role($uid, $rid)
+{
   if ($uid <= 0 || $rid <= 0) {
     return FALSE;
   }
-
+  
   $count = db_result(db_query("SELECT COUNT(uid) FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid));
   if ($count == 0) {
     return db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $uid, $rid);
   }
-
+  
   return FALSE;
 }
 /**
@@ -96,65 +121,75 @@ function install_add_user_to_role($uid, $rid) {
  * (possibly provided by Shibboleth IdP) to give roles to users.
  * The rules can be defined as a [server field - Regexp - role(s)] triplet
  */
-function shib_auth_assignroles() {
+function shib_auth_assignroles()
+{
   global $user;
-	
+  
   // Store rules for further examination
   $former_rules = serialize($user->roles);
-
+  
   // Examine all previously saved rule
   $rules = db_query("SELECT * FROM {shib_auth}");
   while ($rule = db_fetch_array($rules)) {
-    $fieldname = $rule['field'];
-    $expression = '/'. urldecode($rule['regexpression']) .'/';
+    $fieldname  = $rule['field'];
+    $expression = '/' . urldecode($rule['regexpression']) . '/';
     // if the given server field exists
     if (isset($_SERVER[$fieldname])) {
       foreach (explode(';', $_SERVER[$fieldname]) as $value) {
-	//check if the RegEx fits to one of the value of the server field
+        //check if the RegEx fits to one of the value of the server field
         if (preg_match($expression, trim($value))) {
           $roles = unserialize(urldecode($rule['role']));
           // there is a match, so give this user the specified role(s)
           if (!empty($roles)) {
-					
-				foreach ($roles as $key => $value) {
-				if ($user->roles[$key] != $value) {
-					if ($rule['sticky']) {
-						install_add_user_to_role($user->uid, $key);
-						if (!isset($_SESSION['rolelog'])) watchdog('shib_grant_stick', $sticky.'Sticky Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
-					}
-					else {
-						if (!isset($_SESSION['rolelog'])) watchdog('shib_grant_role','Role "@id" has been granted to @name.', array('@name' => $user->name, '@id' => noc_alap_get_role_by_id ($key)), WATCHDOG_NOTICE);
-						$user->roles[$key] = $value;}
-					}
+            foreach ($roles as $key => $value) {
+              if ($user->roles[$key] != $value) {
+                if ($rule['sticky']) {
+                  install_add_user_to_role($user->uid, $key);
+                  if (!isset($_SESSION['rolelog']))
+                    watchdog('shib_grant_stick', $sticky . 'Sticky Role "@id" has been granted to @name.', array(
+                      '@name' => $user->name,
+                      '@id' => noc_alap_get_role_by_id($key)
+                    ), WATCHDOG_NOTICE);
+                } else {
+                  if (!isset($_SESSION['rolelog']))
+                    watchdog('shib_grant_role', 'Role "@id" has been granted to @name.', array(
+                      '@name' => $user->name,
+                      '@id' => noc_alap_get_role_by_id($key)
+                    ), WATCHDOG_NOTICE);
+                  $user->roles[$key] = $value;
+                }
+              }
+            }
+          }
         }
-			}
       }
     }
   }
-	}
   $user->roles = array_filter($user->roles);
-
+  
   // If the user roles array has been changed then reset the permission cache
   if (serialize($user->roles) != $former_rules) {
     // Hack to reset the permissions
     user_access('access content', $account, TRUE);
   }
-	$_SESSION['rolelog'] = '1';
+  $_SESSION['rolelog'] = '1';
 }
 
 /**
  * This function also gives roles to the user, if certain server fields were provided by the Shibboleth server
  */
-function shib_auth_roles_init() {
-	module_load_include('inc', 'shib_auth_roles', 'forms');
-	if (shib_auth_session_valid())
-		shib_auth_assignroles();
+function shib_auth_roles_init()
+{
+  module_load_include('inc', 'shib_auth_roles', 'forms');
+  if (shib_auth_session_valid())
+    shib_auth_assignroles();
 } // function shib_auth_roles_init()
 
 
-function shib_auth_roles_user($op, &$edit, &$account, $category = NULL) {
+function shib_auth_roles_user($op, &$edit, &$account, $category = NULL)
+{
   global $base_url, $user;
-   if ($op == "logout") {
+  if ($op == "logout") {
     unset($_SESSION['rolelog']);
-}
+  }
 }
