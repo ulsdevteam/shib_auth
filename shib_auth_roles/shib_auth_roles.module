@@ -89,7 +89,7 @@ function shib_auth_roles_menu()
   return $items;
 } // function shib_auth_roles_menu()
 
-function noc_alap_get_role_by_id($id)
+function shib_auth_roles_get_role_by_id($id)
 {
   // Create query parameters
   
@@ -103,7 +103,7 @@ function noc_alap_get_role_by_id($id)
   
   return $role;
 }
-function install_add_user_to_role($uid, $rid)
+function shib_auth_roles_add_user_to_role($uid, $rid)
 {
   if ($uid <= 0 || $rid <= 0) {
     return FALSE;
@@ -142,21 +142,27 @@ function shib_auth_assignroles()
           // there is a match, so give this user the specified role(s)
           if (!empty($roles)) {
             foreach ($roles as $key => $value) {
+							//Give roles to users, if they dont't have it already
               if ($user->roles[$key] != $value) {
+								//Determine whether it is a sticky (permanent) rule, and
                 if ($rule['sticky']) {
-                  install_add_user_to_role($user->uid, $key);
+									//Give the role to the user permanently
+                  shib_auth_roles_add_user_to_role($user->uid, $key);
+									//Let admin know what happened - via drupal report system
                   if (!isset($_SESSION['rolelog']))
                     watchdog('shib_grant_stick', $sticky . 'Sticky Role "@id" has been granted to @name.', array(
                       '@name' => $user->name,
-                      '@id' => noc_alap_get_role_by_id($key)
+                      '@id' => shib_auth_roles_get_role_by_id($key)
                     ), WATCHDOG_NOTICE);
                 } else {
+									//Give the user the given role temporarly
+									$user->roles[$key] = $value;
+									//Let admin know what happened - via drupal report system
                   if (!isset($_SESSION['rolelog']))
                     watchdog('shib_grant_role', 'Role "@id" has been granted to @name.', array(
                       '@name' => $user->name,
-                      '@id' => noc_alap_get_role_by_id($key)
-                    ), WATCHDOG_NOTICE);
-                  $user->roles[$key] = $value;
+                      '@id' => shib_auth_roles_get_role_by_id($key)
+                    ), WATCHDOG_NOTICE);          
                 }
               }
             }
