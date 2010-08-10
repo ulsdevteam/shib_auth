@@ -137,10 +137,7 @@ function shib_auth_new_rule($received_form) {
       $roles = array();
       if (is_array($received_form['post']['shib_auth_roles'])) {
         foreach ($received_form['post']['shib_auth_roles'] as $role_id) {
-          $role_entry = db_query("SELECT * FROM {role} WHERE rid = %d", array($role_id));
-          $role_ent = db_fetch_array($role_entry);
-          $role = $role_ent['name'];
-          $roles[$role_id] = $role;
+          $roles[$role_id] = shib_auth_roles_get_role_by_id($role_id);
         }
       }
       //save the new element into an array

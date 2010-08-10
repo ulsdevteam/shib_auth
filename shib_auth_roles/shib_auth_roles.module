@@ -89,20 +89,6 @@ function shib_auth_roles_menu()
   return $items;
 } // function shib_auth_roles_menu()
 
-function shib_auth_roles_get_role_by_id($id)
-{
-  // Create query parameters
-  
-  $params = sprintf("SELECT name FROM {role} WHERE rid = '%s'", $id);
-  // retrieve roles from system
-  $result = db_query($params);
-  
-  while ($row = db_fetch_array($result)) {
-    $role = $row['name'];
-  }
-  
-  return $role;
-}
 function shib_auth_roles_add_user_to_role($uid, $rid)
 {
   if ($uid <= 0 || $rid <= 0) {
@@ -152,7 +138,7 @@ function shib_auth_assignroles()
                   if (!isset($_SESSION['rolelog']))
                     watchdog('shib_grant_stick', $sticky . 'Sticky Role "@id" has been granted to @name.', array(
                       '@name' => $user->name,
-                      '@id' => shib_auth_roles_get_role_by_id($key)
+                      '@id' => $value
                     ), WATCHDOG_NOTICE);
                 } else {
 									//Give the user the given role temporarly
@@ -161,7 +147,7 @@ function shib_auth_assignroles()
                   if (!isset($_SESSION['rolelog']))
                     watchdog('shib_grant_role', 'Role "@id" has been granted to @name.', array(
                       '@name' => $user->name,
-                      '@id' => shib_auth_roles_get_role_by_id($key)
+                      '@id' => $value
                     ), WATCHDOG_NOTICE);          
                 }
               }
