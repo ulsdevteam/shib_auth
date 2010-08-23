@@ -107,36 +107,6 @@ function shib_auth_update_6040() {
  * This is how the schema of the module will look like
  */
 function shib_auth_schema() {
-  $schema['shib_auth'] = array(
-    'description' => t('Stores shibboleth authentication rules'),
-    'fields' => array(
-      'id' => array(
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => t("The id of the Shibboleth role assignment rule"),
-      ),
-      'field' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'default' => '',
-        'description' => t("The observed server variable."),
-      ),
-      'regexpression' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'default' => '',
-        'description' => t("The joint regular expression."),
-      ),
-      'role' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'default' => '',
-        'description' => t("The assigned role."),
-      ),
-    ),
-    'primary key' => array('id'),
-  );
   $schema['shib_authmap'] = array(
     'description' => t('Stores shibboleth authentication mapping from persistend IDs to drupal users.'),
     'fields' => array(
