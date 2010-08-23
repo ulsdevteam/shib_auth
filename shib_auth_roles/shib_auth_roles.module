@@ -117,7 +117,7 @@ function shib_auth_assignroles()
   $former_rules = serialize($user->roles);
   
   // Sticky rules come first
-  $rules = db_query("SELECT * FROM {shib_auth} WHERE ORDER BY sticky DESC");
+  $rules = db_query("SELECT * FROM {shib_auth} WHERE 1 ORDER BY sticky DESC");
   while ($rule = db_fetch_array($rules)) {
     if($profile_changed && !$rule['sticky']) {
       // This is the first non-sticky rule, and sticky rules have modified the user's roles
