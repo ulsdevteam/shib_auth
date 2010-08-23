@@ -466,6 +466,7 @@ function shib_auth_init() {
   drupal_load('module', 'user');
   
   $shib_auth_config = shib_auth_get_config();
+  if (module_exists("shib_auth_advanced"))
 	$shib_auth_config += module_invoke("shib_auth_advanced","get_config");
   //call isDebug function to determine if we want to display debug information or not
   shib_auth_debug();
