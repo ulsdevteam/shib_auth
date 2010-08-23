@@ -103,19 +103,6 @@ function shib_auth_roles_get_role_by_id($id)
   
   return $role;
 }
-function shib_auth_roles_add_user_to_role($uid, $rid)
-{
-  if ($uid <= 0 || $rid <= 0) {
-    return FALSE;
-  }
-  
-  $count = db_result(db_query("SELECT COUNT(uid) FROM {users_roles} WHERE uid = %d AND rid = %d", $uid, $rid));
-  if ($count == 0) {
-    return db_query("INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)", $uid, $rid);
-  }
-  
-  return FALSE;
-}
 /**
  * The admin can define authorization rules based on the server variables 
  * (possibly provided by Shibboleth IdP) to give roles to users.
@@ -124,53 +111,24 @@ function shib_auth_roles_add_user_to_role($uid, $rid)
 function shib_auth_assignroles()
 {
   global $user;
+  $profile_changed=0;
   
   // Store rules for further examination
   $former_rules = serialize($user->roles);
   
-  // Examine all previously saved rule
-  $rules = db_query("SELECT * FROM {shib_auth}");
+  // Sticky rules come first
+  $rules = db_query("SELECT * FROM {shib_auth} WHERE ORDER BY 'sticky' DESC");
   while ($rule = db_fetch_array($rules)) {
-    $fieldname  = $rule['field'];
-    $expression = '/' . urldecode($rule['regexpression']) . '/';
-    // if the given server field exists
-    if (isset($_SERVER[$fieldname])) {
-      foreach (explode(';', $_SERVER[$fieldname]) as $value) {
-        //check if the RegEx fits to one of the value of the server field
-        if (preg_match($expression, trim($value))) {
-          $roles = unserialize(urldecode($rule['role']));
-          // there is a match, so give this user the specified role(s)
-          if (!empty($roles)) {
-            foreach ($roles as $key => $value) {
-							//Give roles to users, if they dont't have it already
-              if ($user->roles[$key] != $value) {
-								//Determine whether it is a sticky (permanent) rule, and
-                if ($rule['sticky']) {
-									//Give the role to the user permanently
-                  shib_auth_roles_add_user_to_role($user->uid, $key);
-									//Let admin know what happened - via drupal report system
-                  if (!isset($_SESSION['rolelog']))
-                    watchdog('shib_grant_stick', $sticky . 'Sticky Role "@id" has been granted to @name.', array(
-                      '@name' => $user->name,
-                      '@id' => $value
-                    ), WATCHDOG_NOTICE);
-                } else {
-									//Give the user the given role temporarly
-									$user->roles[$key] = $value;
-									//Let admin know what happened - via drupal report system
-                  if (!isset($_SESSION['rolelog']))
-                    watchdog('shib_grant_role', 'Role "@id" has been granted to @name.', array(
-                      '@name' => $user->name,
-                      '@id' => $value
-                    ), WATCHDOG_NOTICE);          
-                }
-              }
-            }
-          }
-        }
-      }
+    if($profile_changed && !$rule['sticky']) {
+      // This is the first non-sticky rule, and sticky rules have modified the user's roles
+      user_save($user); // XXX user_save accepts a 'fields' param
+      $profile_changed = 0;
     }
+    $profile_changed += shib_auth_process_rule($rule); // Only sticky rules return >0
   }
+  if ($profile_changed) // must do this again, there might not be non-sticky rules.
+    user_save($user); // XXX user_save accepts a 'fields' param
+
   $user->roles = array_filter($user->roles);
   
   // If the user roles array has been changed then reset the permission cache
@@ -180,6 +138,53 @@ function shib_auth_assignroles()
   }
   $_SESSION['rolelog'] = '1';
 }
+
+function shib_auth_process_rule($rule)
+{
+  $profile_changed=0; // is a constant 0 when the rule is not a sticky one
+  $fieldname  = $rule['field'];
+  $expression = '/' . urldecode($rule['regexpression']) . '/';
+  // if the given server field exists
+  if (isset($_SERVER[$fieldname])) {
+    foreach (explode(';', $_SERVER[$fieldname]) as $value) {
+      //check if the RegEx fits to one of the value of the server field
+      if (preg_match($expression, trim($value))) {
+	$roles = unserialize(urldecode($rule['role']));
+	// there is a match, so give this user the specified role(s)
+	
+	if (empty($roles)) // null-rule, NOP
+	  return 0;
+	
+	foreach ($roles as $role_id => $role_name) {
+	  
+	  if ($user->roles[$role_id] == $role_name) 
+	    continue; // NOP if the user already has the given role
+	  
+	  $user->roles[$key] = $value;
+	  
+	  if ($rule['sticky']) { // Sticky rules change the profile
+	    $profile_changed = 1;
+	    
+	    if (!isset($_SESSION['rolelog']))
+	      watchdog('shib_grant_stick', 'Role "@id" has been permanently granted to @name.', array(
+		'@name' => $user->name,
+		'@id' => $value
+	      ), WATCHDOG_NOTICE);
+	  } else {
+	    if (!isset($_SESSION['rolelog']))
+	      watchdog('shib_grant_role', 'Role "@id" has been granted to @name.', array(
+		'@name' => $user->name,
+		'@id' => $value
+	      ), WATCHDOG_NOTICE);
+	  }
+	}
+      }
+    }
+  }
+  
+  return $profile_changed;
+}
+ 
 
 /**
  * This function also gives roles to the user, if certain server fields were provided by the Shibboleth server
