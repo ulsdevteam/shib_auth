@@ -113,26 +113,26 @@ function shib_auth_assignroles()
   global $user;
   $profile_changed=0;
   
-  // Store rules for further examination
-  $former_rules = serialize($user->roles);
+  // Store roles for further examination
+  $former_roles = serialize($user->roles);
   
   // Sticky rules come first
-  $rules = db_query("SELECT * FROM {shib_auth} WHERE 1 ORDER BY sticky DESC");
+  $rules = db_query("SELECT * FROM {shib_auth} ORDER BY sticky DESC");
   while ($rule = db_fetch_array($rules)) {
     if($profile_changed && !$rule['sticky']) {
       // This is the first non-sticky rule, and sticky rules have modified the user's roles
-      user_save($user); // XXX user_save accepts a 'fields' param
+      shib_auth_save_roles();
       $profile_changed = 0;
     }
     $profile_changed += shib_auth_process_rule($rule); // Only sticky rules return >0
   }
-  if ($profile_changed) // must do this again, there might not be non-sticky rules.
-    user_save($user); // XXX user_save accepts a 'fields' param
+  if ($profile_changed) // must do this in case there's no non-sticky rule
+    shib_auth_save_roles();
 
   $user->roles = array_filter($user->roles);
   
   // If the user roles array has been changed then reset the permission cache
-  if (serialize($user->roles) != $former_rules) {
+  if (serialize($user->roles) != $former_roles) {
     // Hack to reset the permissions
     user_access('access content', $account, TRUE);
   }
@@ -141,6 +141,7 @@ function shib_auth_assignroles()
 
 function shib_auth_process_rule($rule)
 {
+  global $user;
   $profile_changed=0; // is a constant 0 when the rule is not a sticky one
   $fieldname  = $rule['field'];
   $expression = '/' . urldecode($rule['regexpression']) . '/';
@@ -160,7 +161,7 @@ function shib_auth_process_rule($rule)
 	  if ($user->roles[$role_id] == $role_name) 
 	    continue; // NOP if the user already has the given role
 	  
-	  $user->roles[$key] = $value;
+	  $user->roles[$role_id] = $role_name;
 	  
 	  if ($rule['sticky']) { // Sticky rules change the profile
 	    $profile_changed = 1;
@@ -183,6 +184,28 @@ function shib_auth_process_rule($rule)
   }
   
   return $profile_changed;
+}
+
+/** 
+ *  Unfortunately if we called user_save() on updating roles, we would possibly lose profile fields.
+ *  Therefore we hack with the {users_roles} table
+ */
+function shib_auth_save_roles() 
+{
+  global $user;
+  
+  // We won't modify system users
+  if (!$user->uid || $user->uid <= 1)
+    return;
+  
+  if (isset($user->roles)) {
+    db_query('DELETE FROM {users_roles} WHERE uid = %d', $user->uid);
+    foreach (array_keys($user->roles) as $rid) {
+      if (!in_array($rid, array(DRUPAL_ANONYMOUS_RID, DRUPAL_AUTHENTICATED_RID))) {
+	db_query('INSERT INTO {users_roles} (uid, rid) VALUES (%d, %d)', $user->uid, $rid);
+      }
+    }
+  }
 }
  
 
