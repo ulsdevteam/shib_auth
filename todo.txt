@@ -1,4 +1,4 @@
- Advanced:
+Advanced:
 
 consent rész
 logout: comment, hogy nembiztos, hogy redirectel SLO esetén
