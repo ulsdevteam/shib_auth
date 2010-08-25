@@ -167,15 +167,13 @@ function shib_auth_process_rule($rule)
 	    $profile_changed = 1;
 	    
 	    if (!isset($_SESSION['rolelog']))
-	      watchdog('shib_grant_stick', 'Role "@id" has been permanently granted to @name.', array(
-		'@name' => $user->name,
-		'@id' => $value
+	      watchdog('shib_grant_stick', 'Role "@id" has been permanently granted', array(
+		'@id' => $role_name
 	      ), WATCHDOG_NOTICE);
 	  } else {
 	    if (!isset($_SESSION['rolelog']))
-	      watchdog('shib_grant_role', 'Role "@id" has been granted to @name.', array(
-		'@name' => $user->name,
-		'@id' => $value
+	      watchdog('shib_grant_role', 'Role "@id" has been granted', array(
+		'@id' => $role_name
 	      ), WATCHDOG_NOTICE);
 	  }
 	}
