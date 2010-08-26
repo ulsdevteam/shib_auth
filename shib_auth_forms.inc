@@ -95,62 +95,6 @@ function shib_auth_admin_general() {
 
   return system_settings_form($form);
 } // function shib_auth_admin_general()
-/**
- * Generate the administration form of the Shibboleth authentication module
- * @returns HTML text of the administration form
- */
-function shib_auth_admin_advanced() {
-  global $base_url;
-
-  $form = array();
-
-  $form['shib_handler_settings'] = array(
-    '#type'        => 'fieldset',
-    '#title'       => t('Advanced SAML2 settings'),
-    '#weight'      => 0,
-    '#collapsible' => FALSE,
-  );
-  
-  $form['shib_handler_settings']['shib_auth_is_passive'] = array(
-     '#type'          => 'checkbox',
-    '#title'         => t('Enable IsPassive checking'),
-    '#description'   => t('Enable IsPassive checking'),
-    '#default_value' => variable_get('shib_auth_is_passive', FALSE),
-  );
-  $form['shib_handler_settings']['shib_auth_forceauthn'] = array(
-     '#type'          => 'checkbox',
-    '#title'         => t('Enable ForceAuthN function'),
-    '#description'   => t('Force users to re-authenticate'),
-    '#default_value' => variable_get('shib_auth_forceauthn', FALSE),
-  );
-
-  $form['shib_auth_auto_destroy_session'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Strict shibboleth session checking'),
-    '#weight'      => -2,
-  );
-
-  $form['shib_auth_auto_destroy_session']['shib_auth_auto_destroy_session'] = array(
-    '#type'          => 'checkbox',
-    '#title'         => t('Destroy Drupal session when the Shibboleth session expires.'),
-    '#default_value' => variable_get('shib_auth_auto_destroy_session', FALSE),
-  );
-
-  $form['shib_logout_settings'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Logout settings'),
-    '#weight'      => -1,
-  );
-
-  $form['shib_logout_settings']['shib_logout_url'] = array(
-    '#type' => 'textfield',
-    '#title' => t("URL to redirect to after logout"),
-    '#default_value' => variable_get('shib_logout_url', ''),
-    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL.")
-  );
-
-  return system_settings_form($form);
-} // function shib_auth_admin_advanced()
 
 /**
  * Generate the custom e-mail and username provider form
@@ -246,9 +190,6 @@ function shib_auth_custom_email_validate($form, &$form_state) {
 function shib_login() {
   drupal_goto(substr($_GET['q'], 11));
 }
-
-
-
 
 /**
  * Admin users group membership validate
@@ -356,5 +297,4 @@ function shib_auth_admin_advanced() {
     '#suffix' => '</td></tr></table>',
   );
   return system_settings_form($form);
-} // function shib_auth_admin_advanced()
-
+} 
