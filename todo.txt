@@ -38,3 +38,16 @@ Role logolás szűrése egy session tömb segítségével
 
 Todo:
 customok rendbetétele
+
+--
+
+1 debug - role bekapcsolasa eseten trukk - role utan hivodjon meg a debug
+
+2 consent dolgokat külön func-ba:
+ - handle consent kezelje a consentver reszt:
+ - 2 func?
+
+3 custom formok
+
+4 felesleges metodusok torlese - amik nem kellenek
+
