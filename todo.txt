@@ -1,4 +1,4 @@
-Advanced:
+ Advanced:
 
 consent rész
 logout: comment, hogy nembiztos, hogy redirectel SLO esetén
@@ -34,3 +34,7 @@ Feature Req: Blokk betöltése .tpl.php -ból
 
 Role logolás szűrése egy session tömb segítségével
 
+---
+
+Todo:
+customok rendbetétele
