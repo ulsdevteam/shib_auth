@@ -493,6 +493,12 @@ function doing_account_linking() {
   return FALSE;
 }
 
+function shib_auth_consent_update($uname, $umail_single, $uid) {
+	global $shib_auth_config;
+	$sql="UPDATE {shib_authmap} SET consentver='%s' WHERE targeted_id='%s'";
+  $result = db_query($sql, $shib_auth_config['terms_ver'], $uname);
+  shib_login_authmap($uname, $umail_single, $uid);
+}
 /**
  * Create a new user based on informations from the Shibboleth handler if it's necessary or log in.
  *
@@ -572,9 +578,7 @@ function shib_auth_init() {
 			  //The user exists in the authmap, and she had just accepted the new consent version
 			  //Write the new version number into the her authmap row, and log her in
   else if ($existing_authmap && $consent_accepted ) { 
-    $sql="UPDATE {shib_authmap} SET consentver='%s' WHERE targeted_id='%s'";
-    $result = db_query($sql, variable_get('shib_auth_terms_ver', ''),$uname);
-    shib_login_authmap($uname, $umail_single, $existing_authmap['uid']);
+    shib_auth_consent_update($uname, $umail_single, $existing_authmap['uid']);
   }
 //********* END OF LOGIN CASE *************
 
