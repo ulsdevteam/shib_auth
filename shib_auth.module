@@ -513,7 +513,8 @@ function shib_auth_init() {
   
   $shib_auth_config = shib_auth_get_config();
   
-  shib_auth_debug();
+	//If shib_auth_roles module is loaded, we will call debug function at the end of the role assignment
+  if (!module_exists("shib_auth_roles")) shib_auth_debug();
 
   // the script is up here now from https://spaces.internet2.edu/display/SHIB2/isPassive, inserting to repo
   //TODO according to i2 ispassive page: are they ready?
