@@ -671,19 +671,15 @@ function generate_login_text($inform) {
 
   if (!$user->uid||$shib_auth_config['account_linking']) {
     $sessioninitiator = $shib_auth_config['full_handler_url'];
-    
-    $block_content = '';
 
     //Check whether clean url and i18 is enabled, and insert ?q=/ in the return url if not
-    $url_prefix = '';
     if (!module_exists("i18n") && !variable_get('clean_url', FALSE)) {
       $url_prefix = '?q=/';
     }
 
-    $forceauthn = '';
     if ($shib_auth_config['forceauthn'])
       $forceauthn = '&forceAuthn=1';
-    
+
     $url_to_return = (isset($_SERVER['HTTPS']) ? 'https' : 'http') 
                              .'://'. $_SERVER['HTTP_HOST']
                              . url('<front>')
@@ -691,18 +687,15 @@ function generate_login_text($inform) {
                              .'/shib_login/'
                              . $_GET['q'];
     // If there is no session yet then we should put the login text into the block
-    if (!$user->uid)
-      $block_content  .= "<p><b><a href=\"$sessioninitiator?target=". urlencode($url_to_return) 
-		      . $forceauthn ."\">" 
-		      . $shib_auth_config['auth_link_text']
-		      . "</a></b></p>";
+    if (!$user->uid) {
+      $login_url  = $sessioninitiator ."?target=". urlencode($url_to_return) . $forceauthn;
+    }
     //if uid is greater than 1 and user not yet authenticated with shib, display this message in user/edit
-    else if ($inform && $_SESSION['authentication'] != 'shib_auth' && $user->uid > 1)
-      $block_content  .= "<p><b><a href=\"$handler?target=". urlencode($url_to_return) . $forceauthn ."\">"
-		      . t('Link this account to Shibboleth')
-		      ."</a></b></p>";
+    else if ($inform && $_SESSION['authentication'] != 'shib_auth' && $user->uid > 1) {
+      $login_url = $handler .'?target='. urlencode($url_to_return) . $forceauthn;
+    }
 
-    return $block_content;
+    return $login_url;
   }
 } // function generate_login_text()
 
@@ -766,6 +759,7 @@ function shib_auth_menu() {
  * @returns block HTML
  */
 function shib_auth_block($op='list', $delta=0, $edit = array()) {
+  global $shib_auth_config;
   // listing of blocks, such as on the admin/block page
   switch ($op) {
     case "list":
@@ -802,7 +796,7 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
         case 0:
           $block = array(
           'subject' => t('Shibboleth login'),
-          'content' => generate_login_text(0) );
+          'content' => theme('shib_login_block', generate_login_text(0), $shib_auth_config['auth_link_text']) );
         break;
       }
       return $block;
@@ -847,4 +841,19 @@ function shib_auth_form_alter(&$form, &$form_state, $form_id) {
  */
 function access_shib_login() {
   return TRUE;
+}
+
+/**
+ * Implement of the hook_theme()
+ */
+function shib_auth_theme($existsing, $type, $theme, $path) {
+  return array(
+    'shib_login_block' => array(
+      'template' => 'shib_login_block',
+      'arguments' => array(
+        'login_url'  => NULL,
+        'login_text' => NULL,
+      ),
+    ),
+  );
 }
