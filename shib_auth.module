@@ -254,10 +254,10 @@ function shib_auth_link_account ($federated_id,$consentver='') {
  * @param $fed_id federated user identifier
  * @param $uname custom username (might be equal to $uid)
  * @param $mail user email address (might be user defined)
- * @param $terms accepted version of terms&conditions (acceptance must be checked before)
+ * @param $consentver accepted version of terms&conditions (acceptance must be checked before)
  * @return TRUE if saving user was successful, FALSE otherwise
  */
-function shib_auth_user_register ($fed_id,$uname,$mail,$terms='') {
+function shib_auth_user_register ($fed_id,$uname,$mail,$consentver='') {
   global $user;
   
   // Ensure that we have a valid shib session
@@ -281,7 +281,7 @@ function shib_auth_user_register ($fed_id,$uname,$mail,$terms='') {
   if (!isset($user->uid)) { // New user
     $user = user_external_login_register($uname, "shib_auth");
     $user = user_save($user, array('mail' => $mail));
-    return shib_auth_save_authmap($fed_id,$user->uid,$terms);
+    return shib_auth_save_authmap($fed_id,$user->uid,$consentver);
   }
   return TRUE;
 }
@@ -290,7 +290,7 @@ function shib_auth_user_register ($fed_id,$uname,$mail,$terms='') {
  * Saves an authmap entry to the database. Only checks the uniqueness of the federated id
  * @return TRUE if successful
  */
-function shib_auth_authmap_save($fed_id,$uid,$terms) {
+function shib_auth_authmap_save($fed_id,$uid,$consentver) {
   // Check $fed_id uniqueness
   if ( db_fetch_object( db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $fed_id) ) )
     return shib_auth_error("Internal error while saving user account: federated id is not unique.");
@@ -300,7 +300,7 @@ function shib_auth_authmap_save($fed_id,$uid,$terms) {
     return shib_auth_error("Internal error while saving account: missing Shibboleth session");
   // save user
   $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
-  return db_query($sql,	$uid, $fed_id, shib_auth_get_idp(), date("Y-m-d H:i:s"), $terms);
+  return db_query($sql,	$uid, $fed_id, shib_auth_get_idp(), date("Y-m-d H:i:s"), $consentver);
 }
 
 function shib_auth_authmap_get_user ($fed_id) {
