@@ -40,7 +40,7 @@ function shib_auth_edit_form($options) {
     '#options' => $roles,
   );
 
-	$form['shib_auth_new_sticky'] = array(
+  $form['shib_auth_new_sticky'] = array(
     '#type' => 'checkbox',
     '#title' => t('Sticky'),
     '#default_value' => $options[5],
@@ -93,7 +93,7 @@ function _shib_auth_list_rules() {
     $roles = unserialize(urldecode($rule['role']));
     $roles_list = '';
     if (!empty($roles)) $roles_list = implode(', ', $roles);
-		$rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
+    $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
     $retval .= '<tr><td>'. $rule['field'] .'</td><td>'. urldecode($rule['regexpression']) .'</td><td>'. $roles_list .'</td><td>'. $sticky  .'</td>';
     $retval .= '<td stype="text-align: right;">';
     $retval .= '<a href="'. url('admin/user/shib_auth/clone/'. $rule['id']) .'">'. t('Clone') .'</a> | ';
@@ -107,7 +107,7 @@ function _shib_auth_list_rules() {
     $retval .= t('There is no rule in the database') .'</td></tr>'."\n";
   }
   $retval .= '</table>';
-	$retval .= '<a href="'. url('admin/user/shib_auth/new') .'">'. t('Add new rule') .'</a>';
+  $retval .= '<a href="'. url('admin/user/shib_auth/new') .'">'. t('Add new rule') .'</a>';
 
   return $retval;
 } // function _shib_auth_list_rules()
@@ -146,9 +146,8 @@ function shib_auth_new_rule($received_form) {
         'field'         => urlencode($received_form['post']['shib_auth_new_attrib']),
         'regexpression' => urlencode($received_form['post']['shib_auth_new_regexp']),
         'role'          => urlencode(serialize($roles)),
-				'sticky'        => urlencode($received_form['post']['shib_auth_new_sticky']),
+        'sticky'        => urlencode($received_form['post']['shib_auth_new_sticky']),
       );
-			var_dump($new_element);
       //write it in a record
       $ret = drupal_write_record('shib_auth', $new_element, $update);
       // if it wasn't an error
