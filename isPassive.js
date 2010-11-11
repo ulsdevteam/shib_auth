@@ -40,7 +40,7 @@ if(document.cookie && document.cookie.search(/_check_is_passive=/) >= 0){
   document.cookie = "_check_is_passive=" + window.location;
 
   // Redirect to Shibboleth handler
-  window.location = Drupal.settings.shib_auth.login_url;
+  window.location = Drupal.settings.shib_auth.login_url + "&isPassive=true";
 }
 
 <!-- END: isPassive script-->
