@@ -50,10 +50,10 @@ function shib_auth_admin_general() {
     '#default_value' => variable_get('shib_auth_username_variable', 'REMOTE_USER'),
   );
 
-  $form['shib_attribute_settings']['shib_auth_username_email'] = array(
+  $form['shib_attribute_settings']['shib_auth_email_variable'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Server variable for e-mail address'),
-    '#default_value' => variable_get('shib_auth_username_email', 'HTTP_SHIB_MAIL'),
+    '#default_value' => variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL'),
   );
 
   $form['shib_attribute_settings']['shib_auth_define_username'] = array(
@@ -142,7 +142,7 @@ else {
     $form['custom_mail'] = array(
       '#type' => 'textfield',
       '#title' => t('E-mail'),
-      '#default_value' => $_SERVER[variable_get('shib_auth_username_email', 'HTTP_SHIB_MAIL')],
+      '#default_value' => $_SERVER[variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL')],
       '#size' => 60,
     );
     }
@@ -151,7 +151,7 @@ else {
       '#value' => t('<b>E-mail:</b> <br>'),
       );
       $form['custom_mail'] = array(
-      '#value' => $_SERVER[variable_get('shib_auth_username_email', 'HTTP_SHIB_MAIL')],
+      '#value' => $_SERVER[variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL')],
       '#suffix' => '<br>',
       );
       
@@ -268,10 +268,10 @@ function shib_auth_admin_advanced() {
     '#weight'      => -1,
   );
 
-  $form['shib_logout_settings']['shib_logout_url'] = array(
+  $form['shib_logout_settings']['shib_auth_logout_url'] = array(
     '#type' => 'textfield',
     '#title' => t("URL to redirect to after logout"),
-    '#default_value' => variable_get('shib_logout_url', ''),
+    '#default_value' => variable_get('shib_auth_logout_url', ''),
     '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. Please note that, this won't work, if you are using SLO.")
   );
 

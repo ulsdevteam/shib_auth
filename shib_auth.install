@@ -36,18 +36,22 @@ function shib_auth_install() {
  */
 function shib_auth_uninstall() {
 
+  // TODO: Update script needed for tracking variable name changes
+  // (auth_link_text -> shib_auth_link_text, shib_logout_url -> shib_auth_logout_url,
+  // shib_auth_username_email -> shib_auth_email_variable)
+
   // Drop variables.
   $variables = array(
-    'auth_link_text',
+    'shib_auth_link_text',
     'shib_auth_handler_url',
     'shib_auth_handler_protocol',
     'shib_auth_wayf_uri',
     'shib_auth_full_handler_url',
     'shib_auth_full_logout_url',
     'shib_auth_username_variable',
-    'shib_auth_username_email',
+    'shib_auth_email_variable',
     'shib_auth_auto_destroy_session',
-    'shib_logout_url',
+    'shib_auth_logout_url',
     'shib_auth_debug_state',
     'shib_auth_debug_url',
     'shib_auth_enable_custom_mail',
