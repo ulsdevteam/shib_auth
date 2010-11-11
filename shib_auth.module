@@ -30,6 +30,7 @@ function shib_auth_get_config () {
   $config['forceauthn'] = variable_get('shib_auth_forceauthn', FALSE);
   $config['handler_protocol'] = variable_get('shib_auth_handler_protocol', "https");
   $config['handler_url'] = variable_get('shib_auth_handler_url', "/Shibboleth.sso");
+  $config['shib_auth_force_https'] = variable_get('shib_auth_force_https', FALSE);
   $config['ispassive'] = variable_get('shib_auth_is_passive', FALSE);
   $config['req_consent'] = variable_get('shib_auth_terms_accept', FALSE);
   $config['terms_ver'] = variable_get('shib_auth_terms_ver', '');
@@ -679,7 +680,9 @@ function shib_auth_generate_login_url() {
   if ($shib_auth_config['forceauthn'])
     $forceauthn = '&forceAuthn=1';
 
-  $url_to_return = (isset($_SERVER['HTTPS']) ? 'https' : 'http') 
+  $url_to_return = (isset($_SERVER['HTTPS'])||
+                   ($shib_auth_config['shib_auth_force_https']&&substr($sessioninitiator,0,5)=='https') ?
+                   'https' : 'http') 
                            .'://'. $_SERVER['HTTP_HOST']
                            . url('<front>')
                            . $url_prefix

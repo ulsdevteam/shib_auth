@@ -35,6 +35,15 @@ function shib_auth_admin_general() {
     '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
   );
 
+  $form['shib_handler_settings']['shib_auth_force_https'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Force HTTPS on login'),
+    '#description'   => t('If the Shibboleth login handler uses Secure HTTP connections than the user
+    will forced with this feature to return also to secure page (by using HTTPS) even the visited url
+    was unsecure (HTTP).'),
+    '#default_value' => variable_get('shib_auth_force_https', FALSE),
+  );
+
   $form['shib_attribute_settings']['shib_auth_username_variable'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Server variable for username'),
