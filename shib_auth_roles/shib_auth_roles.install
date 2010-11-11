@@ -5,6 +5,7 @@
  * This is the install file of the Shibboleth role assignment module for Drupal system
  *
  */
+
 /**
  * Implementation of hook_install().
  *
@@ -12,8 +13,19 @@
  */
 function shib_auth_roles_install() {
   drupal_install_schema('shib_auth_roles');
-  drupal_set_message(t('Shibboleth authentication module installed successfully.'));
+  drupal_set_message(t('Shibboleth role assignment module installed successfully.'));
 }
+
+/**
+ * Implementation of hook_uninstall().
+ *
+ * Hook to uninstall module
+ */
+function shib_auth_roles_uninstall() {
+  drupal_uninstall_schema('shib_auth_roles');
+  drupal_set_message(t('Shibboleth role assignment module uninstalled successfully.'));
+}
+
 /**
  * Implements hook_schema().
  *
