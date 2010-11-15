@@ -747,7 +747,6 @@ function shib_auth_menu() {
  * @returns block HTML
  */
 function shib_auth_block($op='list', $delta=0, $edit = array()) {
-  global $shib_auth_config;
   // listing of blocks, such as on the admin/block page
   switch ($op) {
     case "list":
@@ -783,13 +782,27 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
       switch ($delta) {
         case 0:
           $block = array(
-          'subject' => t('Shibboleth login'),
-          'content' => theme('shib_login_block', generate_login_text(0), $shib_auth_config['auth_link_text']) );
+            'subject' => t('Shibboleth login'),
+            'content' =>  _login_block_content(),
+          );
         break;
       }
       return $block;
   }
 } // function shib_auth_block()
+
+/**
+ * Generate the login block content if user not logged in
+ *
+ */
+function _login_block_content() {
+  global $shib_auth_config;
+
+  if (user_is_anonymous()) {
+    return theme('shib_login_block', generate_login_text(0), $shib_auth_config['auth_link_text']);
+  }
+  return NULL;
+}
 
 /**
  * Generate the administration form of the Shibboleth authentication module
