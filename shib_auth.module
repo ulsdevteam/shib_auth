@@ -35,8 +35,8 @@ function shib_auth_config($variable) {
                      'username_variable' => 'REMOTE_USER',
                      'logout url' => $base_url,
                      'link_text' => t('Shibboleth Login'),
-                     'shib_auth_full_handler_url' => shib_auth_get_handler_base(). variable_get('wayf_uri','/DS'),
-                     'shib_auth_full_logout_url' => shib_auth_get_handler_base() ."/Logout",
+                     'full_handler_url' => shib_auth_get_handler_base(). variable_get('wayf_uri','/DS'),
+                     'full_logout_url' => shib_auth_get_handler_base() ."/Logout",
                );
 
   if (array_key_exists($variable, $var_store)) return variable_get("shib_auth_$variable", $var_store[$variable]);
@@ -583,8 +583,8 @@ function shib_auth_init() {
  * @return handler base
  */
 function shib_auth_get_handler_base() {
-  $handlerurl = shib_auth_config('handler_url');
-  $handlerprotocol = shib_auth_config('handler_protocol');
+  $handlerurl = variable_get('handler_url','/Shibboleth.sso');
+  $handlerprotocol = variable_get('handler_protocol','https');
   if (ereg("^http[s]{0,1}://", $handlerurl) ) {
     // If handlerurl is an absolute path
     return $handlerurl;
