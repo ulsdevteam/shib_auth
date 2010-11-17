@@ -671,13 +671,11 @@ function generate_login_text($inform) {
 
   if (!$user->uid||shib_auth_config('account_linking')) {
 
-    $block_content = '';
+    $login_url = '';
 
     // If there is no session yet then we should put the login text into the block
     if (!$user->uid)
-      $block_content  .= "<p><b><a href=\"" . shib_auth_generate_login_url() . "\">"
-                      . shib_auth_config('link_text')
-                      . "</a></b></p>";
+      $login_url  .=shib_auth_generate_login_url();
     //if uid is greater than 1 and user not yet authenticated with shib, display this message in user/edit
     else if ($inform && $_SESSION['authentication'] != 'shib_auth' && $user->uid > 1) {
       $login_url = $handler .'?target='. urlencode($url_to_return) . $forceauthn;
@@ -784,7 +782,7 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
         case 0:
           $block = array(
           'subject' => t('Shibboleth login'),
-          'content' => theme('shib_login_block', generate_login_text(0), $shib_auth_config['auth_link_text']) );
+          'content' => theme('shib_login_block', generate_login_text(0), shib_auth_config('link_text')) );
         break;
       }
       return $block;
