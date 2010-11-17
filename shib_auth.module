@@ -7,7 +7,7 @@
  * This module allow administrators to enable Shibboleth based authentication on their drupal installation.
  */
 
-/** 
+/**
  * We should insert some DISCLAIMER here, what do you think?
  */
 
@@ -638,6 +638,7 @@ function shib_auth_perm() {
 function shib_auth_generate_login_url() {
 
   $sessioninitiator = shib_auth_config('full_handler_url');
+#  print_r($sessioninitiator);die;
   //Check whether clean url and i18 is enabled, and insert ?q=/ in the return url if not
   $url_prefix = '';
   if (!module_exists("i18n") && !variable_get('clean_url', FALSE)) {
@@ -649,12 +650,12 @@ function shib_auth_generate_login_url() {
     $forceauthn = '&forceAuthn=1';
 
   $url_to_return = (isset($_SERVER['HTTPS'])||
-                   (shib_auth_config('force_https')&&substr($sessioninitiator,0,5)=='https') ?
-                   'https' : 'http') 
+                   (shib_auth_config('force_https') && substr($sessioninitiator, 0, 5) == 'https') ?
+                   'https' : 'http')
                            .'://'. $_SERVER['HTTP_HOST']
                            . url('<front>')
                            . $url_prefix
-                           .'/shib_login/'
+                           .'shib_login/'
                            . $_GET['q'];
 
   return "$sessioninitiator?target=" . urlencode($url_to_return) . $forceauthn;
@@ -794,10 +795,8 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
  *
  */
 function _login_block_content() {
-  global $shib_auth_config;
-
   if (user_is_anonymous()) {
-    return theme('shib_login_block', generate_login_text(0), $shib_auth_config['auth_link_text']);
+    return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('link_text'));
   }
   return NULL;
 }
