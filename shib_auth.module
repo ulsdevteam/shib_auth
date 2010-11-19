@@ -16,6 +16,7 @@ function shib_auth_config($variable) {
   global $base_url;
 
   $var_store = array('account_linking' => FALSE,
+                     'account_linking_text' => t('Link this account with Shibboleth.'),
                      'auto_destroy_session' => FALSE,
                      'debug_state' => FALSE,
                      'define_username' => FALSE,
@@ -59,9 +60,6 @@ function shib_auth_footer() {
     drupal_add_js($base.'/isPassive.js','module','footer');
   }
 }
-
-
-
 
 /**
  * Display help and module information
@@ -505,7 +503,7 @@ function shib_auth_init() {
   //footer currently contains only ispassive script, if it was enabled
 
   //TODO: Why is this function calling here? Isn't this function the implementation of hook_footer?
-  shib_auth_footer();
+  #shib_auth_footer();
 
   $consent_accepted = FALSE;
 
@@ -662,31 +660,6 @@ function shib_auth_generate_login_url() {
 }
 
 /**
- * Generate the login text in HTML format using the 't' function
- * @param inform distinct login message whether it is in left block or in user/edit for account linking
- * @returns HTML text of the login form
- */
-function generate_login_text($inform) {
-//TODO: rename this function
-  global $user;
-
-  if (!$user->uid||shib_auth_config('account_linking')) {
-
-    $login_url = '';
-
-    // If there is no session yet then we should put the login text into the block
-    if (!$user->uid)
-      $login_url  .=shib_auth_generate_login_url();
-    //if uid is greater than 1 and user not yet authenticated with shib, display this message in user/edit
-    else if ($inform && $_SESSION['authentication'] != 'shib_auth' && $user->uid > 1) {
-      $login_url = $handler .'?target='. urlencode($url_to_return) . $forceauthn;
-    }
-
-    return $login_url;
-  }
-} // function generate_login_text()
-
-/**
  * Generate the menu element to access the Shibboleth authentication module's administration page
  * @returns HTML text of the administer menu element
  */
@@ -782,7 +755,7 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
         case 0:
           $block = array(
             'subject' => t('Shibboleth login'),
-            'content' =>  _login_block_content(),
+            'content' =>  _login_url_html(),
           );
         break;
       }
@@ -794,9 +767,17 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
  * Generate the login block content if user not logged in
  *
  */
-function _login_block_content() {
-  if (user_is_anonymous()) {
+function _login_url_html($is_account_linking = FALSE) {
+  global $user;
+
+  //add theme css
+  drupal_add_css(drupal_get_path('module', 'shib_auth') .'/shib_auth.css');
+
+  if ($user->uid === 0 AND $is_account_linking === FALSE) {
     return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('link_text'));
+  }
+  elseif ($_SESSION['authentication'] !== 'shib_auth' AND $user->uid > 1 AND $is_account_linking) {
+    return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('account_linking_text'));
   }
   return NULL;
 }
@@ -818,18 +799,16 @@ function shib_auth_form_alter(&$form, &$form_state, $form_id) {
   global $user;
   if ($form_id == 'user_login') {
     $form['shibboleth'] = array(
-      '#type' => 'hidden',
-      '#weight' => -1,
-      '#prefix' => generate_login_text(0),
-      '#suffix' => '',
+      '#type' => 'markup',
+      '#weight' => -20,
+      '#value' => _login_url_html(),
     );
   }
   if (($form_id == 'user_profile_form') && ($form['#parameters'][2]->uid == $user->uid)) {
     $form['shibboleth'] = array(
-	'#type' => 'markup',
-	'#weight' => -1,
-	'#value' => generate_login_text(1),
-	'#suffix' => '',
+      '#type' => 'markup',
+      '#weight' => -1,
+      '#value' => _login_url_html(TRUE),
     );
   }
 }

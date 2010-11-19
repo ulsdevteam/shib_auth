@@ -35,6 +35,13 @@ function shib_auth_admin_general() {
     '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
   );
 
+  $form['shib_handler_settings']['shib_auth_link_text'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Shibboleth login link text'),
+    '#default_value' => variable_get('shib_auth_link_text', t('Login Shibboleth')),
+    '#description'   => t('The text of the login link. You can change this text on the Shibbolet login block settings form too!'),
+  );
+
   $form['shib_handler_settings']['shib_auth_force_https'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Force HTTPS on login'),
@@ -83,6 +90,13 @@ function shib_auth_admin_general() {
     '#default_value' => variable_get('shib_auth_account_linking', FALSE),
   );
 
+  $form['shib_attribute_settings']['shib_auth_account_linking_text'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Shibboleth account linking text'),
+    '#default_value' => variable_get('shib_auth_account_linking_text',  t('Link this account with Shibboleth.')),
+    '#description'   => t('The text of the account linking link what is showing in the user change form.'),
+  );
+
   $form['shib_attribute_debug'] = array(
     '#type'          => 'fieldset',
     '#title'         => 'Debugging options',
@@ -112,52 +126,51 @@ function shib_auth_admin_general() {
 function shib_auth_custom_email() {
   global $user;
   $form = array();
-$auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')]);
-$authmap_username = db_fetch_array($auth_map_un_query);
-if ($authmap_username)
-{
-  $form['consent'] = array(
-      '#value' => t('The terms of agreement has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit after your acceptance. Version you accepted: @accepted, document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => variable_get('shib_auth_terms_ver', '') )),
-    );
-}
-else {
-  IF (variable_get('shib_auth_define_username', FALSE) && !$user->uid) {
-    $form['custom_username'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Desired username'),
-      '#default_value' => $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')],
-      '#size' => 60,
-    );
-    }
-    else  {
-      $form['custom_usernamem'] = array(
-      '#value' => t('<b>Username:</b> <br>'),
+  $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')]);
+  $authmap_username = db_fetch_array($auth_map_un_query);
+  if ($authmap_username)
+  {
+    $form['consent'] = array(
+        '#value' => t('The terms of agreement has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit after your acceptance. Version you accepted: @accepted, document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => variable_get('shib_auth_terms_ver', '') )),
       );
+  }
+  else {
+    if (variable_get('shib_auth_define_username', FALSE) && !$user->uid) {
       $form['custom_username'] = array(
-      '#value' => $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')],
-      '#suffix' => '<br>',
+        '#type' => 'textfield',
+        '#title' => t('Desired username'),
+        '#default_value' => $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')],
+        '#size' => 60,
       );
-    }
-  IF (variable_get('shib_auth_enable_custom_mail', FALSE) && !$user->uid) {
-    $form['custom_mail'] = array(
-      '#type' => 'textfield',
-      '#title' => t('E-mail'),
-      '#default_value' => $_SERVER[variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL')],
-      '#size' => 60,
-    );
-    }
-    else  {
-      $form['custom_mailm'] = array(
-      '#value' => t('<b>E-mail:</b> <br>'),
-      );
+      }
+      else  {
+        $form['custom_usernamem'] = array(
+        '#value' => t('<b>Username:</b> <br>'),
+        );
+        $form['custom_username'] = array(
+        '#value' => $_SERVER[variable_get('shib_auth_username_variable', 'REMOTE_USER')],
+        '#suffix' => '<br>',
+        );
+      }
+    if (variable_get('shib_auth_enable_custom_mail', FALSE) && !$user->uid) {
       $form['custom_mail'] = array(
-      '#value' => $_SERVER[variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL')],
-      '#suffix' => '<br>',
+        '#type' => 'textfield',
+        '#title' => t('E-mail'),
+        '#default_value' => $_SERVER[variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL')],
+        '#size' => 60,
       );
-      
-    }
-}
-  IF (variable_get('shib_auth_terms_accept', FALSE)) {
+      }
+      else  {
+        $form['custom_mailm'] = array(
+        '#value' => t('<b>E-mail:</b> <br>'),
+        );
+        $form['custom_mail'] = array(
+        '#value' => $_SERVER[variable_get('shib_auth_email_variable', 'HTTP_SHIB_MAIL')],
+        '#suffix' => '<br>',
+        );
+      }
+  }
+  if (variable_get('shib_auth_terms_accept', FALSE)) {
     $form['accept'] = array(
     '#type'          => 'checkbox',
     '#title'         => 'I accept the <a href="'. variable_get('shib_auth_terms_url', '')
@@ -171,6 +184,7 @@ else {
 
   return $form;
 } // function shib_auth_custom_email()
+
 /**
  * Form validator
  * @param form form identifier
