@@ -636,13 +636,10 @@ function shib_auth_perm() {
 function shib_auth_generate_login_url() {
 
   $sessioninitiator = shib_auth_config('full_handler_url');
-#  print_r($sessioninitiator);die;
-  //Check whether clean url and i18 is enabled, and insert ?q=/ in the return url if not
-  $url_prefix = '';
-  if (!module_exists("i18n") && !variable_get('clean_url', FALSE)) {
-    $url_prefix = '?q=/';
+  //Check whether clean url and i18 is enabled, and insert / in return url as a prefix
+  if (module_exists("i18n") && !variable_get('clean_url', FALSE)) {
+    $url_prefix = '/';
   }
-
   $forceauthn = '';
   if (shib_auth_config('forceauthn'))
     $forceauthn = '&forceAuthn=1';

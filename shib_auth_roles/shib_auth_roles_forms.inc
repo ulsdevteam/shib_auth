@@ -40,11 +40,15 @@ function shib_auth_edit_form($options) {
     '#options' => $roles,
   );
 
+  $form['sticky_markup'] = array(
+    '#value' => '<b>Role type:</b>',
+  );
+
   $form['shib_auth_new_sticky'] = array(
     '#type' => 'checkbox',
     '#title' => t('Sticky'),
     '#default_value' => $options[5],
-    '#description'    => t('Set role to be sticky, if you want the role to be saved permanently to the users'),
+    '#description'    => t('Set rule to be sticky, if you want the role(s) to be saved permanently to the users'),
   );
 
   $form['submit'] = array(
