@@ -636,11 +636,8 @@ function shib_auth_perm() {
 function shib_auth_generate_login_url() {
 
   $sessioninitiator = shib_auth_config('full_handler_url');
-  //Check whether clean url and i18 is enabled, and insert / in return url as a prefix
-  if (module_exists("i18n") && !variable_get('clean_url', FALSE)) {
-    $url_prefix = '/';
-  }
   $forceauthn = '';
+
   if (shib_auth_config('forceauthn'))
     $forceauthn = '&forceAuthn=1';
 
@@ -648,9 +645,7 @@ function shib_auth_generate_login_url() {
                    (shib_auth_config('force_https') && substr($sessioninitiator, 0, 5) == 'https') ?
                    'https' : 'http')
                            .'://'. $_SERVER['HTTP_HOST']
-                           . url('<front>')
-                           . $url_prefix
-                           .'shib_login/'
+                           . url('shib_login/')
                            . $_GET['q'];
 
   return "$sessioninitiator?target=" . urlencode($url_to_return) . $forceauthn;
