@@ -311,7 +311,7 @@ function shib_auth_admin_advanced() {
     '#type'          => 'textfield',
     '#title'         => t('URL of the document'),
     '#default_value' => shib_auth_config('terms_url'),
-    '#description'   => t('If it is a node, it won\'t be accessible throughout the registration process'),
+    '#description'   => t('If it is a drupal content, please start the link with /'),
     '#prefix' => '<table border= \'0\'><tr><td>',
     '#suffix' => '</td>',
   );
