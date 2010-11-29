@@ -375,46 +375,46 @@ function shib_auth_load_from_authmap($uname) {
 
 function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
   if (!valid_email_address($custom_mail)) shib_auth_error("Please enter a valid e-mail address");
-	  // if custom username not enabled
-	  else if (shib_auth_config('define_username')==0)  {
-	    // and email isn't used by another registered drupal user
-	      shib_auth_save_authmap($uname, $uname, $custom_mail);
-	  }
-	    //if the username is also enabled
-	  else if ((shib_auth_config('define_username')==1) && isset($custom_username) && $custom_username) {
-	    if ($error = user_validate_name($custom_username)) 
-		shib_auth_error($error);
-	    else {
-	      // and it isn't used by another registered drupal user
-	      $un_already_used_query = db_query("SELECT * FROM {users} WHERE name='%s'", $custom_username);
-	      $un_already_used = db_fetch_object($un_already_used_query);
-	      if ($un_already_used) {
-		shib_auth_error("Error saving user account. User name is already used.");
-	      }
-		  //register the user with the given address, and the shib provided username
-	      else {
-		    shib_auth_save_authmap($uname, $custom_username, $custom_mail);
-	      }
-	    }
-	  }
-	// If the consent config enabled and it isn't accepted
+  // if custom username not enabled
+  else if (shib_auth_config('define_username')==0)  {
+    // and email isn't used by another registered drupal user
+    shib_auth_save_authmap($uname, $uname, $custom_mail);
+  }
+  //if the username is also enabled
+  else if ((shib_auth_config('define_username')==1) && isset($custom_username) && $custom_username) {
+    if ($error = user_validate_name($custom_username)) 
+      shib_auth_error($error);
+    else {
+      // and it isn't used by another registered drupal user
+      $un_already_used_query = db_query("SELECT * FROM {users} WHERE name='%s'", $custom_username);
+      $un_already_used = db_fetch_object($un_already_used_query);
+      if ($un_already_used) {
+	shib_auth_error("Error saving user account. User name is already used.");
+      }
+      //register the user with the given address, and the shib provided username
+      else {
+	shib_auth_save_authmap($uname, $custom_username, $custom_mail);
+      }
+    }
+  }
 }
 
 function shib_auth_custom_username($uname, $custom_username, $umail_single) {
-	  //validate it
-	  if ($error = user_validate_name($custom_username)) shib_auth_error($error);
-	  else {
-	    $un_already_used_query = db_query("SELECT * FROM {users} WHERE name='%s'", $custom_username);
-	    $un_already_used = db_fetch_object($un_already_used_query);
-	    if ($un_already_used) {
-	      shib_auth_error("Error saving user account. User name is already used.");
-	    }
-		  //register the user with the given username, and the shib provided e-mail address
-	    else {
-	    shib_auth_save_authmap($uname, $custom_username, $umail_single);
-	    }
-	  }
+  //validate it
+  if ($error = user_validate_name($custom_username)) shib_auth_error($error);
+  else {
+    $un_already_used_query = db_query("SELECT * FROM {users} WHERE name='%s'", $custom_username);
+    $un_already_used = db_fetch_object($un_already_used_query);
+    if ($un_already_used) {
+      shib_auth_error("Error saving user account. User name is already used.");
+    }
+    //register the user with the given username, and the shib provided e-mail address
+    else {
+      shib_auth_save_authmap($uname, $custom_username, $umail_single);
+    }
+  }
 }
+
 /**
  * If any customization or consent option is checked, the custom form will show up before registering.
  * 
@@ -441,7 +441,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	    else if (shib_auth_config('define_username') && isset($custom_username) && $custom_username)
 	      shib_auth_custom_username($uname, $custom_username, $umail_single);
 	    else if ($consent_accepted && shib_auth_config('terms_accept'))
-	    shib_auth_save_authmap($uname, $uname, $umail_single);
+	      shib_auth_save_authmap($uname, $uname, $umail_single);
 	    // ****** USER CONSENT ********** 
 	    
 	  }
