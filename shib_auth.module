@@ -373,27 +373,8 @@ function shib_auth_load_from_authmap($uname) {
   return db_fetch_array($auth_map_query); 
 }
 
-/**
- * If any customization or consent option is checked, the custom form will show up before registering.
- * 
- */
-function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
-  if (shib_auth_config('enable_custom_mail') ||
-    ($umail_single && shib_auth_config('define_username')) ||
-      shib_auth_config('terms_accept')) {
-      // if custom something was enabled on the admin form, save it as a variable
-      if ($_POST['form_id'] == 'shib_auth_custom_data') {
-	if ($_POST['custom_mail'])	$custom_mail = $_POST['custom_mail'];
-	if ($_POST['custom_username']) 	$custom_username = $_POST['custom_username'];
-	if ($_POST['accept'])           $consent_accepted = $_POST['accept'];
-      }
-  // ****** CUSTOM MAIL **********
-      //if the user provided the custom mail string on the custom data form, and it is not empty
-      if (isset($custom_mail) && $custom_mail) { 
-	//If the consent is accepted or it isn't configured
-	if (($consent_accepted && shib_auth_config('terms_accept')) ||
-	  !shib_auth_config('terms_accept')) {
-	  if (!valid_email_address($custom_mail)) shib_auth_error("Please enter a valid e-mail address");
+function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
+  if (!valid_email_address($custom_mail)) shib_auth_error("Please enter a valid e-mail address");
 	  // if custom username not enabled
 	  else if (shib_auth_config('define_username')==0)  {
 	    // and email isn't used by another registered drupal user
@@ -417,14 +398,9 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	    }
 	  }
 	// If the consent config enabled and it isn't accepted
-	} else shib_auth_error("You have to accept Terms and conditions to proceed");
-      }
+}
 
-  // ****** CUSTOM USERNAME **********
-	    //if there is no custom email option, but the user can define custom username
-      else if (shib_auth_config('define_username') && isset($custom_username) && $custom_username)        { 
-	//If the consent is accepted or it isn't configured
-	if (($consent_accepted && shib_auth_config('terms_accept')) || !shib_auth_config('terms_accept')) {
+function shib_auth_custom_username($uname, $custom_username, $umail_single) {
 	  //validate it
 	  if ($error = user_validate_name($custom_username)) shib_auth_error($error);
 	  else {
@@ -438,14 +414,39 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	    shib_auth_save_authmap($uname, $custom_username, $umail_single);
 	    }
 	  }
-	}
-	// If the consent config enabled and it isn't accepted
-	else shib_auth_error("You have to accept Terms and conditions to proceed");
+}
+/**
+ * If any customization or consent option is checked, the custom form will show up before registering.
+ * 
+ */
+function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
+  if (shib_auth_config('enable_custom_mail') ||
+    ($umail_single && shib_auth_config('define_username')) ||
+      shib_auth_config('terms_accept')) {
+      // if custom something was enabled on the admin form, save it as a variable
+      if ($_POST['form_id'] == 'shib_auth_custom_data') {
+	if ($_POST['custom_mail'])	$custom_mail = $_POST['custom_mail'];
+	if ($_POST['custom_username']) 	$custom_username = $_POST['custom_username'];
+	if ($_POST['accept'])           $consent_accepted = $_POST['accept'];
       }
-  // ****** USER CONSENT **********
-      else if (isset($consent_accepted) && $consent_accepted && shib_auth_config('terms_accept')) {
-	shib_auth_save_authmap($uname, $uname, $umail_single);
-      }
+
+	//If the consent is accepted or it isn't configured
+	if (($consent_accepted && shib_auth_config('terms_accept')) ||
+	  !shib_auth_config('terms_accept')) {
+// ****** CUSTOM MAIL **********
+      //if the user provided the custom mail string on the custom data form, and it is not empty
+	    if (isset($custom_mail) && $custom_mail)
+	      shib_auth_custom_mail($uname, $custom_username, $custom_mail);
+// ****** CUSTOM USERNAME **********
+	    //if there is no custom email option, but the user can define custom username
+	    else if (shib_auth_config('define_username') && isset($custom_username) && $custom_username)
+	      shib_auth_custom_username($uname, $custom_username, $umail_single);
+	  }
+// ****** USER CONSENT ********** 
+	  else if (isset($consent_accepted) && $consent_accepted && shib_auth_config('terms_accept'))
+	    shib_auth_save_authmap($uname, $uname, $umail_single);
+	  else shib_auth_error("You have to accept Terms and conditions to proceed");
+
   // ****** SHOW FORM, AND REDIRECT ********
   //We want to show the custom mail input form, and then redirect the user to the node, he wanted to go
       else if ($_GET['q']!='shib_auth/get_custom_data') {
