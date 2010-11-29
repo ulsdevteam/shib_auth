@@ -430,6 +430,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	if ($_POST['accept'])           $consent_accepted = $_POST['accept'];
       }
 
+       
 	//If the consent is accepted or it isn't configured
 	if (($consent_accepted && shib_auth_config('terms_accept')) ||
 	  !shib_auth_config('terms_accept')) {
@@ -441,19 +442,24 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	    //if there is no custom email option, but the user can define custom username
 	    else if (shib_auth_config('define_username') && isset($custom_username) && $custom_username)
 	      shib_auth_custom_username($uname, $custom_username, $umail_single);
-	  }
-// ****** USER CONSENT ********** 
-	  else if (isset($consent_accepted) && $consent_accepted && shib_auth_config('terms_accept'))
+	    else if ($consent_accepted && shib_auth_config('terms_accept'))
 	    shib_auth_save_authmap($uname, $uname, $umail_single);
-	  else shib_auth_error("You have to accept Terms and conditions to proceed");
+	    // ****** USER CONSENT ********** 
+	    
+	  }
+	  else if ($_GET['q']!='shib_auth/get_custom_data') {
+	    $_SESSION['redirected_to_custom_data_form'] = TRUE;
+	    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
+	    drupal_goto('shib_auth/get_custom_data'); 
+	  } 
+
+
+	  
+      
 
   // ****** SHOW FORM, AND REDIRECT ********
   //We want to show the custom mail input form, and then redirect the user to the node, he wanted to go
-      else if ($_GET['q']!='shib_auth/get_custom_data') {
-	$_SESSION['redirected_to_custom_data_form'] = TRUE;
-	$_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
-	drupal_goto('shib_auth/get_custom_data'); 
-      } 
+
     //then the user is redirected to the page, which she wanted to open before the auth process had been initiatedd
     if (isset($_SESSION['redirected_to_custom_data_form_url'])) {
       $redirect_url = $_SESSION['redirected_to_custom_data_form_url'];
