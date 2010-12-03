@@ -422,7 +422,7 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
 function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
   if (shib_auth_config('enable_custom_mail') ||
     ($umail_single && shib_auth_config('define_username')) ||
-      shib_auth_config('terms_accept')) {
+      (shib_auth_config('enable_custom_mail') || $umail_single) && shib_auth_config('terms_accept')) {
       // if custom something was enabled on the admin form, save it as a variable
       if ($_POST['form_id'] == 'shib_auth_custom_data') {
 	if ($_POST['custom_mail'])	$custom_mail = $_POST['custom_mail'];
@@ -440,25 +440,30 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	    //if there is no custom email option, but the user can define custom username
 	    else if (shib_auth_config('define_username') && isset($custom_username) && $custom_username)
 	      shib_auth_custom_username($uname, $custom_username, $umail_single);
+// ****** USER CONSENT ********** 
 	    else if ($consent_accepted && shib_auth_config('terms_accept'))
 	      shib_auth_save_authmap($uname, $uname, $umail_single);
-	    // ****** USER CONSENT ********** 
-	    
-	  }
-// ****** SHOW FORM, AND REDIRECT ********
+// ****** NO SUBMISSION - SHOW FORM, AND REMEMBER WHERE TO GO ********
 //We want to show the custom mail input form, and then redirect the user to the node, he wanted to go
-	  else if ($_GET['q']!='shib_auth/get_custom_data') {
+	    else if ($_GET['q']!='shib_auth/get_custom_data') {
+	    $_SESSION['redirected_to_custom_data_form'] = TRUE;
+	    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
+	    drupal_goto('shib_auth/get_custom_data'); 
+	  }
+	} else if ($_GET['q']!='shib_auth/get_custom_data') {
 	    $_SESSION['redirected_to_custom_data_form'] = TRUE;
 	    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
 	    drupal_goto('shib_auth/get_custom_data'); 
 	  } 
+	  
+
     //If everything was fine, the user is redirected to the page, which she wanted to open before the auth process had been initiatedd
     if (isset($_SESSION['redirected_to_custom_data_form_url'])) {
       $redirect_url = $_SESSION['redirected_to_custom_data_form_url'];
       unset($_SESSION['redirected_to_custom_data_form_url']);
       drupal_goto($redirect_url); 
     }
-  }
+  } else return 0;
 }
 
 function doing_account_linking() {
@@ -560,7 +565,7 @@ function shib_auth_init() {
 
     //If we have an e-mail address from the shib server, and there isn't any user with this address, create an account with these infos
     if ($umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') && 
-	!shib_auth_config('req_consent')) {       
+	!shib_auth_config('terms_accept')) {       
 	shib_auth_save_authmap($uname, $uname, $umail_single);
     }
 //********* CUSTOM OPTION ENABLED **********

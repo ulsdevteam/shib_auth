@@ -213,7 +213,7 @@ function shib_auth_save_roles()
 function shib_auth_roles_init()
 {
   module_load_include('inc', 'shib_auth_roles', 'forms');
-  if (shib_auth_session_valid())
+  if (shib_auth_session_valid() && !user_is_anonymous())
     shib_auth_assignroles();
 	//if this module is loaded, let we debug the newly assigned roles too - see shib_auth.module
 	shib_auth_debug();
