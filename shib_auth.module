@@ -415,6 +415,22 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
   }
 }
 
+
+function shib_auth_goto_custom_form() {
+  if ($_GET['q']!='shib_auth/get_custom_data') {
+    $_SESSION['redirected_to_custom_data_form'] = TRUE;
+    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
+    drupal_goto('shib_auth/get_custom_data'); 
+  } 
+}
+
+function shib_auth_submit_redirect() {
+  if (isset($_SESSION['redirected_to_custom_data_form_url'])) {
+    $redirect_url = $_SESSION['redirected_to_custom_data_form_url'];
+    unset($_SESSION['redirected_to_custom_data_form_url']);
+    drupal_goto($redirect_url); 
+  }
+}
 /**
  * If any customization or consent option is checked, the custom form will show up before registering.
  * 
@@ -444,26 +460,14 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 	    else if ($consent_accepted && shib_auth_config('terms_accept'))
 	      shib_auth_save_authmap($uname, $uname, $umail_single);
 // ****** NO SUBMISSION - SHOW FORM, AND REMEMBER WHERE TO GO ********
-//We want to show the custom mail input form, and then redirect the user to the node, he wanted to go
-	    else if ($_GET['q']!='shib_auth/get_custom_data') {
-	    $_SESSION['redirected_to_custom_data_form'] = TRUE;
-	    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
-	    drupal_goto('shib_auth/get_custom_data'); 
-	  }
-	} else if ($_GET['q']!='shib_auth/get_custom_data') {
-	    $_SESSION['redirected_to_custom_data_form'] = TRUE;
-	    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
-	    drupal_goto('shib_auth/get_custom_data'); 
-	  } 
-	  
-
-    //If everything was fine, the user is redirected to the page, which she wanted to open before the auth process had been initiatedd
-    if (isset($_SESSION['redirected_to_custom_data_form_url'])) {
-      $redirect_url = $_SESSION['redirected_to_custom_data_form_url'];
-      unset($_SESSION['redirected_to_custom_data_form_url']);
-      drupal_goto($redirect_url); 
-    }
-  } else return 0;
+//We want to show the custom mail input form, and save the node, he wanted to go
+	    else shib_auth_goto_custom_form();
+//CONSENT to be accepted
+	} else shib_auth_goto_custom_form();
+    //If everything was fine, the user is logged in, and redirected to the page, which she wanted to open before the auth process had been initiated
+    shib_auth_submit_redirect();
+    return true;
+  } else return false;
 }
 
 function doing_account_linking() {
