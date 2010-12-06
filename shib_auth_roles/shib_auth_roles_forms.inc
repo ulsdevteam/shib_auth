@@ -36,7 +36,7 @@ function shib_auth_edit_form($options) {
   $form['shib_auth_roles'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Roles'),
-    '#default_value' => count($options[3])>1||(count($options[3])==1 && $options[3] != "")?array_keys($options[3]):array(),
+    '#default_value' => count($options[3])>1||(count($options[3])==1 && $options[3] != "")?$options[3]:array(),
     '#options' => $roles,
   );
 
@@ -94,9 +94,12 @@ function _shib_auth_list_rules() {
   $retval = '<table style="width: 100%;"><tr><th>Attribute</th><th>RegExp</th><th>Role(s)</th><th>Sticky</th><th>Actions</th></tr>'."\n";
   $counter = 0;
   while ($rule = db_fetch_array($rules)) {
-    $roles = unserialize(urldecode($rule['role']));
+    $roles = unserialize($rule['role']);
     $roles_list = '';
-    if (!empty($roles)) $roles_list = implode(', ', $roles);
+    foreach ($roles as $role) {
+      $roles_list .= shib_auth_roles_get_rolename($role).' ';
+    }
+//     if (!empty($roles)) $roles_list = implode(', ', $roles);
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
     $retval .= '<tr><td>'. $rule['field'] .'</td><td>'. urldecode($rule['regexpression']) .'</td><td>'. $roles_list .'</td><td>'. $sticky  .'</td>';
     $retval .= '<td stype="text-align: right;">';
@@ -141,7 +144,7 @@ function shib_auth_new_rule($received_form) {
       $roles = array();
       if (is_array($received_form['post']['shib_auth_roles'])) {
         foreach ($received_form['post']['shib_auth_roles'] as $role_id) {
-          $roles[$role_id] = shib_auth_roles_get_role_by_id($role_id);
+          $roles[] = $role_id;
         }
       }
       //save the new element into an array
@@ -149,7 +152,7 @@ function shib_auth_new_rule($received_form) {
         'id'            => $new_id,
         'field'         => urlencode($received_form['post']['shib_auth_new_attrib']),
         'regexpression' => urlencode($received_form['post']['shib_auth_new_regexp']),
-        'role'          => urlencode(serialize($roles)),
+        'role'          => serialize($roles),
         'sticky'        => urlencode($received_form['post']['shib_auth_new_sticky']),
       );
       //write it in a record
@@ -185,7 +188,7 @@ function shib_auth_edit_rule($form_state, $id) {
     $rule = db_query("SELECT * FROM {shib_auth} WHERE id = %d", array($id));
     $db_entry = db_fetch_array($rule);
     return shib_auth_edit_form(
-      array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize(urldecode($db_entry['role'])), 'Apply', $db_entry['sticky'])
+      array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize($db_entry['role']), 'Apply', $db_entry['sticky'])
     );
   }
 

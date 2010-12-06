@@ -150,14 +150,14 @@ function shib_auth_process_rule($rule)
     foreach (explode(';', $_SERVER[$fieldname]) as $value) {
       //check if the RegEx fits to one of the value of the server field
       if (preg_match($expression, trim($value))) {
-	$roles = unserialize(urldecode($rule['role']));
+	$roles = unserialize($rule['role']);
 	// there is a match, so give this user the specified role(s)
 	
 	if (empty($roles)) // null-rule, NOP
 	  return 0;
 	
-	foreach ($roles as $role_id => $role_name) {
-	  
+	foreach ($roles as $role_id) {
+	  $role_name = shib_auth_get_rolename($role_id);
 	  if ($user->roles[$role_id] == $role_name) 
 	    continue; // NOP if the user already has the given role
 	  
@@ -205,7 +205,21 @@ function shib_auth_save_roles()
     }
   }
 }
- 
+
+
+function shib_auth_roles_generate_rolenames() {
+  if (!isset($_SESSION['shib_auth_rolecache'])) {
+  $query = db_query('SELECT rid, name FROM {role}');
+  while ($item = db_fetch_array($query))
+    $rolecache[$item['rid']] = $item['name'];
+
+  $_SESSION['shib_auth_rolecache'] = $rolecache;
+  }
+}
+
+function shib_auth_roles_get_rolename($rid) {
+  return $_SESSION['shib_auth_rolecache'][$rid];
+}
 
 /**
  * This function also gives roles to the user, if certain server fields were provided by the Shibboleth server
@@ -213,8 +227,12 @@ function shib_auth_save_roles()
 function shib_auth_roles_init()
 {
   module_load_include('inc', 'shib_auth_roles', 'forms');
-  if (shib_auth_session_valid() && !user_is_anonymous())
+    shib_auth_roles_generate_rolenames();
+
+  if (shib_auth_session_valid() && !user_is_anonymous()){ 
+
     shib_auth_assignroles();
+  }
 	//if this module is loaded, let we debug the newly assigned roles too - see shib_auth.module
 	shib_auth_debug();
 } // function shib_auth_roles_init()
