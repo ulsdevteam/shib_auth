@@ -26,10 +26,14 @@ function shib_auth_roles_uninstall() {
   drupal_set_message(t('Shibboleth role assignment module uninstalled successfully.'));
 }
 
-function shib_auth_roles_update_6041() {
-  $ret = array();
-  $schema = shib_auth_schema();
-  $tables = array('shib_auth', 'shib_authmap');
+/**
+ * Implementation of hook_update().
+ *
+ * Must run after updating to 6.x 4.x
+ */
+function shib_auth_roles_update_6040() {
+  $schema = shib_auth_roles_schema();
+  $tables = array('shib_authmap');
   // make sure these tables exist
   foreach ($tables AS $table) {
     if (!db_table_exists($table)) {
@@ -42,10 +46,9 @@ function shib_auth_roles_update_6041() {
     $old_role = unserialize(urldecode($entry['role']));
     if ($old_role) {
       $new_role = serialize(array_keys($old_role));
-      $ret[] = db_query("UPDATE {shib_auth} SET role='%s' WHERE id=%d",$new_role,$entry['id']);
+      db_query("UPDATE {shib_auth} SET role='%s' WHERE id=%d",$new_role,$entry['id']);
     }
   }
-  return $ret;
 }
 /**
  * Implements hook_schema().
