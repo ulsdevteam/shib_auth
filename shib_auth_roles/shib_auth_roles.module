@@ -157,7 +157,7 @@ function shib_auth_process_rule($rule)
 	  return 0;
 	
 	foreach ($roles as $role_id) {
-	  $role_name = shib_auth_get_rolename($role_id);
+	  $role_name = shib_auth_roles_get_rolename($role_id);
 	  if ($user->roles[$role_id] == $role_name) 
 	    continue; // NOP if the user already has the given role
 	  
