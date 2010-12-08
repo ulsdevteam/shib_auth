@@ -3,9 +3,9 @@
 
 /**
  * @file
- * This is a Shibboleth authentication module.
+ * This is a Shibboleth authentication role assignment module.
  *
- * This module allow administrators to enable Shibboleth based authentication on their drupal installation.
+ * This module allow administrators to enable Shibboleth based role assignment with shibboleth module.
  */
 
 /**
@@ -89,26 +89,12 @@ function shib_auth_roles_menu()
   return $items;
 } // function shib_auth_roles_menu()
 
-function shib_auth_roles_get_role_by_id($id)
-{
-  // Create query parameters
-  
-  $params = sprintf("SELECT name FROM {role} WHERE rid = '%s'", $id);
-  // retrieve roles from system
-  $result = db_query($params);
-  
-  while ($row = db_fetch_array($result)) {
-    $role = $row['name'];
-  }
-  
-  return $role;
-}
 /**
  * The admin can define authorization rules based on the server variables 
  * (possibly provided by Shibboleth IdP) to give roles to users.
  * The rules can be defined as a [server field - Regexp - role(s)] triplet
  */
-function shib_auth_assignroles()
+function shib_auth_roles_assignroles()
 {
   global $user;
   $profile_changed=0;
@@ -121,13 +107,13 @@ function shib_auth_assignroles()
   while ($rule = db_fetch_array($rules)) {
     if($profile_changed && !$rule['sticky']) {
       // This is the first non-sticky rule, and sticky rules have modified the user's roles
-      shib_auth_save_roles();
+      shib_auth_roles_save_roles();
       $profile_changed = 0;
     }
-    $profile_changed += shib_auth_process_rule($rule); // Only sticky rules return >0
+    $profile_changed += shib_auth_roles_process_rule($rule); // Only sticky rules return >0
   }
   if ($profile_changed) // must do this in case there's no non-sticky rule
-    shib_auth_save_roles();
+    shib_auth_roles_save_roles();
 
   $user->roles = array_filter($user->roles);
   
@@ -139,7 +125,7 @@ function shib_auth_assignroles()
   $_SESSION['rolelog'] = '1';
 }
 
-function shib_auth_process_rule($rule)
+function shib_auth_roles_process_rule($rule)
 {
   global $user;
   $profile_changed=0; // is a constant 0 when the rule is not a sticky one
@@ -188,7 +174,7 @@ function shib_auth_process_rule($rule)
  *  Unfortunately if we called user_save() on updating roles, we would possibly lose profile fields.
  *  Therefore we hack with the {users_roles} table
  */
-function shib_auth_save_roles() 
+function shib_auth_roles_save_roles() 
 {
   global $user;
   
@@ -206,22 +192,33 @@ function shib_auth_save_roles()
   }
 }
 
-
+/**
+ * This function gets the username
+ * @param $force If it is TRUE, the cache is regenerated
+ */
 function shib_auth_roles_generate_rolenames($force) {
-  if (!isset($_SESSION['shib_auth_rolecache'])||$force) {
-  unset($_SESSION['shib_auth_rolecache']);
+  if (!isset($_SESSION['shib_auth_rolecache']) || $force) {
+  $_SESSION['shib_auth_rolecache'] = array();
   $query = db_query('SELECT rid, name FROM {role}');
   while ($item = db_fetch_array($query))
     $rolecache[$item['rid']] = $item['name'];
-
   $_SESSION['shib_auth_rolecache'] = $rolecache;
   }
 }
 
+/**
+ * This function gets the username
+ * @param $rid the id of the role
+ * @return the role name from the cache
+ */
 function shib_auth_roles_get_rolename($rid) {
   return $_SESSION['shib_auth_rolecache'][$rid];
 }
 
+/**
+ * This function regenerates role cache, if any of the role editing forms opened
+ * Implements hook_form_alter
+ */
 function shib_auth_roles_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id='user_admin_role') {
     shib_auth_roles_generate_rolenames(TRUE);
@@ -234,14 +231,13 @@ function shib_auth_roles_form_alter(&$form, &$form_state, $form_id) {
 function shib_auth_roles_init()
 {
   module_load_include('inc', 'shib_auth_roles', 'forms');
-    shib_auth_roles_generate_rolenames(FALSE);
-
+  //generate cache if it doesn't exists
+  shib_auth_roles_generate_rolenames(FALSE);
   if (shib_auth_session_valid() && !user_is_anonymous()){ 
-
-    shib_auth_assignroles();
+    shib_auth_roles_assignroles();
   }
-	//if this module is loaded, let we debug the newly assigned roles too - see shib_auth.module
-	shib_auth_debug();
+  //if this module is loaded, let we debug the newly assigned roles too - see shib_auth.module
+  shib_auth_debug();
 } // function shib_auth_roles_init()
 
 
