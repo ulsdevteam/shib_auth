@@ -6,21 +6,7 @@ Written by Tamás Dévai: tamas.devai@niif.hu
 ***********************************************************
 
 Module description:
-You can use Shibboleth 1.3 or above authentication whit this module in Drupal
-system.
+Provides authentication with Shibboleth SP (version 1.3 or 2.x)
 
-Configure:
-The Shibboleth handler's URL: This is the shib SP handler url. By default is
-/Shibboleth.sso, but you can change that in apache config. REQUIRED
-
-The Shibboleth handler's protocol: http or https. Https is very recommended in
-production site! REQUIRED
-
-The WAYF's location: this is url of the Where Are You From service. OPTIONAL
-
-Generated log-in link from the settings: 
-  - with WAYF
-    https://example.com/Shibboleth.sso/WAYF/INSTITUTE-WAYF?target=https://example.com/
-
-  - whitout WAYF
-    https://example.com/Shibboleth.sso/?target=https://example.com/
+For documentation please refer to: 
+https://wiki.aai.niif.hu/index.php/DrupalShibbolethReadmeDev

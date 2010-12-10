@@ -45,9 +45,7 @@ function shib_auth_admin_general() {
   $form['shib_handler_settings']['shib_auth_force_https'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Force HTTPS on login'),
-    '#description'   => t('If the Shibboleth login handler uses Secure HTTP connections than the user
-    will forced with this feature to return also to secure page (by using HTTPS) even the visited url
-    was unsecure (HTTP).'),
+    '#description'   => t('The user will be redirected to HTTPS'),
     '#default_value' => shib_auth_config('force_https'),
   );
 
@@ -94,7 +92,7 @@ function shib_auth_admin_general() {
     '#type'          => 'textfield',
     '#title'         => t('Shibboleth account linking text'),
     '#default_value' => shib_auth_config('account_linking_text'),
-    '#description'   => t('The text of the account linking link what is showing in the user change form.'),
+    '#description'   => t('The text of the link providing account linking shown on the user settings form.'),
   );
 
   $form['shib_attribute_debug'] = array(
@@ -131,7 +129,7 @@ function shib_auth_custom_data() {
   if ($authmap_username)
   {
     $form['consent'] = array(
-        '#value' => t('The terms of agreement has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit after your acceptance. Version you accepted: @accepted, document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
+        '#value' => t('The terms of use document has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit if you accept the new version. Version you havae accepted: @accepted, document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
       );
   }
   else {
@@ -206,7 +204,7 @@ function shib_auth_custom_data_validate($form, &$form_state) {
     }
    IF (shib_auth_config('terms_accept'))
     if ($form_state['values']['accept'] == FALSE) {
-      form_set_error('', t('You have to accept Terms and conditions to proceed.'));
+      form_set_error('', t('You have to accept Terms of Use to proceed.'));
     }
 } // shib_auth_custom_email_validate()
 
@@ -236,7 +234,7 @@ function shib_auth_admin_groups_validate($form, &$form_state) {
  */
 function shib_auth_admin_groups_submit($form, &$form_state) {
   variable_set('shib_auth_affilate_attrib', $form_state['values']['shib_auth_affilate_attrib']);
-  drupal_set_message(t('Your changes are saved.'));
+  drupal_set_message(t('Your changes have been saved.'));
 }//function shub_auth_groups_submit
 
 /**
@@ -257,13 +255,13 @@ function shib_auth_admin_advanced() {
   
   $form['shib_handler_settings']['shib_auth_is_passive'] = array(
      '#type'          => 'checkbox',
-    '#title'         => t('Enable IsPassive checking'),
-    '#description'   => t('Enable IsPassive checking'),
+    '#title'         => t('Enable passive authentication'),
+    '#description'   => t('Enable passive authentication'),
     '#default_value' => shib_auth_config('is_passive'),
   );
   $form['shib_handler_settings']['shib_auth_forceauthn'] = array(
      '#type'          => 'checkbox',
-    '#title'         => t('Enable ForceAuthN function'),
+    '#title'         => t('Enable forced authentication'),
     '#description'   => t('Force users to re-authenticate'),
     '#default_value' => shib_auth_config('forceauthn'),
   );
@@ -290,20 +288,20 @@ function shib_auth_admin_advanced() {
     '#type' => 'textfield',
     '#title' => t("URL to redirect to after logout"),
     '#default_value' => shib_auth_config('logout_url'),
-    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. Please note that, this won't work, if you are using SLO.")
+    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. If you are using SLO, this setting is probably useless (depending on the IdP)")
   );
 
  $form['shib_terms_conditions_settings'] = array(
     '#type'        => 'fieldset',
-    '#title'       => t('Terms and condition acception settings'),
+    '#title'       => t('Terms of use settings'),
     '#weight'      => -2,
     '#collapsible' => FALSE,
   );
 
   $form['shib_terms_conditions_settings']['shib_auth_terms_accept'] = array(
      '#type'          => 'checkbox',
-    '#title'         => t('Force users to accept Terms and conditions'),
-    '#description'   => t('Require acceptance of Terms and conditions every time, it changes'),
+    '#title'         => t('Force users to accept Terms of Use'),
+    '#description'   => t('Require acceptance of Terms of Use every time it changes'),
     '#default_value' => shib_auth_config('terms_accept'),
   );
 

@@ -2,21 +2,32 @@
 // $Id$
 /**
  * @file
- * This is a Shibboleth authentication module.
- *
- * This module allow administrators to enable Shibboleth based authentication on their drupal installation.
+ * Drupal Shibboleth authentication module.
+
+Copyright (C) 2010 NIIF Institute (http://www.niif.hu)
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
  */
 
-/**
- * We should insert some DISCLAIMER here, what do you think?
- */
-
-//TODO: Document this function
+//Handle module configuration
 function shib_auth_config($variable) {
   global $base_url;
 
   $var_store = array('account_linking' => FALSE,
-                     'account_linking_text' => t('Link this account with Shibboleth.'),
+                     'account_linking_text' => t('Link this account with another identity.'),
                      'auto_destroy_session' => FALSE,
                      'debug_state' => FALSE,
                      'define_username' => FALSE,
@@ -40,9 +51,10 @@ function shib_auth_config($variable) {
                      'full_logout_url' => shib_auth_get_handler_base() ."/Logout",
                );
 
-  if (array_key_exists($variable, $var_store)) return variable_get("shib_auth_$variable", $var_store[$variable]);
+  if (array_key_exists($variable, $var_store)) 
+	  return variable_get("shib_auth_$variable", $var_store[$variable]);
   else {
-    drupal_set_message('ERROR', "Here is some problem: function shib_auth_config($variable) called but $variable doesn't exists.");
+    drupal_set_message('ERROR', "function shib_auth_config($variable) called but $variable doesn't exists.");
     return FALSE;
   }
 }
@@ -93,8 +105,6 @@ function shib_auth_help($path, $arg) {
   * 	if (something_bad_happens())
   *		return shib_auth_error("Something bad happened");
 	* EXEPTION WORKAROUND for php4
-  * A: I wouldn't use return, because there could be cases, when the error doesn't exists from function / statement
-  *    This need to be checked though, because in other cases, it would delete an 'else'
   */
 function shib_auth_error($msg = '') {
   drupal_set_message(t($msg) . t(' [Shibboleth authentication]'),'error');
@@ -121,9 +131,10 @@ function shib_auth_session_check($uname) {
   }
   if (isset($_SESSION['uname'])) {
     if ($_SESSION['uname'] != $uname) {
-      /* XXX
-	  This case another user was logged in using the same browser (and Drupal) session.
-	  Probably we should try and re-register the user instead of just kicking him out,
+      /*  See SA-CONTRIB-2009-070
+	  If we reach here, a new federated user was given an existing Drupal session of
+	  an old user. This can happen when using Single Logout.
+	  Probably we should try and re-register the new user instead of just kicking him out,
 	  but for now just terminate the session for safety.
 	  This means that the new user has to initiate the session twice.
 	  */
@@ -225,7 +236,6 @@ function shib_auth_link_account ($federated_id,$consentver='') {
 }
 
 /**
- * TODO: implement
  * Creates <b>new</b> Drupal user and saves user mapping to the shib_authmap table
  * 
  * It doesn't do any check on the input parameters except for asserting uniqueness
@@ -243,17 +253,6 @@ function shib_auth_user_register ($fed_id,$uname,$mail,$consentver='') {
   if (!shib_auth_session_valid())
     return shib_auth_error("Internal error while saving account: missing Shibboleth session");
   
-  // XXX szerintem az ellenorzes nem kell ide.
-  // A: AFAIR These are here to avoid logging in an existing user with the same name instead of the creating one (because of the use of login_register func)
-  /*
-  // Ensure that $uname is not in use
-  if ( db_fetch_object( db_query("SELECT * FROM {users} WHERE name='%s'", $uname) ) ) 
-    return shib_auth_error("Error saving user account, username is already in use.");
-  
-  // Ensure that $mail is not in use
-  if ( db_fetch_object( db_query("SELECT * FROM {users} WHERE mail='%s'", $mail) ) ) 
-    return shib_auth_error("Error saving user account, email address is already in use.");
-  */
   $_SESSION['authentication'] = 'shib_auth';
   // Try to load user
   $user = user_load(array('name' => $uname));
