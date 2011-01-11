@@ -48,7 +48,7 @@ function shib_auth_edit_form($options) {
     '#type' => 'checkbox',
     '#title' => t('Sticky'),
     '#default_value' => $options[5],
-    '#description'    => t('Set rule to be sticky, if you want the role(s) to be saved permanently to the users'),
+    '#description'    => t('Set the rule to be sticky if you want to save the role(s) permanently to the user\'s profile.'),
   );
 
   $form['submit'] = array(
@@ -97,7 +97,7 @@ function _shib_auth_list_rules() {
     $roles = unserialize($rule['role']);
     $roles_list = '';
     foreach ($roles as $role) {
-      $roles_list .= shib_auth_roles_get_rolename($role).' ';
+      $roles_list .= shib_auth_get_rolename($role).' ';
     }
 //     if (!empty($roles)) $roles_list = implode(', ', $roles);
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
