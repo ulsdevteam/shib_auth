@@ -99,7 +99,7 @@ function shib_auth_update_6040() {
     }
   }
   
-  if (variable_get('shib_auth_email_variable'), NULL) {
+  if (variable_get('shib_auth_email_variable', NULL)) {
     //ABORT IF THIS UPDATE WAS EVER RUN
     return $ret;
   }
