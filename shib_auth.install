@@ -99,16 +99,16 @@ function shib_auth_update_6040() {
     }
   }
   
-  if (variable_get('shib_auth_email_variable')) {
+  if (variable_get('shib_auth_email_variable'), NULL) {
     //ABORT IF THIS UPDATE WAS EVER RUN
     return $ret;
   }
   //DESTRUCTIVE PART OF THE UPDATE 
   variable_set('shib_auth_full_logout_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') .'/Logout');
   variable_set('shib_auth_full_handler_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') . variable_get('shib_auth_wayf_uri', '/DS'));
-  variable_set('shib_auth_enable_custom_mail', variable_get('shib_auth_mail_shib_only',FALSE));
+  variable_set('shib_auth_enable_custom_mail', variable_get('shib_auth_mail_shib_only', FALSE));
   variable_del('shib_auth_mail_shib_only');
-  variable_set('shib_auth_email_variable', variable_get('shib_auth_username_email','HTTP_MAIL'));
+  variable_set('shib_auth_email_variable', variable_get('shib_auth_username_email', 'HTTP_MAIL'));
   variable_del('shib_auth_username_email');
   
 
