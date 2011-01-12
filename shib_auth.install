@@ -118,7 +118,8 @@ function shib_auth_update_6040() {
   variable_del('shib_auth_mail_shib_only');
   variable_set('shib_auth_email_variable', variable_get('shib_auth_username_email', 'HTTP_MAIL'));
   variable_del('shib_auth_username_email');
-  
+  variable_set('shib_auth_logout_url', variable_get('shib_logout_url', $_SERVER['HTTP_HOST']));
+  variable_del('shib_logout_url');
 
   // copy the elements of authmap to the database shib_auth module uses, and left idp field empty
   $entries = db_query("SELECT * FROM {authmap} WHERE module='shib_auth'");

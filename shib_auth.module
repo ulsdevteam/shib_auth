@@ -149,7 +149,6 @@ function shib_auth_session_check($uname) {
  */
 function shib_auth_debug() {
   global $user;
-  
   if (shib_auth_config('debug_state'))
     if (drupal_substr($_GET['q'], 0, drupal_strlen(shib_auth_config('debug_url'))) == shib_auth_config('debug_url')) {
       if ($user->uid) {
@@ -324,7 +323,7 @@ function shib_login_authmap($uname, $umail_single, $uid) {
   user_external_login_register($authmap_username['name'], "shib_auth");
   $_SESSION['authentication'] = 'shib_auth';
   //and the Shibboleth mail address override was enabled in the admin config
-  if (shib_auth_config('shib_auth_enable_custom_mail')==0) {
+  if (shib_auth_config('enable_custom_mail')==0) {
     //check if there isn't any user with this e-mail (whose name is different)
     $email_for_other_user_query =
       db_query("SELECT * FROM {users} WHERE mail='%s' AND name <> '%s'", $umail_single, $uname );
@@ -498,6 +497,7 @@ function shib_auth_init() {
   // Make sure that the user module is already loaded.
   drupal_load('module', 'user');
 
+  shib_auth_debug();
   //In your Service Provider 2.x shibboleth.xml file, add redirectErrors="#THIS PAGE#" to the Error element.
   //Make sure #THIS PAGE# is protected with a lazy session (no Shibboleth session is enforced but attribute are made available to application in case a user has a session)
   //footer currently contains only ispassive script, if it was enabled
