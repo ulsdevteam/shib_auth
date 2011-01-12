@@ -497,7 +497,7 @@ function shib_auth_init() {
   // Make sure that the user module is already loaded.
   drupal_load('module', 'user');
 
-  shib_auth_debug();
+
   //In your Service Provider 2.x shibboleth.xml file, add redirectErrors="#THIS PAGE#" to the Error element.
   //Make sure #THIS PAGE# is protected with a lazy session (no Shibboleth session is enforced but attribute are made available to application in case a user has a session)
   //footer currently contains only ispassive script, if it was enabled
@@ -514,6 +514,17 @@ function shib_auth_init() {
   // Do nothing if there's no Shibboleth session
   if (!shib_auth_session_valid()) 
     return;
+    
+  //********* ROLE ASSIGMENT STARTING ********
+  module_load_include('inc', 'shib_auth_roles', 'forms');
+  //generate cache if it doesn't exists
+  shib_auth_generate_rolenames(FALSE);
+  if (shib_auth_session_valid() && !user_is_anonymous()){ 
+    shib_auth_assignroles();
+  }
+    
+  //**************** DEBUG ********************
+  shib_auth_debug();
   
   // Do nothing if the user is logged in and we're not doing account linking
   if ($user->uid && !doing_account_linking())
@@ -577,17 +588,6 @@ function shib_auth_init() {
     }
   }
 //********* END OF REGISTERING *************
-
-//********* ROLE ASSIGMENT STARTING ********
-  module_load_include('inc', 'shib_auth_roles', 'forms');
-  //generate cache if it doesn't exists
-  shib_auth_generate_rolenames(FALSE);
-  if (shib_auth_session_valid() && !user_is_anonymous()){ 
-    shib_auth_assignroles();
-  }
-  
-//**************** DEBUG ********************
-  shib_auth_debug();
  
 } // function shib_auth_init()
 
@@ -1030,11 +1030,11 @@ function shib_auth_save_roles()
  */
 function shib_auth_generate_rolenames($force) {
   if (!isset($_SESSION['shib_auth_rolecache']) || $force) {
-  $_SESSION['shib_auth_rolecache'] = array();
-  $query = db_query('SELECT rid, name FROM {role}');
-  while ($item = db_fetch_array($query))
-    $rolecache[$item['rid']] = $item['name'];
-  $_SESSION['shib_auth_rolecache'] = $rolecache;
+  	$_SESSION['shib_auth_rolecache'] = array();
+  	$query = db_query('SELECT rid, name FROM {role}');
+  	while ($item = db_fetch_array($query))
+    	$rolecache[$item['rid']] = $item['name'];
+  	$_SESSION['shib_auth_rolecache'] = $rolecache;
   }
 }
 
