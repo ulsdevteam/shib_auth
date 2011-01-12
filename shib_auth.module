@@ -83,7 +83,7 @@ function shib_auth_help($path, $arg) {
   $output = '';
   switch ($path) {
     case 'admin/help#shib_auth':
-      //TODO
+      //
       $output ='<p>'. t("The Shibboleth authentication module lets you utilize the advantages of the "
 		    . "Single Sign On (SSO) methods.") .'</p>';
       $output .='<p>'. t("For more help related to Shibboleth and module configuration, see "
@@ -234,61 +234,9 @@ function shib_auth_link_account ($federated_id,$consentver='') {
   return FALSE;
 }
 
-/**
- * Creates <b>new</b> Drupal user and saves user mapping to the shib_authmap table
- * 
- * It doesn't do any check on the input parameters except for asserting uniqueness
- * 
- * @param $fed_id federated user identifier
- * @param $uname custom username (might be equal to $uid)
- * @param $mail user email address (might be user defined)
- * @param $consentver accepted version of terms&conditions (acceptance must be checked before)
- * @return TRUE if saving user was successful, FALSE otherwise
- */
-function shib_auth_user_register ($fed_id,$uname,$mail,$consentver='') {
-  global $user;
-  
-  // Ensure that we have a valid shib session
-  if (!shib_auth_session_valid())
-    return shib_auth_error("Internal error while saving account: missing Shibboleth session");
-  
-  $_SESSION['authentication'] = 'shib_auth';
-  // Try to load user
-  $user = user_load(array('name' => $uname));
-  if (!isset($user->uid)) { // New user
-    $user = user_external_login_register($uname, "shib_auth");
-    $user = user_save($user, array('mail' => $mail));
-    return shib_auth_save_authmap($fed_id,$user->uid,$consentver);
-  }
-  return TRUE;
-}
 
 /**
- * Saves an authmap entry to the database. Only checks the uniqueness of the federated id
- * @return TRUE if successful
- */
-function shib_auth_authmap_save($fed_id,$uid,$consentver) {
-  // Check $fed_id uniqueness
-  if ( db_fetch_object( db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $fed_id) ) )
-    return shib_auth_error("Internal error while saving user account: federated id is not unique.");
-    
-  // Grab $idp from the environment, set date
-  if(!shib_auth_session_valid())
-    return shib_auth_error("Internal error while saving account: missing Shibboleth session");
-  // save user
-  $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
-  return db_query($sql,	$uid, $fed_id, shib_auth_get_idp(), date("Y-m-d H:i:s"), $consentver);
-}
-
-function shib_auth_authmap_get_user ($fed_id) {
-  return ( db_fetch_object( db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $fed_id) ) );
-}
-/**
- * TODO: remove -- CAN BE REMOVED
- * XXX
- * refactor: shib_login_save_authmap -> shib_auth_register_user ???
- * Yes, we should merge these two functions into one, but these are not the same 
- * authmap_save is only for this module, while login_register is doing it in drupal.
+ * 
  */
 function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   global $user;
@@ -314,8 +262,8 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
 }
 
 /**
- * TODO: remove
-*/
+ * 
+ */
 function shib_login_authmap($uname, $umail_single, $uid) {
   global $user;
   $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid='%s'", $uid);
@@ -469,7 +417,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 }
 
 function doing_account_linking() {
-//TODO: rename this function
+//
   if (shib_auth_config('account_linking'))
     return (strstr($_GET['q'],"shib_login") || strstr($_GET['q'],"shib_auth_custom_data"));
   return FALSE;
@@ -650,7 +598,7 @@ function shib_auth_perm() {
   return array('administer shibboleth authentication');
 } // function shib_auth_perm()
 
-//TODO: Document this function
+//
 function shib_auth_generate_login_url() {
 
   $sessioninitiator = shib_auth_config('full_handler_url');
@@ -847,7 +795,6 @@ function shib_auth_block($op='list', $delta=0, $edit = array()) {
 
 /**
  * Generate the login block content if user not logged in
- *
  */
 function _login_url_html($is_account_linking = FALSE) {
   global $user;
@@ -863,11 +810,6 @@ function _login_url_html($is_account_linking = FALSE) {
   }
   return NULL;
 }
-
-/**
- * Generate the administration form of the Shibboleth authentication module
- * @returns HTML text of the administration form
- */
 
 
 /**
@@ -902,7 +844,7 @@ function shib_auth_form_alter(&$form, &$form_state, $form_id) {
  * Dummy access argument function
  */
 function access_shib_login() {
-//TODO: rename this function
+//
   return TRUE;
 }
 
