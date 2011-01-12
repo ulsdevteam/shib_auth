@@ -104,7 +104,7 @@ function shib_auth_help($path, $arg) {
   * Example usage:
   * 	if (something_bad_happens())
   *		return shib_auth_error("Something bad happened");
-	* EXEPTION WORKAROUND for php4
+  * EXCEPTION WORKAROUND for php4
   */
 function shib_auth_error($msg = '') {
   drupal_set_message(t($msg) . t(' [Shibboleth authentication]'),'error');
@@ -121,6 +121,14 @@ function shib_auth_terminate_session() {
   $user = drupal_anonymous_user();
 }
 
+/**
+ * This function would destroy the session if
+ *  * the shib session is expired and auto_destroy_session is enabled
+ *  * the username has changed unexpectedly
+ * @param username (might be null)
+ * @return FALSE if the session was invalid and therefore destroyed
+ *         TRUE if either there's a valid shib session or we allow stale Drupal sessions
+ */
 function shib_auth_session_check($uname) {
   global $user;
   // if the user IS logged in as non-admin, but we're missing Shibboleth identity
@@ -128,6 +136,7 @@ function shib_auth_session_check($uname) {
       shib_auth_config('auto_destroy_session') && $user->uid > 1) {
     shib_auth_error('Your session is expired. Please log in again');
     shib_auth_terminate_session();
+    return FALSE;
   }
   if (isset($_SESSION['uname'])) {
     if ($_SESSION['uname'] != $uname) {
@@ -139,8 +148,10 @@ function shib_auth_session_check($uname) {
 	  This means that the new user has to initiate the session twice.
 	  */
       shib_auth_terminate_session();
+      return FALSE;
     }
   }
+  return TRUE;
 }
 
 /**
@@ -453,15 +464,23 @@ function shib_auth_init() {
 
   $consent_accepted = FALSE;
 
-  // Do nothing if there's no Shibboleth session
-  if (!shib_auth_session_valid()) {
+  /* We want to return as early as possible if we have nothing to do
+      But for checking the session, we need the username first (if it's set) */
+  $uname = $_SERVER[shib_auth_config('username_variable')]; 
+
+  /* CHECKING THE SESSION
+     Here shib_auth_session_check() will destroy the session if
+       * the shib session is expired and auto_destroy_session is enabled
+       * the username has changed unexpectedly
+     Either this happens or we do not have a shib session, we don't have anything to do
+     but send out some debug and exit. 
+  */
+  if (!shib_auth_session_check($uname) || !shib_auth_session_valid()) {
     shib_auth_debug();
     return;
   }
-    
-  // Fetch necessary variables: user identifier, email
-  $uname = $_SERVER[shib_auth_config('username_variable')];
-  shib_auth_session_check($uname); // ensure that the current session belongs to this user
+
+  /* Time to retrevie the mail and begin some work */
   $umail = $_SERVER[shib_auth_config('email_variable')];
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
   
