@@ -90,7 +90,7 @@ function _shib_auth_db_table_exists($table) {
  * Hook to update module from older revisions
  * @return an array with the executed SQL commands
  */
-function shib_auth_update_6040() {
+function shib_auth_update_6400() {
   // NON-DESTRUCTIVE PART OF THE UPDATE -- LET IT RUN MULTIPLE TIMES
   $ret = array();
   $schema = shib_auth_schema();
