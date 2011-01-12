@@ -505,16 +505,18 @@ function shib_auth_init() {
 
   $consent_accepted = FALSE;
 
-  // necessary variables: user identifier, email
+  // Do nothing if there's no Shibboleth session
+  if (!shib_auth_session_valid()) {
+    shib_auth_debug();
+    return;
+  }
+    
+  // Fetch necessary variables: user identifier, email
   $uname = $_SERVER[shib_auth_config('username_variable')];
   shib_auth_session_check($uname); // ensure that the current session belongs to this user
   $umail = $_SERVER[shib_auth_config('email_variable')];
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
   
-  // Do nothing if there's no Shibboleth session
-  if (!shib_auth_session_valid()) 
-    return;
-    
   //********* ROLE ASSIGMENT STARTING ********
   module_load_include('inc', 'shib_auth_roles', 'forms');
   //generate cache if it doesn't exists
