@@ -76,6 +76,9 @@ function shib_auth_uninstall() {
   drupal_set_message(t('The Shibboleth authentication module was uninstalled successfully.'));
 }
 
+/**
+ * It's needed because db_table_exists() does not escape sql wildcard character '_'
+ */
 function _shib_auth_db_table_exists($table) {
   $table = preg_replace('/_/','\_',$table);  
   return (bool) db_fetch_object(db_query("SHOW TABLES LIKE '{" . $table . "}'"));
@@ -91,19 +94,24 @@ function shib_auth_update_6040() {
   // NON-DESTRUCTIVE PART OF THE UPDATE -- LET IT RUN MULTIPLE TIMES
   $ret = array();
   $schema = shib_auth_schema();
-  $tables = array('shib_auth', 'shib_authmap');
-  // make sure these tables exist
-  foreach ($tables AS $table) {
-    if (!_shib_auth_db_table_exists($table)) {
-      db_create_table($ret, $table, $schema[$table]);
-    }
-  }
-  
+
+  if(!_shib_auth_db_table_exists('shib_auth'))
+    db_create_table($ret, 'shib_auth', $schema['shib_auth']);
+  else
+    db_add_field($ret, 'shib_auth', 'sticky', array(
+      'type' => 'int', 'size' => 'tiny', 'not null' => FALSE, 'default' => 0));
+
+  if(!_shib_auth_db_table_exists('shib_authmap'))
+    db_create_table($ret, 'shib_authmap', $schema['shib_authmap']);
+
+  /* Hack to determine if we're already running version 4.x
+     (the 'shib_auth_email_variable' was not set in versions before 4.x) */
   if (variable_get('shib_auth_email_variable', NULL)) {
-    //ABORT IF THIS UPDATE WAS EVER RUN
+    //ABORT
     return $ret;
   }
-  //DESTRUCTIVE PART OF THE UPDATE 
+
+  //DESTRUCTIVE PART OF THE UPDATE -- this must not be run multiple times
   variable_set('shib_auth_full_logout_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') .'/Logout');
   variable_set('shib_auth_full_handler_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') . variable_get('shib_auth_wayf_uri', '/DS'));
   variable_set('shib_auth_enable_custom_mail', variable_get('shib_auth_mail_shib_only', FALSE));
