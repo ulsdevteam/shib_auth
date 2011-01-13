@@ -805,7 +805,7 @@ function _login_url_html($is_account_linking = FALSE) {
   if ($user->uid === 0 AND $is_account_linking === FALSE) {
     return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('link_text'));
   }
-  elseif ($_SESSION['authentication'] !== 'shib_auth' AND $user->uid > 1 AND $is_account_linking) {
+  elseif ($_SESSION['authentication'] !== 'shib_auth' AND $user->uid > 1 AND $is_account_linking AND shib_auth_config('account_linking')) {
     return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('account_linking_text'));
   }
   return NULL;
