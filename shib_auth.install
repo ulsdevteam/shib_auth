@@ -90,7 +90,7 @@ function _shib_auth_db_table_exists($table) {
  * Hook to update module from older revisions
  * @return an array with the executed SQL commands
  */
-function shib_auth_update_6040() {
+function shib_auth_update_6400() {
   // NON-DESTRUCTIVE PART OF THE UPDATE -- LET IT RUN MULTIPLE TIMES
   $ret = array();
   $schema = shib_auth_schema();
@@ -105,11 +105,14 @@ function shib_auth_update_6040() {
     db_create_table($ret, 'shib_authmap', $schema['shib_authmap']);
 
   /* Hack to determine if we're already running version 4.x
-     (the 'shib_auth_email_variable' was not set in versions before 4.x) */
-  if (variable_get('shib_auth_email_variable', NULL)) {
+     (the 'shib_auth_version' was not set in versions before 4.x) */
+  if (variable_get('shib_auth_version', NULL)) {
     //ABORT
     return $ret;
   }
+
+  /* shib_auth module version */
+  variable_set('shib_auth_version',"4.0");
 
   //DESTRUCTIVE PART OF THE UPDATE -- this must not be run multiple times
   variable_set('shib_auth_full_logout_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') .'/Logout');
@@ -120,6 +123,7 @@ function shib_auth_update_6040() {
   variable_del('shib_auth_username_email');
   variable_set('shib_auth_logout_url', variable_get('shib_logout_url', $_SERVER['HTTP_HOST']));
   variable_del('shib_logout_url');
+
 
   // copy the elements of authmap to the database shib_auth module uses, and left idp field empty
   $entries = db_query("SELECT * FROM {authmap} WHERE module='shib_auth'");
