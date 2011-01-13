@@ -107,18 +107,21 @@ function shib_auth_help($path, $arg) {
   * EXCEPTION WORKAROUND for php4
   */
 function shib_auth_error($msg = '') {
-  drupal_set_message(t($msg) . t(' [Shibboleth authentication]'),'error');
+  drupal_set_message(t('[Shibboleth authentication] ') . t($msg),'error');
   return FALSE;
 }
-
-function shib_auth_terminate_session() {
+ 
+function shib_auth_terminate_session($msg="") {
   global $user;
   // unset all session variables and destroy session
   if (isset($user->uid))
     sess_destroy_uid($user->uid);
   $_SESSION = array();
+  if($msg)
+    shib_auth_error($msg);
   session_destroy();
   $user = drupal_anonymous_user();
+
 }
 
 /**
@@ -134,8 +137,7 @@ function shib_auth_session_check($uname) {
   // if the user IS logged in as non-admin, but we're missing Shibboleth identity
   if (!shib_auth_session_valid() && $_SESSION['authentication'] == 'shib_auth' &&
       shib_auth_config('auto_destroy_session') && $user->uid > 1) {
-    shib_auth_error('Your session is expired. Please log in again');
-    shib_auth_terminate_session();
+    shib_auth_terminate_session('Your session is expired. Please log in again.');
     return FALSE;
   }
   if (isset($_SESSION['uname'])) {
