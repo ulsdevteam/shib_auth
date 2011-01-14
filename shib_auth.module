@@ -570,14 +570,15 @@ function shib_auth_init() {
 function shib_auth_get_handler_base() {
   $handlerurl = variable_get('handler_url','/Shibboleth.sso');
   $handlerprotocol = variable_get('handler_protocol','https');
-  if (ereg('^http[s]{0,1}://', $handlerurl) ) {
+  if (preg_match('#^http[s]{0,1}://#', $handlerurl) ) {
     // If handlerurl is an absolute path
     return $handlerurl;
   }
   else {
     // Else, if the handlerurl is a relative path
     // If the URI doesn't start with slash then extend it
-    if ( !ereg('^/', $handlerurl) ) $handlerurl = '/'. $handlerurl;
+    if ( substr($handlerurl, 0 ,1 )!='/' ) 
+      $handlerurl = '/'. $handlerurl;
     return $handlerprotocol .'://'. $_SERVER['HTTP_HOST'] . $handlerurl;
   }
 
@@ -597,7 +598,7 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
     unset($_SESSION['authentication']);
     $logout_redirect = shib_auth_config('logout_url');
     // If the logout_redirect URL was relative extension is needed.
-    if (!ereg('^http[s]{0,1}://', $logout_redirect) ) {
+    if (!preg_match('#^http[s]{0,1}://#', $logout_redirect) ) {
       $logout_redirect = $base_url .'/'. $logout_redirect; // XXX url("<front>") kell helyette? XXX dupla / check
     // A: probably yes, the output will be the same, but we won't use the global variable
     }
