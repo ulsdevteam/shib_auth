@@ -262,9 +262,9 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   //else register the user with the given information
   else {
     //account linking: the user is already logged in
-    if (!($user->uid > 1 && shib_auth_config('account_linking'))) {
+    //if (!($user->uid > 1 && shib_auth_config('account_linking'))) {
       user_external_login_register($custom_uname, "shib_auth");
-    }
+    //}
     $_SESSION['authentication'] = 'shib_auth';
     $user = user_save($user, array('mail' => $umail_single));
     $idp = ($_SERVER['Shib-Identity-Provider']) ? 

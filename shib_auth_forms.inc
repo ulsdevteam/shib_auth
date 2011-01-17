@@ -129,11 +129,11 @@ function shib_auth_custom_data() {
   if ($authmap_username)
   {
     $form['consent'] = array(
-        '#value' => t('The terms of use document has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit if you accept the new version. Version you havae accepted: @accepted, document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
+        '#value' => t('The terms of use document has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit if you accept the new version. Version you have accepted: @accepted - document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
       );
   }
   else {
-    if (shib_auth_config('define_username') && !$user->uid) {
+    if (shib_auth_config('define_username') && (!$user->uid || shib_auth_config('account_linking'))) {
       $form['custom_username'] = array(
         '#type' => 'textfield',
         '#title' => t('Desired username'),
@@ -150,7 +150,7 @@ function shib_auth_custom_data() {
         '#suffix' => '<br>',
         );
       }
-    if (shib_auth_config('enable_custom_mail') && !$user->uid) {
+    if (shib_auth_config('enable_custom_mail') && (!$user->uid  || shib_auth_config('account_linking'))) {
       $form['custom_mail'] = array(
         '#type' => 'textfield',
         '#title' => t('E-mail'),
