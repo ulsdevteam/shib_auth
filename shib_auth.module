@@ -598,8 +598,7 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
     $logout_redirect = shib_auth_config('logout_url');
     // If the logout_redirect URL was relative extension is needed.
     if (!ereg('^http[s]{0,1}://', $logout_redirect) ) {
-      $logout_redirect = $base_url .'/'. $logout_redirect; // XXX url("<front>") kell helyette? XXX dupla / check
-    // A: probably yes, the output will be the same, but we won't use the global variable
+      $logout_redirect = $base_url .'/'. $logout_redirect;
     }
     drupal_goto("$logouthandler?return=$logout_redirect");
   }
