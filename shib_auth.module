@@ -604,10 +604,7 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
     drupal_goto("$logouthandler?return=$logout_redirect");
   }
   else if ($op == 'delete') {
-    db_query("DELETE FROM {authmap} WHERE uid = %d AND authname = '%s' AND module = 'shib_auth'",
-            $account->uid, $account->name);
-     db_query("DELETE FROM {shib_authmap} WHERE uid = %d",
-            $account->uid);
+    db_query("DELETE FROM {shib_authmap} WHERE uid = %d", $account->uid);
   }
 } // function shib_auth_user(logout)
 
