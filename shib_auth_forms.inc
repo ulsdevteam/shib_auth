@@ -310,16 +310,13 @@ function shib_auth_admin_advanced() {
     '#title'         => t('URL of the document'),
     '#default_value' => shib_auth_config('terms_url'),
     '#description'   => t('If it is a drupal content, please start the link with /'),
-    '#prefix' => '<table border= \'0\'><tr><td>',
-    '#suffix' => '</td>',
   );
 
   $form['shib_terms_conditions_settings']['shib_auth_terms_ver'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Document version'),
     '#default_value' => shib_auth_config('terms_ver'),
-    '#prefix' => '<td valign=top>',
-    '#suffix' => '</td></tr></table>',
+    '#size'          => 4,
   );
   return system_settings_form($form);
 } 
