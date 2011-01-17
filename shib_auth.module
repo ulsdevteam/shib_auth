@@ -1002,6 +1002,3 @@ function shib_auth_generate_rolenames($force) {
   	$_SESSION['shib_auth_rolecache'] = $rolecache;
   }
 }
-
-/**
- * This function 
