@@ -591,16 +591,18 @@ function shib_auth_get_handler_base() {
  */
 function shib_auth_user($op, &$edit, &$account, $category = NULL) {
   global $base_url, $user;
-   if ($op == 'logout') {
-    unset($_SESSION['rolelog']);
-    $logouthandler = shib_auth_config('full_logout_url');
-    unset($_SESSION['authentication']);
-    $logout_redirect = shib_auth_config('logout_url');
-    // If the logout_redirect URL was relative extension is needed.
-    if (!ereg('^http[s]{0,1}://', $logout_redirect) ) {
-      $logout_redirect = $base_url .'/'. $logout_redirect;
+  if ($op == 'logout') {
+    if (shib_auth_session_valid()) {
+      unset($_SESSION['rolelog']);
+    	$logouthandler = shib_auth_config('full_logout_url');
+    	unset($_SESSION['authentication']);
+    	$logout_redirect = shib_auth_config('logout_url');
+    	// If the logout_redirect URL was relative extension is needed.
+    	if (!ereg('^http[s]{0,1}://', $logout_redirect) ) {
+    	  $logout_redirect = $base_url .'/'. $logout_redirect;
+      }
+    	drupal_goto("$logouthandler?return=$logout_redirect");
     }
-    drupal_goto("$logouthandler?return=$logout_redirect");
   }
   else if ($op == 'delete') {
     db_query("DELETE FROM {authmap} WHERE uid = %d AND authname = '%s' AND module = 'shib_auth'",
