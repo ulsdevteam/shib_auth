@@ -446,7 +446,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 
 function doing_account_linking() {
   if (shib_auth_config('account_linking')) {
-    return (strstr($_GET['q'], 'shib_login') || strstr($_GET['q'],'shib_auth_custom_data'));
+    return (strstr($_GET['q'], 'shib_login') || strstr($_GET['q'], 'shib_auth/get_custom_data'));
   }
   return FALSE;
 } // function doing_account_linking
@@ -593,7 +593,7 @@ function shib_auth_get_handler_base() {
   else {
     // Else, if the handlerurl is a relative path
     // If the URI doesn't start with slash then extend it
-    if (substr($handlerurl, 0 , 1) != '/') {
+    if (drupal_substr($handlerurl, 0 , 1) != '/') {
       $handlerurl = '/'. $handlerurl;
     }
     return $handlerprotocol .'://'. $_SERVER['HTTP_HOST'] . $handlerurl;
@@ -990,3 +990,12 @@ function shib_auth_generate_rolenames($force) {
     $_SESSION['shib_auth_rolecache'] = $rolecache;
   }
 } //function shib_auth_generate_rolenames
+
+/**
+ * This function gets the username
+ * @param $rid the id of the role
+ * @return the role name from the cache
+ */
+function shib_auth_get_rolename($rid) {
+  return $_SESSION['shib_auth_rolecache'][$rid];
+} //function shib_auth_get_rolename
