@@ -714,7 +714,7 @@ function shib_auth_menu() {
   /******* ROLE-RELATED MENU ITEMS ********/
 
   $items['admin/user/shib_auth/rules'] = array(
-    'title'            => 'Shibboleth group rules)',
+    'title'            => 'Shibboleth group rules',
     'description'      => 'Administer attribute-based role assignment',
     'page callback'    => '_shib_auth_list_rules',
     'page arguments'   => array('shib_auth_list_rules'),
