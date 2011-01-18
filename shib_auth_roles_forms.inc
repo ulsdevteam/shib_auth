@@ -177,8 +177,8 @@ function shib_auth_new_rule($received_form) {
       }
       //an existing rule was updated
       else {
-        if {
-          ($ret = SAVED_UPDATED) drupal_set_message(t('The rule has been modified.'));
+        if ($ret = SAVED_UPDATED) {
+          drupal_set_message(t('The rule has been modified.'));
         }
         else {
           drupal_set_message(t('Unexpected error has been detected.'));
