@@ -35,10 +35,6 @@ function shib_auth_install() {
  */
 function shib_auth_uninstall() {
 
-  // TODO: Update script needed for tracking variable name changes
-  // (auth_link_text -> shib_auth_link_text, shib_logout_url -> shib_auth_logout_url,
-  // shib_auth_username_email -> shib_auth_email_variable)
-
   // Drop variables.
   $variables = array(
     'shib_auth_link_text',
@@ -126,6 +122,8 @@ function shib_auth_update_6400() {
   variable_del('shib_auth_username_email');
   variable_set('shib_auth_logout_url', variable_get('shib_logout_url', $_SERVER['HTTP_HOST']));
   variable_del('shib_logout_url');
+  variable_set('shib_auth_link_text', variable_get('auth_link_text', 'Shibboleth Login'));
+  variable_del('auth_link_text');
 
 
   //copy the elements of authmap to the database shib_auth module uses, and left idp field empty
