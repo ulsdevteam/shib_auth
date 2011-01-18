@@ -433,7 +433,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 function doing_account_linking() {
 //
   if (shib_auth_config('account_linking'))
-    return (strstr($_GET['q'],'shib_login') || strstr($_GET['q'],'shib_auth_custom_data'));
+    return (strstr($_GET['q'],'shib_login') || strstr($_GET['q'],'shib_auth/get_custom_data'));
   return FALSE;
 }
 
