@@ -45,6 +45,7 @@ function shib_auth_config($variable) {
                      'handler_url' => '/Shibboleth.sso',
                      'email_variable' => 'HTTP_SHIB_MAIL',
                      'username_variable' => 'REMOTE_USER',
+                     'login_url' => '',
                      'logout_url' => $base_url,
                      'link_text' => t('Shibboleth Login'),
                      'full_handler_url' => shib_auth_get_handler_base() . variable_get('wayf_uri', '/DS'),
@@ -276,7 +277,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
 /**
  *
  */
-function shib_login_authmap($uname, $umail_single, $uid) {
+function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False) {
   global $user;
 
   $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid='%s'", $uid);
@@ -297,10 +298,11 @@ function shib_login_authmap($uname, $umail_single, $uid) {
       $user = user_save($user, array('mail' => $umail_single));
     }
   }
-  if (isset($_SESSION['redirected_to_custom_data_form_url'])) {
-    $redirect_url = $_SESSION['redirected_to_custom_data_form_url'];
-    unset($_SESSION['redirected_to_custom_data_form_url']);
-    drupal_goto($redirect_url);
+
+  shib_auth_submit_redirect();
+
+  if (shib_auth_config('login_url')!='' && !$alreadyloggedin){
+    drupal_goto(shib_auth_config('login_url'));
   }
 } //function shib_login_authmap
 
@@ -381,7 +383,11 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
 function shib_auth_goto_custom_form() {
   if ($_GET['q']!='shib_auth/get_custom_data') {
     $_SESSION['redirected_to_custom_data_form'] = TRUE;
-    $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
+    if (shib_auth_config('login_url')=='') {
+      $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
+    } else {
+      $_SESSION['redirected_to_custom_data_form_url'] = shib_auth_config('login_url');
+    }
     drupal_goto('shib_auth/get_custom_data');
   }
 } //function shib_auth_goto_custom_form
@@ -485,6 +491,9 @@ function shib_auth_init() {
   But for checking the session, we need the username first (if it's set) */
   $uname = $_SERVER[shib_auth_config('username_variable')];
 
+  // Storing whether the user was already logged in or not
+  $alreadyloggedin = (user_is_anonymous())?False:True;
+
   /* CHECKING THE SESSION
      Here shib_auth_session_check() will destroy the session if
        * the shib session is expired and auto_destroy_session is enabled
@@ -541,7 +550,7 @@ function shib_auth_init() {
   //Then let the user log in
   if ($existing_authmap &&
       (!shib_auth_config('terms_accept') || ($existing_authmap['consentver']==shib_auth_config('terms_ver')))) {
-    shib_login_authmap($uname, $umail_single, $existing_authmap['uid']);
+    shib_login_authmap($uname, $umail_single, $existing_authmap['uid'], $alreadyloggedin);
   }
   //The user exists in the authmap, and she had just accepted the new consent version
   //Write the new version number into the her authmap row, and log her in

@@ -47,6 +47,7 @@ function shib_auth_uninstall() {
     'shib_auth_email_variable',
     'shib_auth_auto_destroy_session',
     'shib_auth_logout_url',
+    'shib_auth_login_url',
     'shib_auth_debug_state',
     'shib_auth_debug_url',
     'shib_auth_enable_custom_mail',

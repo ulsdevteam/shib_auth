@@ -294,6 +294,19 @@ function shib_auth_admin_advanced() {
     '#default_value' => shib_auth_config('auto_destroy_session'),
   );
 
+  $form['shib_login_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Login settings'),
+    '#weight'      => -1,
+  );
+
+  $form['shib_login_settings']['shib_auth_login_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t("URL to redirect to after login"),
+    '#default_value' => shib_auth_config('login_url'),
+    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. If this value is empty than the user will be redirected to the originally requested page.")
+   );
+
   $form['shib_logout_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Logout settings'),
