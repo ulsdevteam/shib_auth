@@ -1003,3 +1003,12 @@ function shib_auth_generate_rolenames($force) {
   	$_SESSION['shib_auth_rolecache'] = $rolecache;
   }
 }
+
+/**
+ * This function gets the username
+ * @param $rid the id of the role
+ * @return the role name from the cache
+ */
+function shib_auth_get_rolename($rid) {
+	return $_SESSION['shib_auth_rolecache'][$rid];
+}
