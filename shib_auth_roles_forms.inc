@@ -1,7 +1,10 @@
 <?php
-// $Id: shib_auth_forms.inc,v 1.6.2.23 2009/02/14 06:26:23 shafter Exp $
+// $Id$
+/**
+ * @file
+ *  Roles manager forms.
+ */
 
-//
 /**
  * Generate the shibboleth rule adding form
  *
@@ -59,7 +62,7 @@ function shib_auth_edit_form($options) {
   $form['#submit'][] = 'shib_auth_new_rule';
 
   return $form;
-}//function shib_auth_edit_form()
+}//function shib_auth_edit_form
 
 /**
  * This function enables the administrator to clone an existing rule, this is useful,
@@ -72,19 +75,25 @@ function _shib_auth_clone_rule($id) {
   $db_entry['id'] = NULL;
   $update = array();
   $ret = drupal_write_record('shib_auth', $db_entry, $update);
-  if ($ret = SAVED_NEW) drupal_set_message('The rule has been successfulliy cloned.');
-  else drupal_set_message('Unexpected error has been detected.');
+  if ($ret = SAVED_NEW) {
+    drupal_set_message(t('The rule has been successfully cloned.'));
+  }
+  else {
+    drupal_set_message(t('Unexpected error has been detected.'));
+  }
   drupal_goto('admin/user/shib_auth/rules');
-}//function _shib_auth_clone_rule()
+}//function _shib_auth_clone_rule
+
 /**
  * This function lets the admin to delete an existing rule
  * @param id rule identifier
  */
 function _shib_auth_delete_rule($id) {
   db_query("DELETE FROM {shib_auth} WHERE id = %d", array($id));
-  drupal_set_message('Rule <span style="font-weight: bold;">#'. $id .'</span> has been deleted.' , 'warning');
+  drupal_set_message(t('Rule <strong>#!id</strong> has been deleted.', array('!id' => $id)) , 'warning');
   drupal_goto('admin/user/shib_auth/rules');
-}//function _shib_auth_delete_rule()
+}//function _shib_auth_delete_rule
+
 /**
  * This function lists all rules, and let the admin to do certain actions with them
  * @returns HTML table containing the attribute, RegExp, role and the actions, which can be done with each role
@@ -97,7 +106,7 @@ function _shib_auth_list_rules() {
     $roles = unserialize($rule['role']);
     $roles_list = '';
     foreach ($roles as $role) {
-      $roles_list .= shib_auth_get_rolename($role).' ';
+      $roles_list .= shib_auth_get_rolename($role) .' ';
     }
 //     if (!empty($roles)) $roles_list = implode(', ', $roles);
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
@@ -117,7 +126,7 @@ function _shib_auth_list_rules() {
   $retval .= '<a href="'. url('admin/user/shib_auth/new') .'">'. t('Add new rule') .'</a>';
 
   return $retval;
-} // function _shib_auth_list_rules()
+} // function _shib_auth_list_rules
 /**
  * Saves a new rule, containing he rule name, the server attrubite, the RegExp, and the role names
  *
@@ -159,13 +168,21 @@ function shib_auth_new_rule($received_form) {
       $ret = drupal_write_record('shib_auth', $new_element, $update);
       // if it wasn't an error
       if (empty($update)) {
-        if ($ret = SAVED_NEW) drupal_set_message('New rule has been stored.');
-        else drupal_set_message('Unexpected error has been detected.');
+        if ($ret = SAVED_NEW) {
+          drupal_set_message(t('New rule has been stored.'));
+        }
+        else {
+          drupal_set_message(t('Unexpected error has been detected.'));
+        }
       }
       //an existing rule was updated
       else {
-        if ($ret = SAVED_UPDATED) drupal_set_message('The rule has been modified.');
-        else drupal_set_message('Unexpected error has been detected.');
+        if {
+          ($ret = SAVED_UPDATED) drupal_set_message(t('The rule has been modified.'));
+        }
+        else {
+          drupal_set_message(t('Unexpected error has been detected.'));
+        }
       }
       //if everything was fine, print the rules with the newly added/modified one
       drupal_goto('admin/user/shib_auth/rules');
@@ -173,7 +190,7 @@ function shib_auth_new_rule($received_form) {
   }
   // if something was wrang, print the edit form again
   return shib_auth_edit_form(array(0, '', '', '', 'Add rule', 0));
-}//function shib_auth_new_rule()
+}//function shib_auth_new_rule
 
 /**
  * Edits an existing rule, containing he rule name, the server attrubite, the RegExp, and the role names
@@ -192,7 +209,7 @@ function shib_auth_edit_rule($form_state, $id) {
     );
   }
 
-}//function shib_auth_edit_rule()
+}//function shib_auth_edit_rule
 
 /**
  * Admin users group membership validate
