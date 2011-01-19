@@ -59,8 +59,6 @@ function shib_auth_edit_form($options) {
     '#value' => t($options[4]),
   );
 
-  $form['#submit'][] = 'shib_auth_new_rule';
-
   return $form;
 }//function shib_auth_edit_form
 
@@ -128,75 +126,94 @@ function _shib_auth_list_rules() {
   return $retval;
 } // function _shib_auth_list_rules
 /**
- * Saves a new rule, containing he rule name, the server attrubite, the RegExp, and the role names
- *
- * @param $received_form - the identifier of the form, which we have just received
- * @returns an edit form, if there was a problem with the input values
+ * Validates a new rule
+ * @param $form - the identifier of the form, which we have just received
+ * @param $form_state - the state of the form, which we have just received, including all of the variables
  */
-function shib_auth_new_rule($received_form) {
-  $form = array();
-
-  if ($received_form['post']['form_id'] == 'shib_auth_new_rule' ||
-    $received_form['#parameters'][1]['post']['form_id'] == 'shib_auth_edit_rule') {
-
-    $update = array();
-    if (isset($received_form['#parameters'])) {
-      $received_form = $received_form['#parameters'][1];
-      $update = "id";
-    }
-    // if the received informations weren't empty
-    if (!empty($received_form['post']['shib_auth_new_attrib']) &&
-        !empty($received_form['post']['shib_auth_new_regexp'])) {
-
-      $new_id = $received_form['post']['shib_auth_new_id'] == '0' ? NULL : (int) $received_form['post']['shib_auth_new_id'];
-      // collect ther roles into an array
-      $roles = array();
-      if (is_array($received_form['post']['shib_auth_roles'])) {
-        foreach ($received_form['post']['shib_auth_roles'] as $role_id) {
-          $roles[] = $role_id;
-        }
-      }
-      //save the new element into an array
-      $new_element = array(
-        'id'            => $new_id,
-        'field'         => urlencode($received_form['post']['shib_auth_new_attrib']),
-        'regexpression' => urlencode($received_form['post']['shib_auth_new_regexp']),
-        'role'          => serialize($roles),
-        'sticky'        => urlencode($received_form['post']['shib_auth_new_sticky']),
-      );
-      //write it in a record
-      $ret = drupal_write_record('shib_auth', $new_element, $update);
-      // if it wasn't an error
-      if (empty($update)) {
-        if ($ret = SAVED_NEW) {
-          drupal_set_message(t('New rule has been stored.'));
-        }
-        else {
-          drupal_set_message(t('Unexpected error has been detected.'));
-        }
-      }
-      //an existing rule was updated
-      else {
-        if ($ret = SAVED_UPDATED) {
-          drupal_set_message(t('The rule has been modified.'));
-        }
-        else {
-          drupal_set_message(t('Unexpected error has been detected.'));
-        }
-      }
-      //if everything was fine, print the rules with the newly added/modified one
-      drupal_goto('admin/user/shib_auth/rules');
-    }
+function shib_auth_new_rule_validate($form, &$form_state) {
+  if (empty($form_state['values']['shib_auth_new_attrib'])) 
+  	form_set_error('shib_auth_new_attrib',t('This element must not be empty'));
+  if (empty($form_state['values']['shib_auth_new_regexp'])) {
+ 		form_set_error('shib_auth_new_regexp',t('This element must not be empty'));
   }
-  // if something was wrang, print the edit form again
-  return shib_auth_edit_form(array(0, '', '', '', 'Add rule', 0));
-}//function shib_auth_new_rule
-
+}
 /**
- * Edits an existing rule, containing he rule name, the server attrubite, the RegExp, and the role names
- *
- * @param $form_state contains all of the data of the form
- * @returns the edit form, with the fields already filled in
+ * Creates a new rule by calling universal create/edit form
+ */
+function shib_auth_new_rule(){
+  return shib_auth_edit_form(array(0, '', '', '', 'Add rule', 0));
+}
+/**
+ * Creates a new rule, containing he rule name, the server attrubite, the RegExp, and the role names by calling save rule
+ */
+function shib_auth_new_rule_submit($form, &$form_state) {
+  shib_auth_save_rule($form_state, array());
+}//function shib_auth_new_rule
+/**
+ * Validates rule edit
+ * @param $form - the identifier of the form, which we have just received
+ * @param $form_state - the state of the form, which we have just received, including all of the variables
+ */
+function shib_auth_edit_rule_validate($form, &$form_state) {
+  if (empty($form_state['values']['shib_auth_new_attrib'])) 
+  	form_set_error('shib_auth_new_attrib',t('This element must not be empty'));
+  if (empty($form_state['values']['shib_auth_new_regexp'])) {
+ 		form_set_error('shib_auth_new_regexp',t('This element must not be empty'));
+  }
+}
+/**
+ * Edits a rule, containing he rule name, the server attrubite, the RegExp, and the role names by calling save rule
+ */
+function shib_auth_edit_rule_submit($form, &$form_state) {
+  shib_auth_save_rule($form_state, "id");
+}//function shib_auth_new_rule
+/**
+ * Saves a new rule into database
+ * @param $update - decides if it is a new rule (NULL), or we're just modifing one ('id')
+ * @param $form_state - the state of the form, which we have just received, including all of the variables
+ */
+function shib_auth_save_rule($form_state, $update) {
+	$new_id = $form_state['values']['shib_auth_new_id'] == '0' ? NULL : (int) $form_state['values']['shib_auth_new_id'];
+	// collect ther roles into an array
+	$roles = array();
+	if (is_array($form_state['values']['shib_auth_roles'])) {
+		foreach ($form_state['values']['shib_auth_roles'] as $role_id) {
+			$roles[] = $role_id;
+		}
+	}
+		//save the new element into an array
+	$new_element = array(
+			'id'            => $new_id,
+			'field'         => urlencode($form_state['values']['shib_auth_new_attrib']),
+			'regexpression' => urlencode($form_state['values']['shib_auth_new_regexp']),
+			'role'          => serialize($roles),
+			'sticky'        => urlencode($form_state['values']['shib_auth_new_sticky']),
+	);
+	//write it in a record
+	$ret = drupal_write_record('shib_auth', $new_element, $update);
+	// if it wasn't an error
+	if (empty($update)) {
+		if ($ret = SAVED_NEW) {
+			drupal_set_message(t('New rule has been stored.'));
+		}
+		else {
+			drupal_set_message(t('Unexpected error has been detected.'));
+		}
+	}
+	//an existing rule was updated
+	else {
+		if ($ret = SAVED_UPDATED) {
+			drupal_set_message(t('The rule has been modified.'));
+		}
+		else {
+			drupal_set_message(t('Unexpected error has been detected.'));
+		}
+	}
+	//if everything was fine, print the rules with the newly added/modified one
+	drupal_goto('admin/user/shib_auth/rules');
+}
+/**
+ * Edits a rule by calling universal create/edit form
  */
 function shib_auth_edit_rule($form_state, $id) {
   $form = array();
