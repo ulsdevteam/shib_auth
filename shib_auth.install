@@ -159,8 +159,8 @@ function shib_auth_update_6401() {
   /* Hack to determine if we're already running version 4.01
      (the 'shib_auth_version' was not set in versions before 4.x) */
   if (variable_get('shib_auth_version', NULL) != "4.01") {
-  	//ABORT
-  	return $ret;
+    //ABORT
+    return $ret;
   }
   variable_set('shib_auth_version', "4.01");
   //ACTUAL UPDATE
