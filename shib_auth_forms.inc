@@ -325,7 +325,7 @@ function shib_auth_admin_advanced() {
     '#type'          => 'textfield',
     '#title'         => t('URL of the document'),
     '#default_value' => shib_auth_config('terms_url'),
-    '#description'   => t('If it is a drupal content, please start the link with /'),
+    '#description'   => t('If it is a drupal content of this site, please only enter the characters after "yourdomain.org/" e.g. "node/1"'),
   );
 
   $form['shib_terms_conditions_settings']['shib_auth_terms_ver'] = array(
