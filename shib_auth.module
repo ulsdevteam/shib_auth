@@ -579,12 +579,12 @@ function shib_auth_init() {
 
     //********* CUSTOM OPTION ENABLED **********
     //Lock user into the customization / consent form, unless it is the terms and contitions page itself
-    elseif (('/'. $_GET['q']) == shib_auth_config('terms_url')) {
-      //TODO: ???
+    elseif (($_GET['q']) == shib_auth_config('terms_url')) {
+      //Don't display custom form, let the terms and conditions be displayed
     }
     //if one of the customizing options enabled, ask for these values, then register her
     elseif (shib_auth_custom_form($umail_single, $uname)) {
-      //TODO: ???
+      //We display custom forms on every page, if the user isn't registered yet
     }
     //If there is no custom mail option enabled, and we didn't received email address from server, output an error
     else {
