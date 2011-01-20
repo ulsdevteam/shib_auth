@@ -6,8 +6,6 @@
  */
 
 function shib_auth_admin_general() {
-  global $base_url;
-
   $form = array();
 
   $form['shib_handler_settings'] = array(
@@ -176,18 +174,9 @@ function shib_auth_custom_data() {
   }
 
   if (shib_auth_config('terms_accept')) {
-    global $base_url;
-
-    if (drupal_substr(shib_auth_config('terms_url'), 0, 1) == '/') {
-      $url = $base_url . shib_auth_config('terms_url');
-    }
-    else {
-      $url = shib_auth_config('terms_url');
-    }
     $form['accept'] = array(
     '#type'          => 'checkbox',
-    '#title'         => 'I accept the <a href="'. $url
-                   .'" target="_blank">terms and conditions</a>',
+    '#title'         => t('I accept the <a href="@link" target="_blank">terms and conditions</a>', array('@link' => url(shib_auth_config('terms_url')))),
     );
   }
 
@@ -257,8 +246,6 @@ function shib_auth_admin_groups_submit($form, &$form_state) {
  * @returns HTML text of the administration form
  */
 function shib_auth_admin_advanced() {
-  global $base_url;
-
   $form = array();
 
   $form['shib_handler_settings'] = array(

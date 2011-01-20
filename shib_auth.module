@@ -24,8 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 //Handle module configuration
 function shib_auth_config($variable) {
-  global $base_url;
-
   $var_store = array('account_linking' => FALSE,
                      'account_linking_text' => t('Link this account with another identity.'),
                      'auto_destroy_session' => FALSE,
@@ -46,7 +44,7 @@ function shib_auth_config($variable) {
                      'email_variable' => 'HTTP_SHIB_MAIL',
                      'username_variable' => 'REMOTE_USER',
                      'login_url' => '',
-                     'logout_url' => $base_url,
+                     'logout_url' => url('<front>'),
                      'link_text' => t('Shibboleth Login'),
                      'full_handler_url' => shib_auth_get_handler_base() . variable_get('wayf_uri', '/DS'),
                      'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
@@ -626,17 +624,13 @@ function shib_auth_get_handler_base() {
  * @param category The active category of user information being edited.
  */
 function shib_auth_user($op, &$edit, &$account, $category = NULL) {
-  global $base_url, $user;
+  global $user;
   if ($op == 'logout') {
     if ($_SESSION['authentication'] === 'shib_auth') {
       unset($_SESSION['rolelog']);
       $logouthandler = shib_auth_config('full_logout_url');
       unset($_SESSION['authentication']);
-      $logout_redirect = shib_auth_config('logout_url');
-      // If the logout_redirect URL was relative extension is needed.
-      if (!ereg('^http[s]{0,1}://', $logout_redirect) ) {
-        $logout_redirect = $base_url .'/'. $logout_redirect;
-      }
+      $logout_redirect = url(shib_auth_config('logout_url'));
       user_module_invoke('logout');
       drupal_goto("$logouthandler?return=$logout_redirect");
     }
