@@ -482,6 +482,9 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
 function shib_auth_init() {
   global $user;
 
+  //add theme css
+  drupal_add_css(drupal_get_path('module', 'shib_auth') .'/shib_auth.css');
+
   module_load_include('inc', 'shib_auth', 'forms');
   // Make sure that the user module is already loaded.
   drupal_load('module', 'user');
@@ -828,9 +831,6 @@ function shib_auth_block($op = 'list', $delta = 0, $edit = array()) {
  */
 function _login_url_html($is_account_linking = FALSE) {
   global $user;
-
-  //add theme css
-  drupal_add_css(drupal_get_path('module', 'shib_auth') .'/shib_auth.css');
 
   if ($user->uid === 0 AND $is_account_linking === FALSE) {
     return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('link_text'));
