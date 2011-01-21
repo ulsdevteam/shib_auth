@@ -269,7 +269,8 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     $idp = ($_SERVER['Shib-Identity-Provider']) ? $_SERVER['Shib-Identity-Provider'] : $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
     $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
     $result = db_query($sql, $user->uid, $uname, $idp, date('Y-m-d H:i:s'), shib_auth_config('terms_ver'));
-    user_module_invoke('insert');
+    $null = NULL;
+    user_module_invoke('insert', $null, $user);
   }
 } //function shib_auth_save_authmap
 
@@ -299,7 +300,8 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
   }
 
   if (!$alreadyloggedin) {
-    user_module_invoke('login');
+    $null = NULL;
+    user_module_invoke('login', $null, $user);
   }
 
   shib_auth_submit_redirect();
@@ -631,7 +633,8 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
       $logouthandler = shib_auth_config('full_logout_url');
       unset($_SESSION['authentication']);
       $logout_redirect = url(shib_auth_config('logout_url'));
-      user_module_invoke('logout');
+      $null = NULL;
+      user_module_invoke('logout', $null, $user);
       drupal_goto("$logouthandler?return=$logout_redirect");
     }
   }
