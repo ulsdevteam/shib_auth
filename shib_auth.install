@@ -124,6 +124,8 @@ function shib_auth_update_6400() {
   variable_del('shib_auth_username_email');
   variable_set('shib_auth_logout_url', variable_get('shib_logout_url', $_SERVER['HTTP_HOST']));
   variable_del('shib_logout_url');
+  variable_set('shib_auth_link_text', variable_get('auth_link_text', 'Shibboleth Login'));
+  variable_del('auth_link_text');
 
 
   //copy the elements of authmap to the database shib_auth module uses, and left idp field empty
@@ -148,25 +150,6 @@ function shib_auth_update_6400() {
   return $ret;
 }
 
-/**
- * Implementation of hook_update().
- *
- * Hook to update module from older revisions
- * Unfortunately, we forgot to update auth_link text, so it was resetted to 
- * default in 4.x. Run this update to get the auth link text used in 3.x.
- */
-function shib_auth_update_6401() {
-  /* Hack to determine if we're already running version 4.01
-     (the 'shib_auth_version' was not set in versions before 4.x) */
-  if (variable_get('shib_auth_version', NULL) != "4.01") {
-    //ABORT
-    return $ret;
-  }
-  variable_set('shib_auth_version', "4.01");
-  //ACTUAL UPDATE
-  variable_set('shib_auth_link_text', variable_get('auth_link_text', 'Shibboleth Login'));
-  variable_del('auth_link_text');
-}
 /**
  * Implementation of hook_schema().
  *
