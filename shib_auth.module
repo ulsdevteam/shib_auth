@@ -22,8 +22,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
  */
 
-//Handle module configuration
+/**
+ * Configuration handler
+ * Defines a database with the default values, and gets the asked variable
+ * @param variable the name of the variable
+ * @return the matching variable prefixed with shib_auth_
+ */
 function shib_auth_config($variable) {
+  //building an array with the available variables, and their default values
   $var_store = array('account_linking' => FALSE,
                      'account_linking_text' => t('Link this account with another identity.'),
                      'auto_destroy_session' => FALSE,
@@ -49,7 +55,7 @@ function shib_auth_config($variable) {
                      'full_handler_url' => shib_auth_get_handler_base() . variable_get('wayf_uri', '/DS'),
                      'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
   );
-
+  //check, if it exists in the array above, and get its value
   if (array_key_exists($variable, $var_store)) {
     return variable_get("shib_auth_$variable", $var_store[$variable]);
   }
@@ -95,17 +101,22 @@ function shib_auth_help($path, $arg) {
   return $output;
 } //function shib_auth_help
 
-/** Errors out
+/** 
+  * Errors out
   * Example usage:
   *   if (something_bad_happens())
   *   return shib_auth_error("Something bad happened");
   * EXCEPTION WORKAROUND for php4
+  * @param msg Error Message
   */
 function shib_auth_error($msg = '') {
   drupal_set_message(t("[Shibboleth authentication] %msg", array('%msg' => $msg)), 'error');
   return FALSE;
 } // function shib_auth_error
 
+/** Unset session variables and destroy them 
+  * @param msg Error Message
+  */
 function shib_auth_terminate_session($msg='') {
   global $user;
   // unset all session variables and destroy session
@@ -174,7 +185,10 @@ function shib_auth_debug() {
     }
   }
 } //function shib_auth_debug
-
+/**
+  * Get IdP name
+  * @return IdP name
+  */
 function shib_auth_get_idp() {
   if (isset ($_SERVER['Shib-Identity-Provider']))
     return $_SERVER['Shib-Identity-Provider'];
