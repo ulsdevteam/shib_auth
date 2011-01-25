@@ -51,7 +51,7 @@ function shib_auth_config($variable) {
 /**
  * This footer part executes isPassive script, if the option was checked on the configuration page
  */
-function shib_auth_footer() {
+function shib_auth_page_alter() {
   global $user;
 
   if (!shib_auth_session_valid() && shib_auth_config('is_passive') && !$user->uid) {
@@ -60,7 +60,7 @@ function shib_auth_footer() {
     drupal_add_js(array('shib_auth' => $my_settings), array('type' => 'setting', 'scope' => JS_DEFAULT));
     drupal_add_js($base . '/isPassive.js', array('scope' => 'footer'));
   }
-} //function shib_auth_footer
+} //function shib_auth_page_alter
 
 /**
  * Display help and module information
