@@ -25,7 +25,7 @@ function shib_auth_install() {
   }
   cache_clear_all(NULL, 'cache_block');
 
-  drupal_set_message(t('Shibboleth authentication module installed successfully.'));
+  drupal_set_message(st('Shibboleth authentication module installed successfully.'));
 }
 
 /**
@@ -34,10 +34,6 @@ function shib_auth_install() {
  * Hook to uninstall variables and the block, witch were created and used by the module
  */
 function shib_auth_uninstall() {
-
-  // TODO: Update script needed for tracking variable name changes
-  // (auth_link_text -> shib_auth_link_text, shib_logout_url -> shib_auth_logout_url,
-  // shib_auth_username_email -> shib_auth_email_variable)
 
   // Drop variables.
   $variables = array(
@@ -51,6 +47,7 @@ function shib_auth_uninstall() {
     'shib_auth_email_variable',
     'shib_auth_auto_destroy_session',
     'shib_auth_logout_url',
+    'shib_auth_login_url',
     'shib_auth_debug_state',
     'shib_auth_debug_url',
     'shib_auth_enable_custom_mail',
@@ -62,6 +59,7 @@ function shib_auth_uninstall() {
     'shib_auth_terms_url',
     'shib_auth_terms_ver',
     'shib_auth_force_https',
+    'shib_auth_version',
   );
   foreach ($variables as $variable) {
     variable_del($variable);
@@ -80,7 +78,7 @@ function shib_auth_uninstall() {
  * It's needed because db_table_exists() does not escape sql wildcard character '_'
  */
 function _shib_auth_db_table_exists($table) {
-  $table = preg_replace('/_/','\_',$table);  
+  $table = preg_replace('/_/', '\_', $table);
   return (bool) db_fetch_object(db_query("SHOW TABLES LIKE '{" . $table . "}'"));
 }
 
@@ -95,14 +93,17 @@ function shib_auth_update_6400() {
   $ret = array();
   $schema = shib_auth_schema();
 
-  if(!_shib_auth_db_table_exists('shib_auth'))
+  if (!_shib_auth_db_table_exists('shib_auth')) {
     db_create_table($ret, 'shib_auth', $schema['shib_auth']);
-  else
+  }
+  else {
     db_add_field($ret, 'shib_auth', 'sticky', array(
       'type' => 'int', 'size' => 'tiny', 'not null' => FALSE, 'default' => 0));
+  }
 
-  if(!_shib_auth_db_table_exists('shib_authmap'))
+  if (!_shib_auth_db_table_exists('shib_authmap')) {
     db_create_table($ret, 'shib_authmap', $schema['shib_authmap']);
+  }
 
   /* Hack to determine if we're already running version 4.x
      (the 'shib_auth_version' was not set in versions before 4.x) */
@@ -112,7 +113,7 @@ function shib_auth_update_6400() {
   }
 
   /* shib_auth module version */
-  variable_set('shib_auth_version',"4.0");
+  variable_set('shib_auth_version', "4.0");
 
   //DESTRUCTIVE PART OF THE UPDATE -- this must not be run multiple times
   variable_set('shib_auth_full_logout_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') .'/Logout');
@@ -123,9 +124,11 @@ function shib_auth_update_6400() {
   variable_del('shib_auth_username_email');
   variable_set('shib_auth_logout_url', variable_get('shib_logout_url', $_SERVER['HTTP_HOST']));
   variable_del('shib_logout_url');
+  variable_set('shib_auth_link_text', variable_get('auth_link_text', 'Shibboleth Login'));
+  variable_del('auth_link_text');
 
 
-  // copy the elements of authmap to the database shib_auth module uses, and left idp field empty
+  //copy the elements of authmap to the database shib_auth module uses, and left idp field empty
   $entries = db_query("SELECT * FROM {authmap} WHERE module='shib_auth'");
   while ($entry = db_fetch_array($entries)) {
     if ($entry['uid']>1) {
@@ -135,17 +138,18 @@ function shib_auth_update_6400() {
     }
   }
 
-  // update shib elements to 
+  //update shib elements to
   $entries = db_query("SELECT * FROM {shib_auth}");
   while ($entry = db_fetch_array($entries)) {
     $old_role = unserialize(urldecode($entry['role']));
     if ($old_role) {
       $new_role = serialize(array_keys($old_role));
-      db_query("UPDATE {shib_auth} SET role='%s' WHERE id=%d",$new_role,$entry['id']);
+      db_query("UPDATE {shib_auth} SET role='%s' WHERE id=%d", $new_role, $entry['id']);
     }
   }
   return $ret;
 }
+
 /**
  * Implementation of hook_schema().
  *
@@ -194,7 +198,7 @@ function shib_auth_schema() {
     'primary key' => array('id'),
     'unique keys' => array('targeted_id' => array('targeted_id'), ),
   );
-  
+
   $schema['shib_auth'] = array(
     'description' => t('Stores shibboleth authentication rules'),
     'fields' => array(
@@ -231,6 +235,6 @@ function shib_auth_schema() {
     ),
     'primary key' => array('id'),
   );
-  
+
   return $schema;
 }

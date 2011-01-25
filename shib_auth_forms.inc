@@ -1,15 +1,17 @@
 <?php
 // $Id$
+/**
+ * @file
+ * Drupal forms of the Shibboleth authentication module.
+ */
 
 function shib_auth_admin_general() {
-  global $base_url;
-
   $form = array();
 
   $form['shib_handler_settings'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Shibboleth handler settings'),
-    '#weight'      => -10, 
+    '#weight'      => -10,
     '#collapsible' => FALSE,
   );
 
@@ -64,12 +66,12 @@ function shib_auth_admin_general() {
   $form['shib_attribute_settings']['shib_auth_define_username'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('User-defined usernames'),
-    '#description'   => t('Allow users to set their Drupal usernames at first Shibboleth login. Note 
-    that disabling this option only prevents new users from registering their 
+    '#description'   => t('Allow users to set their Drupal usernames at first Shibboleth login. Note
+    that disabling this option only prevents new users from registering their
     own username. Existing user-defined usernames will remain valid.'),
     '#default_value' => shib_auth_config('define_username'),
   );
-  
+
   $form['shib_attribute_settings']['shib_auth_enable_custom_mail'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('User-defined e-mail addresses'),
@@ -82,8 +84,8 @@ function shib_auth_admin_general() {
   $form['shib_attribute_settings']['shib_auth_account_linking'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Account linking'),
-    '#description'   => t('Allow locally authenticated users to link their Drupal accounts to 
-    federated logins. Note that disabling this option only prevents from 
+    '#description'   => t('Allow locally authenticated users to link their Drupal accounts to
+    federated logins. Note that disabling this option only prevents from
     creating/removing associations, existing links will remain valid.'),
     '#default_value' => shib_auth_config('account_linking'),
   );
@@ -126,59 +128,58 @@ function shib_auth_custom_data() {
   $form = array();
   $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $_SERVER[shib_auth_config('username_variable')]);
   $authmap_username = db_fetch_array($auth_map_un_query);
-  if ($authmap_username)
-  {
+  if ($authmap_username) {
     $form['consent'] = array(
-        '#value' => t('The terms of use document has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit if you accept the new version. Version you havae accepted: @accepted, document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
+        '#value' => t('The terms of use document has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit if you accept the new version. Version you have accepted: @accepted - document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
       );
   }
   else {
-    if (shib_auth_config('define_username') && !$user->uid) {
+    if (shib_auth_config('define_username') && (!$user->uid || shib_auth_config('account_linking'))) {
       $form['custom_username'] = array(
         '#type' => 'textfield',
         '#title' => t('Desired username'),
         '#default_value' => $_SERVER[shib_auth_config('username_variable')],
         '#size' => 60,
       );
-      }
-      else  {
-        $form['custom_usernamem'] = array(
-        '#value' => t('<b>Username:</b> <br>'),
-        );
-        $form['custom_username'] = array(
+    }
+    else {
+      $form['custom_usernamem'] = array(
+        '#value' => t('<b>Username:</b> <br />'),
+      );
+
+      $form['custom_username'] = array(
         '#value' => $_SERVER[shib_auth_config('username_variable')],
-        '#suffix' => '<br>',
-        );
-      }
-    if (shib_auth_config('enable_custom_mail') && !$user->uid) {
+        '#suffix' => '<br />',
+      );
+    }
+
+    if (shib_auth_config('enable_custom_mail') && (!$user->uid  || shib_auth_config('account_linking'))) {
       $form['custom_mail'] = array(
         '#type' => 'textfield',
         '#title' => t('E-mail'),
         '#default_value' => $_SERVER[shib_auth_config('email_variable')],
         '#size' => 60,
       );
-      }
-      else  {
-        $form['custom_mailm'] = array(
-        '#value' => t('<b>E-mail:</b> <br>'),
-        );
-        $form['custom_mail'] = array(
+    }
+    else {
+      $form['custom_mailm'] = array(
+        '#value' => t('<b>E-mail:</b> <br />'),
+      );
+
+      $form['custom_mail'] = array(
         '#value' => $_SERVER[shib_auth_config('email_variable')],
-        '#suffix' => '<br>',
-        );
-      }
+        '#suffix' => '<br />',
+      );
+    }
   }
+
   if (shib_auth_config('terms_accept')) {
-    global $base_url;
-    if (drupal_substr(shib_auth_config('terms_url'), 0, 1) == '/')
-      $url = $base_url.shib_auth_config('terms_url');
-    else $url = shib_auth_config('terms_url');
     $form['accept'] = array(
     '#type'          => 'checkbox',
-    '#title'         => 'I accept the <a href="'. $url
-                   .'" target="_blank">terms and conditions</a>',
+    '#title'         => t('I accept the <a href="@link" target="_blank">terms and conditions</a>', array('@link' => url(shib_auth_config('terms_url')))),
     );
   }
+
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Send'),
@@ -193,19 +194,23 @@ function shib_auth_custom_data() {
  * @param form_state $form_state contains all of the data of the form
  */
 function shib_auth_custom_data_validate($form, &$form_state) {
-  IF (shib_auth_config('enable_custom_mail'))
+  if (shib_auth_config('enable_custom_mail')) {
     if ($form_state['values']['custom_mail'] == '') {
       form_set_error('', t('You have to fill the \'E-mail\' field.'));
     }
-    
-  IF (shib_auth_config('define_username'))
+  }
+
+  if (shib_auth_config('define_username')) {
     if ($form_state['values']['custom_username'] == '') {
       form_set_error('', t('You have to fill the \'Username\' field.'));
     }
-   IF (shib_auth_config('terms_accept'))
+  }
+
+  if (shib_auth_config('terms_accept')) {
     if ($form_state['values']['accept'] == FALSE) {
       form_set_error('', t('You have to accept Terms of Use to proceed.'));
     }
+  }
 } // shib_auth_custom_email_validate()
 
 
@@ -213,7 +218,7 @@ function shib_auth_custom_data_validate($form, &$form_state) {
  * This function prevents drupal loading a cached page after shibboleth login
  */
 function shib_login() {
-  drupal_goto(substr($_GET['q'], 11));
+  drupal_goto(drupal_substr($_GET['q'], 11));
 }
 
 /**
@@ -223,7 +228,6 @@ function shib_login() {
  * @param &$form_state contains all of the data of the form
  */
 function shib_auth_admin_groups_validate($form, &$form_state) {
-
 }//function shib_auth_admin_groups
 
 /**
@@ -242,8 +246,6 @@ function shib_auth_admin_groups_submit($form, &$form_state) {
  * @returns HTML text of the administration form
  */
 function shib_auth_admin_advanced() {
-  global $base_url;
-
   $form = array();
 
   $form['shib_handler_settings'] = array(
@@ -252,13 +254,14 @@ function shib_auth_admin_advanced() {
     '#weight'      => 0,
     '#collapsible' => FALSE,
   );
-  
+
   $form['shib_handler_settings']['shib_auth_is_passive'] = array(
      '#type'          => 'checkbox',
     '#title'         => t('Enable passive authentication'),
     '#description'   => t('Enable passive authentication'),
     '#default_value' => shib_auth_config('is_passive'),
   );
+
   $form['shib_handler_settings']['shib_auth_forceauthn'] = array(
      '#type'          => 'checkbox',
     '#title'         => t('Enable forced authentication'),
@@ -278,6 +281,19 @@ function shib_auth_admin_advanced() {
     '#default_value' => shib_auth_config('auto_destroy_session'),
   );
 
+  $form['shib_login_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Login settings'),
+    '#weight'      => -1,
+  );
+
+  $form['shib_login_settings']['shib_auth_login_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t("URL to redirect to after login"),
+    '#default_value' => shib_auth_config('login_url'),
+    '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. If this value is empty than the user will be redirected to the originally requested page.")
+   );
+
   $form['shib_logout_settings'] = array(
     '#type' => 'fieldset',
     '#title' => t('Logout settings'),
@@ -291,7 +307,7 @@ function shib_auth_admin_advanced() {
     '#description' => t("The URL can be absolute or relative to the server base url. The relative paths will be automatically extended with the site base URL. If you are using SLO, this setting is probably useless (depending on the IdP)")
   );
 
- $form['shib_terms_conditions_settings'] = array(
+  $form['shib_terms_conditions_settings'] = array(
     '#type'        => 'fieldset',
     '#title'       => t('Terms of use settings'),
     '#weight'      => -2,
@@ -309,17 +325,15 @@ function shib_auth_admin_advanced() {
     '#type'          => 'textfield',
     '#title'         => t('URL of the document'),
     '#default_value' => shib_auth_config('terms_url'),
-    '#description'   => t('If it is a drupal content, please start the link with /'),
-    '#prefix' => '<table border= \'0\'><tr><td>',
-    '#suffix' => '</td>',
+    '#description'   => t('Please refence local content with e.g. "node/1", or use an external link.'),
   );
 
   $form['shib_terms_conditions_settings']['shib_auth_terms_ver'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Document version'),
     '#default_value' => shib_auth_config('terms_ver'),
-    '#prefix' => '<td valign=top>',
-    '#suffix' => '</td></tr></table>',
+    '#size'          => 4,
   );
+
   return system_settings_form($form);
-} 
+}
