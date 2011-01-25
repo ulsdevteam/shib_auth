@@ -39,7 +39,7 @@ function shib_auth_edit_form($options) {
   $form['shib_auth_roles'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Roles'),
-    '#default_value' => count($options[3])>1||(count($options[3])==1 && $options[3] != "")?$options[3]:array(),
+    '#default_value' => count($options[3]) > 1 || (count($options[3]) == 1 && $options[3] != "") ? $options[3] : array(),
     '#options' => $roles,
   );
 
@@ -60,7 +60,7 @@ function shib_auth_edit_form($options) {
   );
 
   return $form;
-}//function shib_auth_edit_form
+} //function shib_auth_edit_form
 
 /**
  * This function enables the administrator to clone an existing rule, this is useful,
@@ -68,7 +68,7 @@ function shib_auth_edit_form($options) {
  * @param id rule identifier
  */
 function _shib_auth_clone_rule($id) {
-  $rule = db_query("SELECT * FROM {shib_auth} WHERE id = %d", array($id));
+  $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
   $db_entry = db_fetch_array($rule);
   $db_entry['id'] = NULL;
   $update = array();
@@ -80,17 +80,19 @@ function _shib_auth_clone_rule($id) {
     drupal_set_message(t('Unexpected error has been detected.'));
   }
   drupal_goto('admin/user/shib_auth/rules');
-}//function _shib_auth_clone_rule
+} //function _shib_auth_clone_rule
 
 /**
  * This function lets the admin to delete an existing rule
  * @param id rule identifier
  */
 function _shib_auth_delete_rule($id) {
-  db_query("DELETE FROM {shib_auth} WHERE id = %d", array($id));
-  drupal_set_message(t('Rule <strong>#!id</strong> has been deleted.', array('!id' => $id)) , 'warning');
+  db_delete('shib_auth')
+  ->condition('id', $id)
+  ->execute();
+  drupal_set_message(t('Rule <strong>#!id</strong> has been deleted.', array('!id' => $id)), 'warning');
   drupal_goto('admin/user/shib_auth/rules');
-}//function _shib_auth_delete_rule
+} //function _shib_auth_delete_rule
 
 /**
  * This function lists all rules, and let the admin to do certain actions with them
@@ -98,75 +100,83 @@ function _shib_auth_delete_rule($id) {
  */
 function _shib_auth_list_rules() {
   $rules = db_query("SELECT * FROM {shib_auth}");
-  $retval = '<table style="width: 100%;"><tr><th>Attribute</th><th>RegExp</th><th>Role(s)</th><th>Sticky</th><th>Actions</th></tr>'."\n";
+  $retval = '<table style="width: 100%;"><tr><th>Attribute</th><th>RegExp</th><th>Role(s)</th><th>Sticky</th><th>Actions</th></tr>' . "\n";
   $counter = 0;
   while ($rule = db_fetch_array($rules)) {
     $roles = unserialize($rule['role']);
     $roles_list = '';
     foreach ($roles as $role) {
-      $roles_list .= shib_auth_get_rolename($role) .' ';
+      $roles_list .= shib_auth_get_rolename($role) . ' ';
     }
-//     if (!empty($roles)) $roles_list = implode(', ', $roles);
+    //     if (!empty($roles)) $roles_list = implode(', ', $roles);
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
-    $retval .= '<tr><td>'. $rule['field'] .'</td><td>'. urldecode($rule['regexpression']) .'</td><td>'. $roles_list .'</td><td>'. $sticky  .'</td>';
+    $retval .= '<tr><td>' . $rule['field'] . '</td><td>' . urldecode($rule['regexpression']) . '</td><td>' . $roles_list . '</td><td>' . $sticky  . '</td>';
     $retval .= '<td stype="text-align: right;">';
-    $retval .= '<a href="'. url('admin/user/shib_auth/clone/'. $rule['id']) .'">'. t('Clone') .'</a> | ';
-    $retval .= '<a href="'. url('admin/user/shib_auth/edit/'. $rule['id']) .'">'. t('Edit') .'</a> | ';
-    $retval .= '<a href="'. url('admin/user/shib_auth/delete/'. $rule['id']) .'">'. t('Delete') .'</a>';
-    $retval .= '</td></tr>'."\n";
+    $retval .= '<a href="' . url('admin/user/shib_auth/clone/' . $rule['id']) . '">' . t('Clone') . '</a> | ';
+    $retval .= '<a href="' . url('admin/user/shib_auth/edit/' . $rule['id']) . '">' . t('Edit') . '</a> | ';
+    $retval .= '<a href="' . url('admin/user/shib_auth/delete/' . $rule['id']) . '">' . t('Delete') . '</a>';
+    $retval .= '</td></tr>' . "\n";
     $counter++;
   }
   if ($counter == 0) {
     $retval .= '<tr><td colspan="4" stype="text-align: center;">';
-    $retval .= t('There is no rule in the database') .'</td></tr>'."\n";
+    $retval .= t('There is no rule in the database') . '</td></tr>' . "\n";
   }
   $retval .= '</table>';
-  $retval .= '<a href="'. url('admin/user/shib_auth/new') .'">'. t('Add new rule') .'</a>';
+  $retval .= '<a href="' . url('admin/user/shib_auth/new') . '">' . t('Add new rule') . '</a>';
 
   return $retval;
-} // function _shib_auth_list_rules
+} //function _shib_auth_list_rules
+
 /**
  * Validates a new rule
  * @param $form - the identifier of the form, which we have just received
  * @param $form_state - the state of the form, which we have just received, including all of the variables
  */
 function shib_auth_new_rule_validate($form, &$form_state) {
-  if (empty($form_state['values']['shib_auth_new_attrib'])) 
+  if (empty($form_state['values']['shib_auth_new_attrib'])) {
     form_set_error('shib_auth_new_attrib', t('This element must not be empty'));
+  }
   if (empty($form_state['values']['shib_auth_new_regexp'])) {
     form_set_error('shib_auth_new_regexp', t('This element must not be empty'));
   }
-}
+} //function shib_auth_new_rule_validate
+
 /**
  * Creates a new rule by calling universal create/edit form
  */
 function shib_auth_new_rule() {
   return shib_auth_edit_form(array(0, '', '', '', 'Add rule', 0));
-}
+} //function shib_auth_new_rule
+
 /**
  * Creates a new rule, containing he rule name, the server attrubite, the RegExp, and the role names by calling save rule
  */
 function shib_auth_new_rule_submit($form, &$form_state) {
   shib_auth_save_rule($form_state, array());
-}//function shib_auth_new_rule
+} //function shib_auth_new_rule_submit
+
 /**
  * Validates rule edit
  * @param $form - the identifier of the form, which we have just received
  * @param $form_state - the state of the form, which we have just received, including all of the variables
  */
 function shib_auth_edit_rule_validate($form, &$form_state) {
-  if (empty($form_state['values']['shib_auth_new_attrib'])) 
+  if (empty($form_state['values']['shib_auth_new_attrib'])) {
     form_set_error('shib_auth_new_attrib', t('This element must not be empty'));
+  }
   if (empty($form_state['values']['shib_auth_new_regexp'])) {
     form_set_error('shib_auth_new_regexp', t('This element must not be empty'));
   }
-}
+} //function shib_auth_edit_rule_validate
+
 /**
  * Edits a rule, containing he rule name, the server attrubite, the RegExp, and the role names by calling save rule
  */
 function shib_auth_edit_rule_submit($form, &$form_state) {
   shib_auth_save_rule($form_state, "id");
-}//function shib_auth_new_rule
+} //function shib_auth_edit_rule_submit
+
 /**
  * Saves a new rule into database
  * @param $update - decides if it is a new rule (NULL), or we're just modifing one ('id')
@@ -181,7 +191,7 @@ function shib_auth_save_rule($form_state, $update) {
       $roles[] = $role_id;
     }
   }
-    //save the new element into an array
+  //save the new element into an array
   $new_element = array(
       'id'            => $new_id,
       'field'         => urlencode($form_state['values']['shib_auth_new_attrib']),
@@ -211,22 +221,22 @@ function shib_auth_save_rule($form_state, $update) {
   }
   //if everything was fine, print the rules with the newly added/modified one
   drupal_goto('admin/user/shib_auth/rules');
-}
+} //function shib_auth_save_rule
+
 /**
  * Edits a rule by calling universal create/edit form
  */
 function shib_auth_edit_rule($form_state, $id) {
   $form = array();
   // calls the edit form, with the fields of the existing rule
-  if (is_int((int)$id)) {
-    $rule = db_query("SELECT * FROM {shib_auth} WHERE id = %d", array($id));
+  if (is_int((int) $id)) {
+    $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
     $db_entry = db_fetch_array($rule);
     return shib_auth_edit_form(
       array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize($db_entry['role']), 'Apply', $db_entry['sticky'])
     );
   }
-
-}//function shib_auth_edit_rule
+} //function shib_auth_edit_rule
 
 /**
  * Admin users group membership validate
@@ -236,7 +246,7 @@ function shib_auth_edit_rule($form_state, $id) {
  */
 function shib_auth_admin_groups_validate($form, &$form_state) {
 
-}//function shib_auth_admin_groups
+} //function shib_auth_admin_groups
 
 /**
  * Admin users group membership submit
@@ -247,5 +257,4 @@ function shib_auth_admin_groups_validate($form, &$form_state) {
 function shib_auth_admin_groups_submit($form, &$form_state) {
   variable_set('shib_auth_affilate_attrib', $form_state['values']['shib_auth_affilate_attrib']);
   drupal_set_message(t('Your changes are saved.'));
-}//function shub_auth_groups_submit
-
+} //function shub_auth_groups_submit
