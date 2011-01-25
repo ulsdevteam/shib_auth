@@ -124,9 +124,10 @@ function shib_auth_admin_general() {
  */
 function shib_auth_custom_data() {
   global $user;
+
   $form = array();
-  //Decide if the user is already registered, but a new consent version is present 
-  $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $_SERVER[shib_auth_config('username_variable')]);
+  //Decide if the user is already registered, but a new consent version is present
+  $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $_SERVER[shib_auth_config('username_variable')]));
   $authmap_username = db_fetch_array($auth_map_un_query);
   //if the user already registered, display a message about consent version change
   if ($authmap_username) {
@@ -136,7 +137,7 @@ function shib_auth_custom_data() {
   }
   //register a new user with the data given here
   else {
-  //username textfield is writable, if define_username variable is true
+    //username textfield is writable, if define_username variable is true
     if (shib_auth_config('define_username') && (!$user->uid || shib_auth_config('account_linking'))) {
       $form['custom_username'] = array(
         '#type' => 'textfield',
@@ -250,8 +251,8 @@ function shib_auth_link() {
  * @param $form data of the form
  * @param &$form_state contains all of the data of the form
  */
-function shib_auth_admin_groups_validate($form, &$form_state) {
-}//function shib_auth_admin_groups
+function shib_auth_admin_groups_validate($form, &$form_state) { }
+//function shib_auth_admin_groups
 
 /**
  * Admin users group membership submit
@@ -262,7 +263,8 @@ function shib_auth_admin_groups_validate($form, &$form_state) {
 function shib_auth_admin_groups_submit($form, &$form_state) {
   variable_set('shib_auth_affilate_attrib', $form_state['values']['shib_auth_affilate_attrib']);
   drupal_set_message(t('Your changes have been saved.'));
-}//function shub_auth_groups_submit
+}
+//function shub_auth_groups_submit
 
 /**
  * Generate the administration form of the Shibboleth authentication module
