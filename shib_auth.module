@@ -282,7 +282,11 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   else {
     //if linking an account with shib: don't login again
     if (!($user->uid > 1 && shib_auth_config('account_linking'))) {
-      //register a new user with this username, and login
+      if (user_is_blocked($custom_uname)) {
+        //register a new user with this username, and login
+        shib_auth_error('This user is blocked');
+        return;
+      }
       user_external_login_register($custom_uname, 'shib_auth');
     }
     $_SESSION['authentication'] = 'shib_auth';
