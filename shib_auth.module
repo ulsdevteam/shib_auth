@@ -693,7 +693,10 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
       unset($_SESSION['rolelog']);
       $logouthandler = shib_auth_config('full_logout_url');
       unset($_SESSION['authentication']);
-      $logout_redirect = url(shib_auth_config('logout_url'));
+      $logout_redirect = url(
+        shib_auth_config('logout_url'),
+        array('absolute' => TRUE)
+      );
       $null = NULL;
       user_module_invoke('logout', $null, $user);
       drupal_goto("$logouthandler?return=$logout_redirect");
