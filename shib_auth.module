@@ -312,22 +312,22 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
   $account = user_external_load($authmap_username);
   if (isset($account->uid)) {
     if (user_external_login($account)) {
-    $_SESSION['authentication'] = 'shib_auth';
-  //and the Shibboleth mail address override was enabled in the admin config
-  if (shib_auth_config('enable_custom_mail') == 0) {
-    //check if there isn't any user with this e-mail (whose name is different)
-    $email_for_other_user_query =
-      db_query("SELECT * FROM {users} WHERE mail='%s' AND name <> '%s'", $umail_single, $uname );
-    $email_for_other_user = db_fetch_object($username_and_email_query);
-    if ($email_for_other_user) {
-      shib_auth_error('Error saving user account. E-mail address is already used.');
-    }
-    //if everything is allright, modify the mail address of the user.
-    else {
-      $user = user_save($user, array('mail' => $umail_single));
-    }
-  }
+      $_SESSION['authentication'] = 'shib_auth';
+      //and the Shibboleth mail address override was enabled in the admin config
+      if (shib_auth_config('enable_custom_mail') == 0) {
+        //check if there isn't any user with this e-mail (whose name is different)
+        $email_for_other_user_query =
+        db_query("SELECT * FROM {users} WHERE mail='%s' AND name <> '%s'", $umail_single, $uname );
+        $email_for_other_user = db_fetch_object($username_and_email_query);
+        if ($email_for_other_user) {
+          shib_auth_error('Error saving user account. E-mail address is already used.');
+        }
+        //if everything is allright, modify the mail address of the user.
+        else {
+          $user = user_save($user, array('mail' => $umail_single));
+        }
       }
+    }
   }
   
 
