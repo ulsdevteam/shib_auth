@@ -328,7 +328,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
         }
         //if everything is allright, modify the mail address of the user.
         else {
-          $user = user_save($user, array('mail' => $umail_single));
+          $user = user_save($account, array('mail' => $umail_single));
         }
       }
     }
