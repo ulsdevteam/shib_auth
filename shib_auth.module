@@ -313,7 +313,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
 
   $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid='%s'", $uid);
   $authmap_username = db_fetch_array($auth_map_un_query);
-  $account = user_external_load($authmap_username);
+  $account = user_external_load($authmap_username['name']);
   if (isset($account->uid)) {
     if (user_external_login($account)) {
       $_SESSION['authentication'] = 'shib_auth';
@@ -333,7 +333,6 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
       }
     }
   }
-  
 
   //redirect user to a predefined page, or a page, she wanted to see before clicking on login
   shib_auth_submit_redirect();
