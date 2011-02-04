@@ -23,7 +23,7 @@ function shib_auth_edit_form($options) {
     '#type'           => 'textfield',
     '#default_value'  => $options[1],
     '#require'        => TRUE,
-    '#description'    => t('More properly: <b>$_SERVER</b> field name; enable DEBUG mode to list available fields. <br/>Note that it might differ from your users\' fields.'),
+    '#description'    => t('More properly: <b>!server</b> field name; enable DEBUG mode to list available fields. <br/>Note that it might differ from your users\' fields.', array('!server' => $_SERVER)),
   );
 
   $form['shib_auth_new_regexp'] = array(
@@ -68,7 +68,7 @@ function shib_auth_edit_form($options) {
  */
 function _shib_auth_clone_rule($id) {
   $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
-  $db_entry = db_fetch_array($rule);
+  $db_entry = $rule->fetchCol();
   $db_entry['id'] = NULL;
   $update = array();
   $ret = drupal_write_record('shib_auth', $db_entry, $update);
@@ -101,7 +101,7 @@ function _shib_auth_list_rules() {
   $rules = db_query("SELECT * FROM {shib_auth}");
   $retval = '<table style="width: 100%;"><tr><th>Attribute</th><th>RegExp</th><th>Role(s)</th><th>Sticky</th><th>Actions</th></tr>' . "\n";
   $counter = 0;
-  while ($rule = db_fetch_array($rules)) {
+  while ($rule = $rules->fetchAssoc()) {
     $roles = unserialize($rule['role']);
     $roles_list = '';
     foreach ($roles as $role) {
@@ -230,7 +230,7 @@ function shib_auth_edit_rule($form_state, $id) {
   // calls the edit form, with the fields of the existing rule
   if (is_int((int) $id)) {
     $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
-    $db_entry = db_fetch_array($rule);
+    $db_entry = $rule->fetchCol();
     return shib_auth_edit_form(
       array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize($db_entry['role']), 'Apply', $db_entry['sticky'])
     );
