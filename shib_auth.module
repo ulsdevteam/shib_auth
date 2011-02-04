@@ -76,7 +76,7 @@ function shib_auth_help($path, $arg) {
       $output .= t('<p<For more help related to Shibboleth and module configuration, see <a href=\"@wiki\">NIIF AAI wiki pages</a></p>',
         array('@wiki' => url('https://wiki.aai.niif.hu/index.php/Drupal_Shibboleth_module')));
       break;
-    case 'admin/user/shib_auth':
+    case 'admin/config/people/shib_auth':
       $output = t('<p>The text shown in the block and on other login pages can be changed on the <a href=\"@block\">block settings page</a></p>',
         array('@block' => url('admin/structure/block/configure/shib_auth/0')));
       break;
@@ -208,13 +208,13 @@ function shib_auth_get_idp() {
 function shib_auth_add_authmap($uid, $federated_id, $consentver = '') {
   // Check if $federated_id exists in {shib_authmap}
   $query_fed_id = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $federated_id));
-  if (db_fetch_object($query_fed_id)) {
+  if ($query_fed_id->fetchObject()) {
     return shib_auth_error('Cannot link federated login to multiple accounts');
   }
   $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) "
       . "VALUES  ('%s', '%s', '%s', '%s', '%s')";
   // TODO Please convert this statement to the D7 database API syntax.
-  return db_query($sql, $uid, $federated_id, shib_auth_get_idp(), date('Y-m-d H:i:s'), $consentver);
+  return db_query($sql, $uid, $federated_id, shib_auth_get_idp(), time(), $consentver);
 } //function shib_auth_add_authmap
 
 /**
@@ -248,7 +248,7 @@ function shib_auth_session_isShib2x() {
 function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   global $user;
   $email_already_used_query = db_query("SELECT * FROM {users} WHERE mail = :mail", array(':mail' => $umail_single));
-  $email_already_used = db_fetch_object($email_already_used_query);
+  $email_already_used = $email_already_used_query->fetchObject();
   // If the mail address is used, give an error
   if ($email_already_used) {
     shib_auth_error('Error saving user account. E-mail address is already used.');
@@ -376,7 +376,7 @@ function shib_auth_check_identifier($uname) {
  */
 function shib_auth_load_from_authmap($uname) {
   $auth_map_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $uname));
-  return db_fetch_array($auth_map_query);
+  return $auth_map_query->fetchCol();
 } //function shib_auth_load_from_authmap
 
 /**
@@ -403,7 +403,7 @@ function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
     else {
       // and it isn't used by another registered drupal user
       $un_already_used_query = db_query("SELECT * FROM {users} WHERE name = :name", array(':name' => $custom_username));
-      $un_already_used = db_fetch_object($un_already_used_query);
+      $un_already_used = $un_already_used_query->fetchObject();
       if ($un_already_used) {
         shib_auth_error('Error saving user account. User name is already used.');
       }
@@ -719,40 +719,41 @@ function shib_auth_get_handler_base() {
 
 /**
  * Let the user exit from the Shibboleth authority when he/she log out from the actual Drupal site.
- * @param op What kind of action is being performed.
- * @param edit The array of form values submitted by the user.
  * @param account The user object on which the operation is being performed.
- * @param category The active category of user information being edited.
  */
-function shib_auth_user($op, &$edit, &$account, $category = NULL) {
-  global $user;
-  if ($op == 'logout') {
-    if ($_SESSION['shib_auth_authentication'] === 'shib_auth') {
-      unset($_SESSION['shib_auth_rolelog']);
-      $logouthandler = shib_auth_config('full_logout_url');
-      unset($_SESSION['shib_auth_authentication']);
-      $logout_redirect = url(
-        shib_auth_config('logout_url'),
-        array('absolute' => TRUE)
-      );
-      drupal_goto("$logouthandler?return=$logout_redirect");
-    }
+function shib_auth_user_logout($account) {
+  if ($_SESSION['authentication'] === 'shib_auth') {
+    unset($_SESSION['rolelog']);
+    $logouthandler = shib_auth_config('full_logout_url');
+    unset($_SESSION['authentication']);
+    $logout_redirect = url(shib_auth_config('logout_url'));
+    $null = NULL;
+    user_module_invoke('logout', $null, $account);
+    drupal_goto("$logouthandler?return=$logout_redirect");
   }
-  elseif ($op == 'delete') {
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("DELETE FROM {shib_authmap} WHERE uid = %d", $account->uid) */
-    db_delete('shib_authmap')
-  ->condition('uid', $account->uid)
-  ->execute();
-  }
+}
+
+/**
+ * Let the user delet from the Drupal site.
+ * @param account The user object on which the operation is being performed.
+ */
+function shib_auth_user_delete($account) {
+  db_delete('shib_authmap')
+    ->condition('uid', $account->uid)
+    ->execute();
 } // function shib_auth_user
 
 /**
  * Valid permissions for this module
  * @return array An array of valid permissions for the shib_auth module
  */
-function shib_auth_perm() {
-  return array('administer shibboleth authentication');
+function shib_auth_permission() {
+  return array(
+    'administer shibboleth authentication' => array(
+      'title' => t('Admin the shibboleth authentication'),
+      'description' => t('Admin the shibboleth authentication module settings page.'),
+    ),
+  );
 } // function shib_auth_perm()
 
 /**
@@ -782,7 +783,7 @@ function shib_auth_generate_login_url() {
 function shib_auth_menu() {
   $items = array();
 
-  $items['admin/user/shib_auth'] = array(
+  $items['admin/config/people/shib_auth'] = array(
     'title'            => 'Shibboleth settings',
     'description'      => 'Settings of the Shibboleth authentication module',
     'page callback'    => 'drupal_get_form',
@@ -791,7 +792,7 @@ function shib_auth_menu() {
     'file'             => 'shib_auth_forms.inc',
   );
 
-  $items['admin/user/shib_auth/general'] = array(
+  $items['admin/config/people/shib_auth/general'] = array(
     'title'            => 'General settings',
     'type'             => MENU_DEFAULT_LOCAL_TASK,
     'access arguments' => array('administer shibboleth authentication'),
@@ -822,7 +823,7 @@ function shib_auth_menu() {
     'file'             => 'shib_auth_forms.inc',
   );
 
-  $items['admin/user/shib_auth/advanced'] = array(
+  $items['admin/config/people/shib_auth/advanced'] = array(
     'title'            => 'Advanced settings',
     'type'             => MENU_LOCAL_TASK,
     'page callback'    => 'drupal_get_form',
@@ -834,7 +835,7 @@ function shib_auth_menu() {
 
   /******* ROLE-RELATED MENU ITEMS ********/
 
-  $items['admin/user/shib_auth/rules'] = array(
+  $items['admin/config/people/shib_auth/rules'] = array(
     'title'            => 'Shibboleth group rules',
     'description'      => 'Administer attribute-based role assignment',
     'page callback'    => '_shib_auth_list_rules',
@@ -845,7 +846,7 @@ function shib_auth_menu() {
     'file'             => 'shib_auth_roles_forms.inc'
   );
 
-  $items['admin/user/shib_auth/new'] = array(
+  $items['admin/config/people/shib_auth/new'] = array(
     'title'            => 'Add new rule',
     'description'      => 'Add new attribute-based role assignment rule',
     'page callback'    => 'drupal_get_form',
@@ -856,7 +857,7 @@ function shib_auth_menu() {
     'file'             => 'shib_auth_roles_forms.inc'
   );
 
-  $items['admin/user/shib_auth/delete/%'] = array(
+  $items['admin/config/people/shib_auth/delete/%'] = array(
     'title'            => 'Delete rule',
     'page callback'    => '_shib_auth_delete_rule',
     'page arguments'   => array(4),
@@ -865,7 +866,7 @@ function shib_auth_menu() {
     'file'             => 'shib_auth_roles_forms.inc'
   );
 
-  $items['admin/user/shib_auth/edit/%'] = array(
+  $items['admin/config/people/shib_auth/edit/%'] = array(
     'title'            => 'Edit rule',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('shib_auth_edit_rule', 4),
@@ -874,7 +875,7 @@ function shib_auth_menu() {
     'file'             => 'shib_auth_roles_forms.inc'
   );
 
-  $items['admin/user/shib_auth/clone/%'] = array(
+  $items['admin/config/people/shib_auth/clone/%'] = array(
     'title'            => 'Edit rule',
     'page callback'    => '_shib_auth_clone_rule',
     'page arguments'   => array(4),
@@ -888,55 +889,65 @@ function shib_auth_menu() {
 
 /**
  * Generate the HTML text for the shib_auth login block
- * @param op the operation from the URL
- * @param delta offset
- * @returns block HTML
+ * @returns data of the block in an associative array
  */
-function shib_auth_block($op = 'list', $delta = 0, $edit = array()) {
+function shib_auth_block_info() {
   // listing of blocks, such as on the admin/block page
-  switch ($op) {
-    case 'list':
-      $blocks[0] = array(
-        'info'       => t('Shibboleth authentication'),
-        'status'     => TRUE,
-        'visibility' => 1,
-        'weight'     => 0,
-        'region'     => 'left'
-      );
-      return $blocks;
-    case 'configure':
-      $form = array();
-      switch ($delta) {
-        case 0:
-          $form['shib_auth_link_text'] = array(
-          '#type'          => 'textfield',
-          '#title'         => t('Text of the auth link'),
-          '#require'       => TRUE,
-          '#size'          => 60,
-          '#description'   => t('Here you can replace the text of the authentication link.'),
-          '#default_value' => shib_auth_config('link_text'),
-        );
-      }
-      return $form;
-    case 'save':
-      switch ($delta) {
-        case 0:
-          variable_set('shib_auth_link_text', $edit['shib_auth_link_text']);
-      }
-      break;
-    case 'view':
-    default:
-      switch ($delta) {
-        case 0:
-          $block = array(
-            'subject' => t('Shibboleth login'),
-            'content' =>  _login_url_html(),
-          );
-          break;
-      }
-      return $block;
+  $blocks['login_box'] = array(
+    'info'       => t('Shibboleth authentication'),
+    'status'     => 1,
+    'visibility' => 1,
+    'weight'     => 0,
+    'region'     => 'left'
+  );
+  return $blocks;
+} //function shib_auth_block_info
+
+/**
+ * Generate the shib_auth settings form
+ * @returns associative array whith the config form structure
+ */
+function shib_auth_block_configure($delta = '') {
+  $form = array();
+  switch ($delta) {
+    case 'login_box':
+      $form['shib_auth_link_text'] = array(
+      '#type'          => 'textfield',
+      '#title'         => t('Text of the auth link'),
+      '#require'       => TRUE,
+      '#size'          => 60,
+      '#description'   => t('Here you can replace the text of the authentication link.'),
+      '#default_value' => shib_auth_config('link_text'),
+    );
   }
-} // function shib_auth_block()
+  return $form;
+} //function shib_auth_block_configure
+
+/**
+ * Save the shib_auth settings
+ */
+function shib_auth_block_save($delta = '', $edit = array()) {
+  switch ($delta) {
+    case 'login_box':
+      variable_set('shib_auth_link_text', $edit['shib_auth_link_text']);
+  }
+} //function shib_auth_block_save
+
+/**
+ * Generate the shib_auth block content
+ * @returns associative array whith the config form structure
+ */
+function shib_auth_block_view($delta = '') {
+  switch ($delta) {
+    case 'login_box':
+      $block = array(
+        'subject' => t('Shibboleth login'),
+        'content' => '*'. _login_url_html() .'*',
+      );
+      break;
+  }
+  return $block;
+} //function shib_auth_block_view
 
 /**
  * Generate the login block content if user not logged in
@@ -946,7 +957,7 @@ function _login_url_html($is_account_linking = FALSE) {
 
   if ($user->uid === 0 AND $is_account_linking === FALSE) {
     // TODO Please change this theme call to use an associative array for the $variables parameter.
-    return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('link_text'));
+    return theme('shib_login_block', array('login_url' => shib_auth_generate_login_url(), 'login_text' => shib_auth_config('link_text')));
   }
   elseif ($user->uid > 1 AND $is_account_linking AND shib_auth_config('account_linking')) {
     return theme('shib_login_block', url('shib_link'), shib_auth_config('account_linking_text'));
@@ -1019,7 +1030,8 @@ function shib_auth_assignroles() {
 
   // Sticky rules come first
   $rules = db_query("SELECT * FROM {shib_auth} ORDER BY sticky DESC");
-  while ($rule = db_fetch_array($rules)) {
+
+  while ($rule = $rules->fetchAssoc()) {
     if ($profile_changed && !$rule['sticky']) {
       // This is the first non-sticky rule, and sticky rules have modified the user's roles
       shib_auth_save_roles();
@@ -1027,6 +1039,7 @@ function shib_auth_assignroles() {
     }
     $profile_changed += shib_auth_process_rule($rule); // Only sticky rules return >0
   }
+
   if ($profile_changed) {
     shib_auth_save_roles();
   }
@@ -1175,7 +1188,7 @@ function shib_auth_generate_rolenames($force) {
   if (!isset($_SESSION['shib_auth_rolecache']) || $force) {
     $_SESSION['shib_auth_rolecache'] = array();
     $query = db_query('SELECT rid, name FROM {role}');
-    while ($item = db_fetch_array($query)) {
+    while ($item = $query->fetchAssoc()) {
       $rolecache[$item['rid']] = $item['name'];
     }
     $_SESSION['shib_auth_rolecache'] = $rolecache;

@@ -1,5 +1,3 @@
-<!-- START: isPassive script-->
-<!--
 // Written by Lukas Haemmerle <lukas.haemmerle@switch.ch>, SWITCH
 /*
 This isPassive script will automatically try to log in a user using the SAML2
@@ -21,26 +19,25 @@ Requirements:
 - It also makes sense to protect #THIS PAGE# with a lazy session in order to use
   the Shibboleth attribute that maybe are available after authentication.
 */
+(function ($) {
+  // Check for session cookie that contains the initial location
+  if(document.cookie && document.cookie.search(/_check_is_passive=/) >= 0){
+    // If we have the opensaml::FatalProfileException GET arguments
+    // redirect to initial location because isPassive failed
+    if (
+      window.location.search.search(/errorType/) >= 0
+      && window.location.search.search(/RelayState/) >= 0
+      && window.location.search.search(/requestURL/) >= 0
+    ) {
+      var startpos = (document.cookie.indexOf('_check_is_passive=')+18);
+      var endpos = document.cookie.indexOf(';', startpos);
+      window.location = document.cookie.substring(startpos,endpos);
+    }
+  } else {
+    // Mark browser as being isPassive checked
+    document.cookie = "_check_is_passive=" + window.location;
 
-// Check for session cookie that contains the initial location
-if(document.cookie && document.cookie.search(/_check_is_passive=/) >= 0){
-  // If we have the opensaml::FatalProfileException GET arguments
-  // redirect to initial location because isPassive failed
-  if (
-    window.location.search.search(/errorType/) >= 0
-    && window.location.search.search(/RelayState/) >= 0
-    && window.location.search.search(/requestURL/) >= 0
-  ) {
-    var startpos = (document.cookie.indexOf('_check_is_passive=')+18);
-    var endpos = document.cookie.indexOf(';', startpos);
-    window.location = document.cookie.substring(startpos,endpos);
+    // Redirect to Shibboleth handler
+    window.location = Drupal.settings.shib_auth.login_url + "&isPassive=true";
   }
-} else {
-  // Mark browser as being isPassive checked
-  document.cookie = "_check_is_passive=" + window.location;
-
-  // Redirect to Shibboleth handler
-  window.location = Drupal.settings.shib_auth.login_url + "&isPassive=true";
-}
-
-<!-- END: isPassive script-->
+})(jQuery);
