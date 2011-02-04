@@ -765,7 +765,7 @@ function shib_auth_generate_login_url() {
   //append forceAuthN variable to the login string
   if (shib_auth_config('forceauthn'))
     $forceauthn = '&forceAuthn=1';
-  //generate the currently viewed url to pass as an url to return from IdP 
+  //generate the currently viewed url to pass as an url to return from IdP
   $url_to_return = (isset($_SERVER['HTTPS'])||
                    (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https') ?
                    'https' : 'http')
