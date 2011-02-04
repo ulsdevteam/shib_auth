@@ -942,7 +942,7 @@ function shib_auth_block_view($delta = '') {
     case 'login_box':
       $block = array(
         'subject' => t('Shibboleth login'),
-        'content' => '*'. _login_url_html() .'*',
+        'content' => _login_url_html(),
       );
       break;
   }
