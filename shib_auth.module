@@ -291,7 +291,12 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     }
     $_SESSION['authentication'] = 'shib_auth';
     //save the received e-mail address
-    $user = user_save($user, array('mail' => $umail_single));
+    $user = shib_auth_save_mail ($user, $umail_single);
+    if (!$user) {
+      // Something really bad happened
+      shib_auth_error ('Fatal error while saving mail address');
+      return;
+    }
     $idp = shib_auth_get_idp();
     //write an entry into shib_authmap set the current consent version
     $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
@@ -328,7 +333,12 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
         }
         //if everything is allright, modify the mail address of the user.
         else {
-          $user = user_save($account, array('mail' => $umail_single));
+          $user = shib_auth_save_mail ($user, $umail_single);
+	  if (!$user) {
+	    // Something really bad happened
+	    shib_auth_error ('Fatal error while saving mail address');
+	    return;
+	  }
         }
       }
     }
@@ -1065,6 +1075,47 @@ function shib_auth_save_roles() {
     }
   }
 } //function shib_auth_save_roles
+
+/**
+ *  Unfortunately if we called user_save() on updating email, we would possibly lose 
+ *  profile fields, so we are forced to hack with the {users} table
+ *  @param $account user account to modify
+ *  @param $mail new mail address
+ *  @return modified user object or FALSE on error, just like user_save would do 
+ */
+function shib_auth_save_mail($account, $mail) {
+  // Basic parameter checks to avoid do anything fatal
+  if (!is_object($account) || !$account->uid || $account->uid <= 1) 
+    return FALSE;
+  if (!valid_email_address($mail)) {
+    shib_auth_error('E-mail address is invalid');
+    return FALSE;
+  }
+
+  // If the mail hasn't changed, do not do anything
+  if ($account->mail && $account->mail == $mail) 
+    return $account;
+
+  // We deliberately do not call user_module_invoke('update',..) here, because 
+  // profile module seems to take it too seriously and wipes out profile fields
+
+  // Cross fingers, do the update
+  $success = db_query("UPDATE {users} SET mail = '%s' WHERE uid = %d", $mail, $account->uid);
+  if (!$success) {
+    // Failed for some reason?
+    shib_auth_error ('Error saving mail');
+    return FALSE;
+  }
+
+  // Refresh user object
+  $account->mail = $mail;
+
+  // We can call things hooked on after_update 
+  $null = NULL;
+  user_module_invoke('after_update', $null, $account);
+
+  return $account;
+} // function shib_auth_save_mail
 
 /**
  * This function gets the username
