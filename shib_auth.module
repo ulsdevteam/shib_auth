@@ -222,7 +222,7 @@ function shib_auth_add_authmap($uid, $federated_id, $consentver = '') {
  * @return true if there is a valid Shibboleth session
  */
 function shib_auth_session_valid() {
-  return ((shib_auth_get_idp()));
+  return (bool) shib_auth_get_idp();
 } // function shib_auth_session_valid
 
 /**
@@ -292,7 +292,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     $_SESSION['authentication'] = 'shib_auth';
     //save the received e-mail address
     $user = user_save($user, array('mail' => $umail_single));
-    $idp = ($_SERVER['Shib-Identity-Provider']) ? $_SERVER['Shib-Identity-Provider'] : $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
+    $idp = shib_auth_get_idp();
     //write an entry into shib_authmap set the current consent version
     $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
     $result = db_query($sql, $user->uid, $uname, $idp, date('Y-m-d H:i:s'), shib_auth_config('terms_ver'));
