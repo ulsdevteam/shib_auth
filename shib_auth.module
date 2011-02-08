@@ -347,7 +347,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
   //redirect user to a predefined page, or a page, she wanted to see before clicking on login
   shib_auth_submit_redirect();
 
-  if (shib_auth_config('login_url')!='' && !$alreadyloggedin) {
+  if (shib_auth_config('login_url')!='' && !$alreadyloggedin && $_GET['q']!= shib_auth_config('login_url')) {
     drupal_goto(shib_auth_config('login_url'));
   }
 } //function shib_login_authmap
