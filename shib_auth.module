@@ -331,15 +331,13 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
           $user = user_save($account, array('mail' => $umail_single));
         }
       }
+      if (shib_auth_config('login_url')!='' && !$alreadyloggedin && $_GET['q']!= shib_auth_config('login_url')) {
+        drupal_goto(shib_auth_config('login_url'));
+      }
     }
   }
-
   //redirect user to a predefined page, or a page, she wanted to see before clicking on login
   shib_auth_submit_redirect();
-
-  if (shib_auth_config('login_url')!='' && !$alreadyloggedin && $_GET['q']!= shib_auth_config('login_url')) {
-    drupal_goto(shib_auth_config('login_url'));
-  }
 } //function shib_login_authmap
 
 /**
