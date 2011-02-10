@@ -191,6 +191,11 @@ function shib_auth_custom_data() {
     '#type' => 'submit',
     '#value' => t('Send'),
   );
+  
+  $form['cancel'] = array(
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+  );
 
   return $form;
 } // function shib_auth_custom_data()
