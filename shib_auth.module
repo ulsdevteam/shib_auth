@@ -459,6 +459,21 @@ function shib_auth_submit_redirect() {
 } //function shib_auth_submit_redirect
 
 /**
+ * Cancel button is pressed, redirect user to shib logout, and then to the page he came from / loginurl
+ */
+function shib_auth_cancel_custom() {
+  $logouthandler = shib_auth_config('full_logout_url');
+  if (isset($_SESSION['redirected_to_custom_data_form_url'])) {
+  $redirect_url = url(
+    $_SESSION['redirected_to_custom_data_form_url'],
+    array('absolute' => TRUE)
+  );
+  unset($_SESSION['redirected_to_custom_data_form_url']);
+  drupal_goto("$logouthandler?return=$redirect_url");
+  }
+}
+
+/**
  * If any customization or consent option is enabled, the custom form will show  up before registering
  * and forces the user to accept user consent and define username and/or e-mail address
  * (prefilling fields with the data coming from the IdP)
@@ -466,6 +481,9 @@ function shib_auth_submit_redirect() {
  * @uname id received from IdP
  */
 function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
+  if (isset($_POST['op']) && $_POST['op'] == t('Cancel')) {
+    shib_auth_cancel_custom();
+  }
   //check if any of the customization options are enabled
   if (shib_auth_config('enable_custom_mail') ||
      ($umail_single && shib_auth_config('define_username')) ||
@@ -949,7 +967,7 @@ function shib_auth_theme($existsing, $type, $theme, $path) {
     'shib_login_block' => array(
       'template' => 'shib_login_block',
       'arguments' => array(
-        'login_url'  => NULL,
+        'f'  => NULL,
         'login_text' => NULL,
       ),
     ),
