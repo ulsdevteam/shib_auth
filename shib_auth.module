@@ -158,6 +158,9 @@ function shib_auth_session_check($uname) {
       return FALSE;
     }
   }
+  else {
+      $_SESSION['uname'] = $uname;
+  }
   return TRUE;
 } // function shib_auth_session_check
 
