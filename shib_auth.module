@@ -967,7 +967,7 @@ function shib_auth_theme($existsing, $type, $theme, $path) {
     'shib_login_block' => array(
       'template' => 'shib_login_block',
       'arguments' => array(
-        'f'  => NULL,
+        'login_url'  => NULL,
         'login_text' => NULL,
       ),
     ),
