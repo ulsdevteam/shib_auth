@@ -237,7 +237,6 @@ function shib_auth_login() {
  */
 function shib_auth_link() {
     $_SESSION['account_linking'] = TRUE;
-    drupal_set_message('linking set true');
     drupal_goto(shib_auth_generate_login_url());
 }
 
