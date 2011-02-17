@@ -145,6 +145,7 @@ function shib_auth_session_check($uname) {
     shib_auth_terminate_session('Your session is expired. Please log in again.');
     return FALSE;
   }
+
   if (isset($_SESSION['uname'])) {
     if ($_SESSION['uname'] != $uname && $_SESSION['account_linking'] != TRUE) {
       /*  See SA-CONTRIB-2009-070
@@ -160,7 +161,8 @@ function shib_auth_session_check($uname) {
     }
   }
   else {
-    $_SESSION['uname'] = $uname;
+    if ($uname)
+      $_SESSION['uname'] = $uname;
   }
   return TRUE;
 } // function shib_auth_session_check
