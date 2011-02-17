@@ -267,6 +267,9 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       }
       user_external_login_register($custom_uname, 'shib_auth');
     }
+    if (!user_get_authmaps($user->name)) {
+      user_set_authmaps($user,array('auth_shib_auth' => $user->name));
+    }
     $_SESSION['authentication'] = 'shib_auth';
     $idp = ($_SERVER['Shib-Identity-Provider']) ? $_SERVER['Shib-Identity-Provider'] : $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
     //write an entry into shib_authmap set the current consent version
@@ -294,14 +297,17 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
  */
 function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False) {
   global $user;
-
+  //First, we want to get the name of the user with the given uid
   $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid='%s'", $uid);
   $authmap_username = db_fetch_array($auth_map_un_query);
+  //We load this account to make operations with
   $account = user_external_load($authmap_username['name']);
   if (isset($account->uid)) {
-    if (user_external_login($account)) {
+  //We don't login user again, if there is already one logged in (made redirect loops when linking an account)
+    if ($user->uid || user_external_login($account)) {
+      //set auth variable to shib_auth
       $_SESSION['authentication'] = 'shib_auth';
-      //and the Shibboleth mail address override was enabled in the admin config
+      //Shibboleth mail address override was enabled in the admin config
       if (shib_auth_config('enable_custom_mail') == 0) {
         //check if there isn't any user with this e-mail (whose name is different)
         $email_for_other_user_query =
@@ -315,6 +321,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
           $user = user_save($account, array('mail' => $umail_single));
         }
       }
+      //forward user to login url, if set
       if (shib_auth_config('login_url')!='' && !$alreadyloggedin && $_GET['q']!= shib_auth_config('login_url')) {
         drupal_goto(shib_auth_config('login_url'));
       }
