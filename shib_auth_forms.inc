@@ -229,7 +229,11 @@ function shib_auth_custom_data_validate($form, &$form_state) {
  * This function prevents drupal loading a cached page after shibboleth login
  */
 function shib_auth_login() {
-  drupal_goto(drupal_substr($_GET['q'], 11));
+  $redirect_to = drupal_substr($_GET['q'], 11);
+  if ($redirect_to!='shib_link')
+    drupal_goto($redirect_to);
+  else
+    drupal_goto('user');
 }
 
 /**
