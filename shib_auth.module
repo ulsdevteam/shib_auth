@@ -651,7 +651,7 @@ function shib_auth_init() {
     //If it is account linking and the terms are accepted or forcing an existing user to accept termsandconditions
 
     //If we have an e-mail address from the shib server, and there isn't any user with this address, create an account with these infos
-    if ($umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') &&
+    if ($_SESSION['account_linking'] || $umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') &&
     !shib_auth_config('terms_accept')) {
       shib_auth_save_authmap($uname, $uname, $umail_single);
     }
