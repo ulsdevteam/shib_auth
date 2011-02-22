@@ -31,7 +31,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 function shib_auth_config($variable) {
   //building an array with the available variables, and their default values
   $var_store = array('account_linking' => FALSE,
-                     'account_linking_text' => t('Link this account with another identity.'),
+                     'account_linking_text' => t('Link this account with another identity'),
                      'auto_destroy_session' => FALSE,
                      'debug_state' => FALSE,
                      'define_username' => FALSE,
@@ -146,20 +146,21 @@ function shib_auth_session_check($uname) {
     return FALSE;
   }
   if (isset($_SESSION['uname'])) {
-    if ($_SESSION['uname'] != $uname) {
+    if ($_SESSION['uname'] != $uname && $_SESSION['account_linking'] != TRUE) {
       /*  See SA-CONTRIB-2009-070
       If we reach here, a new federated user was given an existing Drupal session of
       an old user. This can happen when using Single Logout.
       Probably we should try and re-register the new user instead of just kicking him out,
       but for now just terminate the session for safety.
       This means that the new user has to initiate the session twice.
+      However, we allow account linking, if the account_linking session variable had been set
       */
       shib_auth_terminate_session();
       return FALSE;
     }
   }
   else {
-      $_SESSION['uname'] = $uname;
+    $_SESSION['uname'] = $uname;
   }
   return TRUE;
 } // function shib_auth_session_check
@@ -239,32 +240,6 @@ function shib_auth_session_isShib2x() {
 } //function shib_auth_session_isShib2x
 
 /**
- * Handle account linking
- *
- * Saves an entry to {shib_authmap}, if the user is already logged in.
- * Mapping to default Drupal users (uid<=1) is not allowed.
- * @return TRUE if account linking is stored, FALSE otherwise
- */
-function shib_auth_link_account($federated_id, $consentver = '') {
-  global $user;
-
-  // Assert some basic security requirements
-  if (!$user) {
-    return shib_auth_error('You must be logged in for account linking');
-  }
-
-  if ($user->uid <= 1) {
-    return shib_auth_error('It is not allowed to link federated login to a system account');
-  }
-
-  if (shib_auth_config('account_linking')) {
-    return shib_auth_add_authmap($user->uid, $federated_id, $consentver);
-  }
-
-  return FALSE;
-} //function shib_auth_link_account
-
-/**
  * Save an entry into shib_authmap
  * A row in the authmap contains the drupal user id, the targeted id from 
  * Shibboleth, the IdP name, the date the user was created, and user consent 
@@ -283,8 +258,8 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   }
   //else register the user with the given information
   else {
-    //if linking an account with shib: don't login again
-    if (!($user->uid > 1 && shib_auth_config('account_linking'))) {
+    //if linking an account with shib: don't login / register again
+    if (!($user->uid > 1 && $_SESSION['account_linking'])) {
       if (user_is_blocked($custom_uname)) {
         //register a new user with this username, and login
         shib_auth_error('This user is blocked');
@@ -304,8 +279,16 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     //write an entry into shib_authmap set the current consent version
     $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
     $result = db_query($sql, $user->uid, $uname, $idp, date('Y-m-d H:i:s'), shib_auth_config('terms_ver'));
-    $null = NULL;
-    user_module_invoke('insert', $null, $user);
+    if (isset($_SESSION['account_linking']) && $_SESSION['account_linking']) {
+      unset($_SESSION['account_linking']);
+      drupal_set_message('Account successfully linked to new shibboleth id!');
+    }
+    else {
+      //rewrite e-mail address
+      $user = user_save($user, array('mail' => $umail_single));
+      $null = NULL;
+      user_module_invoke('insert', $null, $user);
+    }
   }
 } //function shib_auth_save_authmap
 
@@ -348,7 +331,9 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
         drupal_goto(shib_auth_config('login_url'));
       }
     }
-  }
+    else shib_auth_error('Couldn\'t login user: '. $authmap_username['name']);
+  } 
+  else shib_auth_error('Couldn\'t login user: '. $authmap_username['name']);
   //redirect user to a predefined page, or a page, she wanted to see before clicking on login
   shib_auth_submit_redirect();
 } //function shib_login_authmap
@@ -447,7 +432,7 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
  * This function redirects user to the custom data form, remembering the url, she wanted to visit before registering or a specific login url, if it is set
  */
 function shib_auth_goto_custom_form() {
-  if ($_GET['q']!='shib_auth/get_custom_data') {
+  if ($_GET['q']!='shib_auth/get_custom_data' || $_GET['q']!='shib_link') {
     $_SESSION['redirected_to_custom_data_form'] = TRUE;
     if (shib_auth_config('login_url')=='') {
       $_SESSION['redirected_to_custom_data_form_url'] = $_GET['q'];
@@ -544,16 +529,6 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 } //function shib_auth_custom_form
 
 /**
- * This function only gives a hint, if there COULD BE account linkig now
- */
-function doing_account_linking() {
-  if (shib_auth_config('account_linking')) {
-    return (strstr($_GET['q'], 'shib_login') || strstr($_GET['q'], 'shib_auth/get_custom_data'));
-  }
-  return FALSE;
-} // function doing_account_linking
-
-/**
  * This function updates the accepted consent version number of the user to the current one 
 */
 function shib_auth_consent_update($uname, $umail_single, $uid) {
@@ -624,9 +599,9 @@ function shib_auth_init() {
   shib_auth_debug();
 
   // Do nothing if the user is logged in and we're not doing account linking
-  if ($user->uid && !doing_account_linking())
+  if ($user->uid && !$_SESSION['account_linking'])
     return;
-
+    
   // Do virtually nothing when we need to display the custom data form
   if ( isset($_SESSION['redirected_to_custom_data_form']) && $_SESSION['redirected_to_custom_data_form']) {
     unset($_SESSION['redirected_to_custom_data_form']); // Display it only once
@@ -687,7 +662,10 @@ function shib_auth_init() {
     }
   }
   //********* END OF REGISTERING *************
-
+  if (isset($_SESSION['account_linking']) && $_SESSION['account_linking']) {
+    unset($_SESSION['account_linking']);
+    drupal_set_message('End of account linking session');
+  }
 }// function shib_auth_init()
 
 /**
@@ -729,8 +707,6 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
         shib_auth_config('logout_url'),
         array('absolute' => TRUE)
       );
-      $null = NULL;
-      user_module_invoke('logout', $null, $user);
       drupal_goto("$logouthandler?return=$logout_redirect");
     }
   }
@@ -795,15 +771,22 @@ function shib_auth_menu() {
     'title'            => 'Customize drupal user attributes',
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('shib_auth_custom_data'),
-    'access arguments' => 'access_shib_login',
+    'access callback' => 'access_shib_login',
     'type'             => MENU_CALLBACK,
     'file'             => 'shib_auth_forms.inc',
   );
 
   $items['shib_login/%'] = array(
-    'page callback'    => 'shib_login',
+    'page callback'    => 'shib_auth_login',
     'type'             => MENU_CALLBACK,
     'access callback'  => 'access_shib_login',
+    'file'             => 'shib_auth_forms.inc',
+  );
+  
+  $items['shib_link'] = array(
+    'page callback'    => 'shib_auth_link',
+    'type'             => MENU_CALLBACK,
+    'access arguments' => array('access content'),
     'file'             => 'shib_auth_forms.inc',
   );
 
@@ -931,8 +914,8 @@ function _login_url_html($is_account_linking = FALSE) {
   if ($user->uid === 0 AND $is_account_linking === FALSE) {
     return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('link_text'));
   }
-  elseif ($_SESSION['authentication'] !== 'shib_auth' AND $user->uid > 1 AND $is_account_linking AND shib_auth_config('account_linking')) {
-    return theme('shib_login_block', shib_auth_generate_login_url(), shib_auth_config('account_linking_text'));
+  elseif ($user->uid > 1 AND $is_account_linking AND shib_auth_config('account_linking')) {
+    return theme('shib_login_block', url('shib_link'), shib_auth_config('account_linking_text'));
   }
   return NULL;
 } //function _login_url_html
@@ -975,7 +958,7 @@ function access_shib_login() {
 /**
  * Implement of the hook_theme()
  */
-function shib_auth_theme($existsing, $type, $theme, $path) {
+function shib_auth_theme($existing, $type, $theme, $path) {
   return array(
     'shib_login_block' => array(
       'template' => 'shib_login_block',
