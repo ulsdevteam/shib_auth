@@ -280,8 +280,6 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       user_set_authmaps($user,array('auth_shib_auth' => $user->name));
     }
     $_SESSION['shib_auth_authentication'] = 'shib_auth';
-    //save the received e-mail address
-    $user = shib_auth_save_mail ($user, $umail_single);
     if (!$user) {
       // Something really bad happened
       shib_auth_error ('Fatal error while saving mail address');
@@ -297,7 +295,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     }
     else {
       //rewrite e-mail address
-      $user = user_save($user, array('mail' => $umail_single));
+      $user = shib_auth_save_mail($user, $umail_single);
       $null = NULL;
       user_module_invoke('insert', $null, $user);
     }

@@ -233,7 +233,7 @@ function shib_auth_login() {
   if ($redirect_to!='shib_link')
     drupal_goto($redirect_to);
   else
-    drupal_goto('user');
+    drupal_goto('shib_login/user');
 }
 
 /**
