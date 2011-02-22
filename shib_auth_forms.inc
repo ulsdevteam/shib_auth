@@ -245,14 +245,6 @@ function shib_auth_link() {
 }
 
 /**
- * This function manages account linking
- */
-function shib_auth_link() {
-    $_SESSION['account_linking'] = TRUE;
-    drupal_goto(shib_auth_generate_login_url());
-}
-
-/**
  * Admin users group membership validate
  *
  * @param $form data of the form
