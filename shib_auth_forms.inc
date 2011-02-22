@@ -240,7 +240,7 @@ function shib_auth_login() {
  * This function manages account linking
  */
 function shib_auth_link() {
-    $_SESSION['account_linking'] = TRUE;
+    $_SESSION['shib_auth_account_linking'] = TRUE;
     drupal_goto(shib_auth_generate_login_url());
 }
 
