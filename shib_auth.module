@@ -311,8 +311,8 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
 function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = False) {
   global $user;
   //First, we want to get the name of the user with the given uid
-  $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid='%s'", $uid);
-  $authmap_username = db_fetch_array($auth_map_un_query);
+  $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid = :uid", array(':uid' => $uid));
+  $authmap_username = $auth_map_un_query->fetchAssoc();
   //We load this account to make operations with
   $account = user_external_load($authmap_username['name']);
   if (isset($account->uid)) {
@@ -375,8 +375,8 @@ function shib_auth_check_identifier($uname) {
  * @return the authmap object(array) if found, null otherwise
  */
 function shib_auth_load_from_authmap($uname) {
-  $auth_map_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $uname));
-  return $auth_map_query->fetchCol();
+  $auth_map_query = db_query('SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id', array(':targeted_id' => $uname));
+  return $auth_map_query->fetchAssoc();
 } //function shib_auth_load_from_authmap
 
 /**
@@ -592,8 +592,14 @@ function shib_auth_init() {
   $consent_accepted = FALSE;
 
   /* We want to return as early as possible if we have nothing to do.
-   But for checking the session, we need the username first (if it's set) */
-  $uname = $_SERVER[shib_auth_config('username_variable')];
+  But for checking the session, we need the username first (if it's set) */
+  $uname_key = shib_auth_config('username_variable');
+  if (array_key_exists($uname_key, $_SERVER)) {
+    $uname = $_SERVER[$uname_key];
+  }
+  else {
+    $uname = NULL;
+  }
 
   // Storing whether the user was already logged in or not
   $alreadyloggedin = (user_is_anonymous()) ? False : True;
@@ -722,13 +728,13 @@ function shib_auth_get_handler_base() {
  * @param account The user object on which the operation is being performed.
  */
 function shib_auth_user_logout($account) {
-  if ($_SESSION['authentication'] === 'shib_auth') {
+  if ($_SESSION['authentication'] === 'shib_auth' || 1) {
     unset($_SESSION['rolelog']);
     $logouthandler = shib_auth_config('full_logout_url');
     unset($_SESSION['authentication']);
-    $logout_redirect = url(shib_auth_config('logout_url'));
+    $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
     $null = NULL;
-    user_module_invoke('logout', $null, $account);
+    session_destroy();
     drupal_goto("$logouthandler?return=$logout_redirect");
   }
 }
@@ -860,7 +866,7 @@ function shib_auth_menu() {
   $items['admin/config/people/shib_auth/delete/%'] = array(
     'title'            => 'Delete rule',
     'page callback'    => '_shib_auth_delete_rule',
-    'page arguments'   => array(4),
+    'page arguments'   => array(5),
     'access arguments' => array('administer permissions'),
     'type'             => MENU_CALLBACK,
     'file'             => 'shib_auth_roles_forms.inc'
@@ -869,7 +875,7 @@ function shib_auth_menu() {
   $items['admin/config/people/shib_auth/edit/%'] = array(
     'title'            => 'Edit rule',
     'page callback'    => 'drupal_get_form',
-    'page arguments'   => array('shib_auth_edit_rule', 4),
+    'page arguments'   => array('shib_auth_edit_rule', 5),
     'access arguments' => array('administer permissions'),
     'type'             => MENU_NORMAL_ITEM,
     'file'             => 'shib_auth_roles_forms.inc'
@@ -878,7 +884,7 @@ function shib_auth_menu() {
   $items['admin/config/people/shib_auth/clone/%'] = array(
     'title'            => 'Edit rule',
     'page callback'    => '_shib_auth_clone_rule',
-    'page arguments'   => array(4),
+    'page arguments'   => array(5),
     'access arguments' => array('administer permissions'),
     'type'             => MENU_CALLBACK,
     'file'             => 'shib_auth_roles_forms.inc'
