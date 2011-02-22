@@ -69,7 +69,7 @@ function shib_auth_edit_form($options) {
  */
 function _shib_auth_clone_rule($id) {
   $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
-  $db_entry = $rule->fetchCol();
+  $db_entry = $rule->fetchAssoc();
   $db_entry['id'] = NULL;
   $update = array();
   $ret = drupal_write_record('shib_auth', $db_entry, $update);
@@ -79,7 +79,7 @@ function _shib_auth_clone_rule($id) {
   else {
     drupal_set_message(t('Unexpected error has been detected.'));
   }
-  drupal_goto('admin/user/shib_auth/rules');
+  drupal_goto('admin/config/people/shib_auth/rules');
 } //function _shib_auth_clone_rule
 
 /**
@@ -91,7 +91,7 @@ function _shib_auth_delete_rule($id) {
   ->condition('id', $id)
   ->execute();
   drupal_set_message(t('Rule <strong>#!id</strong> has been deleted.', array('!id' => $id)), 'warning');
-  drupal_goto('admin/user/shib_auth/rules');
+  drupal_goto('admin/config/people/shib_auth/rules');
 } //function _shib_auth_delete_rule
 
 /**
@@ -112,9 +112,9 @@ function _shib_auth_list_rules() {
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
     $retval .= '<tr><td>' . $rule['field'] . '</td><td>' . urldecode($rule['regexpression']) . '</td><td>' . $roles_list . '</td><td>' . $sticky  . '</td>';
     $retval .= '<td stype="text-align: right;">';
-    $retval .= '<a href="' . url('admin/user/shib_auth/clone/' . $rule['id']) . '">' . t('Clone') . '</a> | ';
-    $retval .= '<a href="' . url('admin/user/shib_auth/edit/' . $rule['id']) . '">' . t('Edit') . '</a> | ';
-    $retval .= '<a href="' . url('admin/user/shib_auth/delete/' . $rule['id']) . '">' . t('Delete') . '</a>';
+    $retval .= '<a href="' . url('admin/config/people/shib_auth/clone/' . $rule['id']) . '">' . t('Clone') . '</a> | ';
+    $retval .= '<a href="' . url('admin/config/people/shib_auth/edit/' . $rule['id']) . '">' . t('Edit') . '</a> | ';
+    $retval .= '<a href="' . url('admin/config/people/shib_auth/delete/' . $rule['id']) . '">' . t('Delete') . '</a>';
     $retval .= '</td></tr>' . "\n";
     $counter++;
   }
@@ -123,7 +123,7 @@ function _shib_auth_list_rules() {
     $retval .= t('There is no rule in the database') . '</td></tr>' . "\n";
   }
   $retval .= '</table>';
-  $retval .= '<a href="' . url('admin/user/shib_auth/new') . '">' . t('Add new rule') . '</a>';
+  $retval .= '<a href="' . url('admin/config/people/shib_auth/new') . '">' . t('Add new rule') . '</a>';
 
   return $retval;
 } //function _shib_auth_list_rules
@@ -220,18 +220,19 @@ function shib_auth_save_rule($form_state, $update) {
     }
   }
   //if everything was fine, print the rules with the newly added/modified one
-  drupal_goto('admin/user/shib_auth/rules');
+  drupal_goto('admin/config/people/shib_auth/rules');
 } //function shib_auth_save_rule
 
 /**
  * Edits a rule by calling universal create/edit form
  */
-function shib_auth_edit_rule($form_state, $id) {
+function shib_auth_edit_rule($form, &$form_state) {
+  $id = $form_state['build_info']['args'][0];
   $form = array();
   // calls the edit form, with the fields of the existing rule
   if (is_int((int) $id)) {
-    $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
-    $db_entry = $rule->fetchCol();
+    $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => $id));
+    $db_entry = $rule->fetchAssoc();
     return shib_auth_edit_form(
       array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize($db_entry['role']), 'Apply', $db_entry['sticky'])
     );
