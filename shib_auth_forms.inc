@@ -21,7 +21,6 @@ function shib_auth_admin_general() {
     '#collapsible' => FALSE,
   );
 
-
   $form['shib_handler_settings']['shib_auth_full_handler_url'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Shibboleth login handler URL'),
@@ -125,14 +124,18 @@ function shib_auth_admin_general() {
 function shib_auth_custom_data() {
   global $user;
   $form = array();
+  //Decide if the user is already registered, but a new consent version is present 
   $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id='%s'", $_SERVER[shib_auth_config('username_variable')]);
   $authmap_username = db_fetch_array($auth_map_un_query);
+  //if the user already registered, display a message about consent version change
   if ($authmap_username) {
     $form['consent'] = array(
         '#value' => t('The terms of use document has been modified since your last login with id @targetedid. Please read it carefully, and click on Submit if you accept the new version. Version you have accepted: @accepted - document version: @documentver', array('@targetedid' => $authmap_username['targeted_id'], '@accepted' => $authmap_username['consentver'], '@documentver' => shib_auth_config('terms_ver') )),
       );
   }
+  //register a new user with the data given here
   else {
+  //username textfield is writable, if define_username variable is true
     if (shib_auth_config('define_username') && (!$user->uid || shib_auth_config('account_linking'))) {
       $form['custom_username'] = array(
         '#type' => 'textfield',
@@ -141,6 +144,7 @@ function shib_auth_custom_data() {
         '#size' => 60,
       );
     }
+    //username textfield is not writable, if define_username variable is false
     else {
       $form['custom_usernamem'] = array(
         '#value' => t('<b>Username:</b> <br />'),
@@ -153,6 +157,7 @@ function shib_auth_custom_data() {
     }
 
     if (shib_auth_config('enable_custom_mail') && (!$user->uid  || shib_auth_config('account_linking'))) {
+      //mail textfield is writable, if define_username variable is true
       $form['custom_mail'] = array(
         '#type' => 'textfield',
         '#title' => t('E-mail'),
@@ -160,6 +165,7 @@ function shib_auth_custom_data() {
         '#size' => 60,
       );
     }
+    //mail textfield is not writable, if define_username variable is false
     else {
       $form['custom_mailm'] = array(
         '#value' => t('<b>E-mail:</b> <br />'),
@@ -171,7 +177,7 @@ function shib_auth_custom_data() {
       );
     }
   }
-
+  //display terms of use link, if it is required by admin
   if (shib_auth_config('terms_accept')) {
     $form['accept'] = array(
     '#type'          => 'checkbox',
@@ -183,12 +189,17 @@ function shib_auth_custom_data() {
     '#type' => 'submit',
     '#value' => t('Send'),
   );
+  
+  $form['cancel'] = array(
+    '#type' => 'submit',
+    '#value' => t('Cancel'),
+  );
 
   return $form;
 } // function shib_auth_custom_data()
 
 /**
- * Form validator
+ * Form validator - require to fill all of the fields
  * @param form form identifier
  * @param form_state $form_state contains all of the data of the form
  */
@@ -216,8 +227,20 @@ function shib_auth_custom_data_validate($form, &$form_state) {
 /**
  * This function prevents drupal loading a cached page after shibboleth login
  */
-function shib_login() {
-  drupal_goto(drupal_substr($_GET['q'], 11));
+function shib_auth_login() {
+  $redirect_to = drupal_substr($_GET['q'], 11);
+  if ($redirect_to!='shib_link')
+    drupal_goto($redirect_to);
+  else
+    drupal_goto('shib_login/user');
+}
+
+/**
+ * This function manages account linking
+ */
+function shib_auth_link() {
+    $_SESSION['shib_auth_account_linking'] = TRUE;
+    drupal_goto(shib_auth_generate_login_url());
 }
 
 /**
