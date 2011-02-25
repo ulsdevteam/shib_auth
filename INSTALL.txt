@@ -1,4 +1,3 @@
-$Id$
 ***********************************************************
 Shibboleth Authetication module - Installation Instructions
 

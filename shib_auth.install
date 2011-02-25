@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * This is the install file of the Shibboleth authentication module for Drupal system
