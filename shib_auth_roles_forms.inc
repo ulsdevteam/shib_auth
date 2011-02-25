@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  *  Roles manager forms.

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Drupal forms of the Shibboleth authentication module.

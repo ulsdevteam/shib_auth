@@ -1,5 +1,4 @@
 # translation of hu.po to Hungarian
-# $Id$
 #
 # Hungarian translation of Drupal (general)
 # Copyright YEAR NAME <EMAIL@ADDRESS>
