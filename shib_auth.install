@@ -150,6 +150,20 @@ function shib_auth_update_6400() {
 }
 
 /**
+ * Implementation of hook_update().
+ *
+ * Hook to update module from older revisions
+ * @return an array with the executed SQL commands
+ */
+function shib_auth_update_6401() {
+  // This update is a helper to rebuild menu tree, because of the new menu item 
+  // This is useful for those, who are updating from a previous 4.x release
+  menu_rebuild();
+  // For some reason, update.php insists to have a returned array. Let it be then.
+  $returned = array();
+  return $returned;
+}
+/**
  * Implementation of hook_schema().
  *
  * This is how the schema of the module will look like
