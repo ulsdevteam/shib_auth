@@ -576,6 +576,8 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
  */
 function shib_auth_init() {
   global $user;
+  global $shib_auth_logout;
+  $shib_auth_logout = FALSE;
 
   //add theme css
   drupal_add_css(drupal_get_path('module', 'shib_auth') . '/shib_auth.css');
@@ -703,6 +705,25 @@ function shib_auth_init() {
 }// function shib_auth_init()
 
 /**
+ * Implemets of the hook_exit
+ *
+ */
+function shib_auth_exit() {
+  global $shib_auth_logout;
+
+  if ($shib_auth_logout) {
+    if ($_SESSION['authentication'] === 'shib_auth' || 1) {
+      unset($_SESSION['rolelog']);
+      $logouthandler = shib_auth_config('full_logout_url');
+      unset($_SESSION['authentication']);
+      $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
+      $null = NULL;
+      drupal_goto("$logouthandler?return=$logout_redirect");
+    }
+  }
+}
+
+/**
  * Get Shibboleth handler base as an absolute URI (such as https://example.com/Shibboleth.sso)
  * @return handler base
  */
@@ -728,15 +749,8 @@ function shib_auth_get_handler_base() {
  * @param account The user object on which the operation is being performed.
  */
 function shib_auth_user_logout($account) {
-  if ($_SESSION['authentication'] === 'shib_auth' || 1) {
-    unset($_SESSION['rolelog']);
-    $logouthandler = shib_auth_config('full_logout_url');
-    unset($_SESSION['authentication']);
-    $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
-    $null = NULL;
-    session_destroy();
-    drupal_goto("$logouthandler?return=$logout_redirect");
-  }
+  global $shib_auth_logout;
+  $shib_auth_logout = TRUE;
 }
 
 /**
