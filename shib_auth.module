@@ -275,7 +275,8 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       }
       user_external_login_register($custom_uname, 'shib_auth');
       if($user->uid) {
-        user_authenticate_finalize(array());
+	$null = array();
+        user_authenticate_finalize($null);
       }
     }
     if (!user_get_authmaps($user->name)) {
