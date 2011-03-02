@@ -104,7 +104,7 @@ function shib_auth_terminate_session($msg = '') {
   global $user;
   // unset all session variables and destroy session
   if (isset($user->uid)) {
-    sess_destroy_uid($user->uid);
+    drupal_session_destroy_uid($user->uid);
   }
   $_SESSION = array();
   if ($msg) {
@@ -317,14 +317,15 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
   $account = user_external_load($authmap_username['name']);
   if (isset($account->uid)) {
   //We don't login user again, if there is already one logged in (made redirect loops when linking an account)
-    if ($user->uid || user_external_login($account)) {
+    user_external_login_register($account->name, 'shib_auth');
+    if ($user->uid) {
       //set auth variable to shib_auth
       $_SESSION['shib_auth_authentication'] = 'shib_auth';
       //Shibboleth mail address override was enabled in the admin config
       if (shib_auth_config('enable_custom_mail') == 0) {
         //check if there isn't any user with this e-mail (whose name is different)
         $email_for_other_user_query = db_query("SELECT * FROM {users} WHERE mail = :mail AND name <> :name", array(':mail' => $umail_single, ':name' => $uname));
-        $email_for_other_user = $username_and_email_query->fetchObject();
+        $email_for_other_user = $email_for_other_user_query->fetchObject();
         if ($email_for_other_user) {
           shib_auth_error('Error saving user account. E-mail address is already used.');
         }
@@ -344,7 +345,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
       }
     }
     else shib_auth_error('Couldn\'t login user: '. $authmap_username['name']);
-  } 
+  }
   else shib_auth_error('Couldn\'t login user: '. $authmap_username['name']);
   //redirect user to a predefined page, or a page, she wanted to see before clicking on login
   shib_auth_submit_redirect();
