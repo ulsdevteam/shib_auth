@@ -211,9 +211,10 @@ function shib_auth_add_authmap($uid, $federated_id, $consentver = '') {
     return shib_auth_error('Cannot link federated login to multiple accounts');
   }
   $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) "
-      . "VALUES  ('%s', '%s', '%s', '%s', '%s')";
+      . "VALUES  (:uid, ':tid', ':idp', :created, ':consentver')";
+  $params = array(':uid' => $uid, ':tid' => $federated_id, ':idp' => shib_auth_get_idp(), ':created' => time(), ':consentver' => $consentver);
   // TODO Please convert this statement to the D7 database API syntax.
-  return db_query($sql, $uid, $federated_id, shib_auth_get_idp(), time(), $consentver);
+  return db_query($sql, $params);
 } //function shib_auth_add_authmap
 
 /**
@@ -237,8 +238,8 @@ function shib_auth_session_isShib2x() {
 
 /**
  * Save an entry into shib_authmap
- * A row in the authmap contains the drupal user id, the targeted id from 
- * Shibboleth, the IdP name, the date the user was created, and user consent 
+ * A row in the authmap contains the drupal user id, the targeted id from
+ * Shibboleth, the IdP name, the date the user was created, and user consent
  * version number.
  * @uname the username got from IdP
  * @custom_uname the customized username
@@ -278,13 +279,12 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     }
     $idp = shib_auth_get_idp();
     //write an entry into shib_authmap set the current consent version
-    $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) VALUES  ('%s', '%s', '%s', '%s', '%s')";
-    $result = $id = db_insert('shib_authmap')
+    db_insert('shib_authmap')
       ->fields(array(
         'uid' => $user->uid,
         'targeted_id' => $uname,
         'idp' => $idp,
-        'created' => date('Y-m-d H:i:s'),
+        'created' => time(),
         'consentver' => shib_auth_config('terms_ver'),
         ))
       ->execute();
@@ -981,7 +981,7 @@ function _login_url_html($is_account_linking = FALSE) {
     return theme('shib_login_block', array('login_url' => shib_auth_generate_login_url(), 'login_text' => shib_auth_config('link_text')));
   }
   elseif ($user->uid > 1 AND $is_account_linking AND shib_auth_config('account_linking')) {
-    return theme('shib_login_block', url('shib_link'), shib_auth_config('account_linking_text'));
+    return theme('shib_login_block', array('login_url' => url('shib_link'), 'login_text' => shib_auth_config('account_linking_text')));
   }
   return NULL;
 } //function _login_url_html
@@ -995,6 +995,7 @@ function _login_url_html($is_account_linking = FALSE) {
  */
 function shib_auth_form_alter(&$form, &$form_state, $form_id) {
   global $user;
+
   if ($form_id == 'user_login') {
     $form['shibboleth'] = array(
       '#type' => 'markup',
@@ -1002,11 +1003,10 @@ function shib_auth_form_alter(&$form, &$form_state, $form_id) {
       '#value' => _login_url_html(),
     );
   }
-  if (($form_id == 'user_profile_form') && ($form['#parameters'][2]->uid == $user->uid)) {
+  if (($form_id == 'user_profile_form') && ($form['#user']->uid == $user->uid)) {
     $form['shibboleth'] = array(
-      '#type' => 'markup',
       '#weight' => -1,
-      '#value' => _login_url_html(TRUE),
+      '#markup' => _login_url_html(TRUE),
     );
   }
   if ($form_id = 'user_admin_role') {
@@ -1161,15 +1161,15 @@ function shib_auth_save_roles() {
 } //function shib_auth_save_roles
 
 /**
- *  Unfortunately if we called user_save() on updating email, we would possibly lose 
+ *  Unfortunately if we called user_save() on updating email, we would possibly lose
  *  profile fields, so we are forced to hack with the {users} table
  *  @param $account user account to modify
  *  @param $mail new mail address
- *  @return modified user object or FALSE on error, just like user_save would do 
+ *  @return modified user object or FALSE on error, just like user_save would do
  */
 function shib_auth_save_mail($account, $mail) {
   // Basic parameter checks to avoid do anything fatal
-  if (!is_object($account) || !$account->uid || $account->uid <= 1) 
+  if (!is_object($account) || !$account->uid || $account->uid <= 1)
     return FALSE;
   if (!valid_email_address($mail)) {
     shib_auth_error('E-mail address is invalid');
@@ -1177,14 +1177,19 @@ function shib_auth_save_mail($account, $mail) {
   }
 
   // If the mail hasn't changed, do not do anything
-  if ($account->mail && $account->mail == $mail) 
+  if ($account->mail && $account->mail == $mail)
     return $account;
 
-  // We deliberately do not call user_module_invoke('update',..) here, because 
+  // We deliberately do not call user_module_invoke('update',..) here, because
   // profile module seems to take it too seriously and wipes out profile fields
 
   // Cross fingers, do the update
-  $success = db_query("UPDATE {users} SET mail = '%s' WHERE uid = %d", $mail, $account->uid);
+  $success = db_update('users')
+    ->fields(array(
+      'mail' => $mail
+    ))
+    ->condition('uid', $account->uid, '=')
+    ->execute();
   if (!$success) {
     // Failed for some reason?
     shib_auth_error ('Error saving mail');
@@ -1194,7 +1199,7 @@ function shib_auth_save_mail($account, $mail) {
   // Refresh user object
   $account->mail = $mail;
 
-  // We can call things hooked on after_update 
+  // We can call things hooked on after_update
   $null = NULL;
   user_module_invoke('after_update', $null, $account);
 
