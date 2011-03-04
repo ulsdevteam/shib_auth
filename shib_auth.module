@@ -146,7 +146,7 @@ function shib_auth_session_check($uname) {
   }
 
   if (isset($_SESSION['shib_auth_username'])) {
-    if ($_SESSION['shib_auth_username'] != $uname && $_SESSION['shib_auth_account_linking'] != TRUE) {
+    if ($_SESSION['shib_auth_username'] != $uname && empty($_SESSION['shib_auth_account_linking'])) {
       /*  See SA-CONTRIB-2009-070
       If we reach here, a new federated user was given an existing Drupal session of
       an old user. This can happen when using Single Logout.
@@ -267,7 +267,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   //else register the user with the given information
   else {
     //if linking an account with shib: don't login / register again
-    if (!($user->uid > 1 && $_SESSION['shib_auth_account_linking'])) {
+    if (!($user->uid > 1 && !empty($_SESSION['shib_auth_account_linking']))) {
       if (user_is_blocked($custom_uname)) {
         //register a new user with this username, and login
         shib_auth_error('This user is blocked');
@@ -616,7 +616,7 @@ function shib_auth_init() {
   shib_auth_debug();
 
   // Do nothing if the user is logged in and we're not doing account linking
-  if ($user->uid && !$_SESSION['shib_auth_account_linking'])
+  if ($user->uid && empty($_SESSION['shib_auth_account_linking']))
     return;
     
   // Do virtually nothing when we need to display the custom data form
@@ -659,7 +659,7 @@ function shib_auth_init() {
     //If it is account linking and the terms are accepted or forcing an existing user to accept termsandconditions
 
     //If we have an e-mail address from the shib server, and there isn't any user with this address, create an account with these infos
-    if ($_SESSION['shib_auth_account_linking'] || $umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') &&
+    if (!empty($_SESSION['shib_auth_account_linking']) || $umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') &&
     !shib_auth_config('terms_accept')) {
       shib_auth_save_authmap($uname, $uname, $umail_single);
     }
