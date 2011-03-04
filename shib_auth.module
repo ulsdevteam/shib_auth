@@ -573,6 +573,8 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
  */
 function shib_auth_init() {
   global $user;
+  global $shib_auth_logout;
+  $shib_auth_logout = FALSE;
 
   //add theme css
   drupal_add_css(drupal_get_path('module', 'shib_auth') . '/shib_auth.css');
