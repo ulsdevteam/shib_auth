@@ -577,8 +577,6 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
  */
 function shib_auth_init() {
   global $user;
-  global $shib_auth_logout;
-  $shib_auth_logout = FALSE;
 
   //add theme css
   drupal_add_css(drupal_get_path('module', 'shib_auth') . '/shib_auth.css');
@@ -637,7 +635,7 @@ function shib_auth_init() {
   // Do nothing if the user is logged in and we're not doing account linking
   if ($user->uid && !$_SESSION['shib_auth_account_linking'])
     return;
-    
+
   // Do virtually nothing when we need to display the custom data form
   if ( isset($_SESSION['shib_auth_custom_form']) && $_SESSION['shib_auth_custom_form']) {
     unset($_SESSION['shib_auth_custom_form']); // Display it only once
@@ -712,15 +710,10 @@ function shib_auth_init() {
 function shib_auth_exit() {
   global $shib_auth_logout;
 
-  if ($shib_auth_logout) {
-    if ($_SESSION['authentication'] === 'shib_auth' || 1) {
-      unset($_SESSION['rolelog']);
-      $logouthandler = shib_auth_config('full_logout_url');
-      unset($_SESSION['authentication']);
-      $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
-      $null = NULL;
-      drupal_goto("$logouthandler?return=$logout_redirect");
-    }
+  if (isset($shib_auth_logout) AND $shib_auth_logout === TRUE) {
+    $logouthandler = shib_auth_config('full_logout_url');
+    $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
+    drupal_goto("$logouthandler?return=$logout_redirect");
   }
 }
 
