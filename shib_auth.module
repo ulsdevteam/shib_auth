@@ -188,9 +188,9 @@ function shib_auth_debug() {
       // Work around that drupal_set_message() keeps previous messages in $_SESSION
       $session_copy = $_SESSION;
       if (isset ($session_copy['messages']))
-        unset ($session_copy['messages']);
+        unset($session_copy['messages']);
       $debug_message = '<b>$_SESSION:</b><br /><pre>' . print_r($session_copy, TRUE) . '</pre>';
-      unset ($session_copy); // end of workaround
+      unset($session_copy); // end of workaround
       drupal_set_message($debug_message);
       $debug_message = '<b>$_SERVER:</b><br /><pre>' . print_r($_SERVER, TRUE) . '</pre>';
       drupal_set_message($debug_message);
@@ -274,18 +274,18 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
         return;
       }
       user_external_login_register($custom_uname, 'shib_auth');
-      if($user->uid) {
-	$null = array();
+      if ($user->uid) {
+        $null = array();
         user_authenticate_finalize($null);
       }
     }
     if (!user_get_authmaps($user->name)) {
-      user_set_authmaps($user,array('auth_shib_auth' => $user->name));
+      user_set_authmaps($user, array('auth_shib_auth' => $user->name));
     }
     $_SESSION['shib_auth_authentication'] = 'shib_auth';
     if (!$user) {
       // Something really bad happened
-      shib_auth_error ('Fatal error while saving mail address');
+      shib_auth_error('Fatal error while saving mail address');
       return;
     }
     $idp = shib_auth_get_idp();
@@ -335,12 +335,12 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin=False)
         }
         //if everything is allright, modify the mail address of the user.
         else {
-          $user = shib_auth_save_mail ($user, $umail_single);
-	  if (!$user) {
-	    // Something really bad happened
-	    shib_auth_error ('Fatal error while saving mail address');
-	    return;
-	  }
+          $user = shib_auth_save_mail($user, $umail_single);
+          if (!$user) {
+            // Something really bad happened
+            shib_auth_error('Fatal error while saving mail address');
+            return;
+          }
         }
       }
       //forward user to login url, if set
@@ -1122,7 +1122,7 @@ function shib_auth_save_mail($account, $mail) {
   $success = db_query("UPDATE {users} SET mail = '%s' WHERE uid = %d", $mail, $account->uid);
   if (!$success) {
     // Failed for some reason?
-    shib_auth_error ('Error saving mail');
+    shib_auth_error('Error saving mail');
     return FALSE;
   }
 
