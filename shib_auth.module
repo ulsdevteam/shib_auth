@@ -258,10 +258,10 @@ function shib_auth_session_isShib2x() {
  */
 function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   global $user;
-  $email_already_used_query = db_query("SELECT * FROM {users} WHERE mail='%s'", $umail_single );
+  $email_already_used_query = db_query("SELECT uid FROM {users} WHERE mail='%s'", $umail_single );
   $email_already_used = db_fetch_object($email_already_used_query);
   // If the mail address is used, give an error
-  if ($email_already_used) {
+  if ($email_already_used && !(!empty($_SESSION['shib_auth_account_linking']) && $email_already_used->uid == $user->uid)) {
     shib_auth_error('Error saving user account. E-mail address is already used.');
   }
   //else register the user with the given information
