@@ -136,7 +136,7 @@ function shib_auth_custom_data() {
   //register a new user with the data given here
   else {
   //username textfield is writable, if define_username variable is true
-    if (shib_auth_config('define_username') && (!$user->uid || shib_auth_config('account_linking'))) {
+    if (shib_auth_config('define_username')) {
       $form['custom_username'] = array(
         '#type' => 'textfield',
         '#title' => t('Desired username'),
@@ -156,7 +156,7 @@ function shib_auth_custom_data() {
       );
     }
 
-    if (shib_auth_config('enable_custom_mail') && (!$user->uid  || shib_auth_config('account_linking'))) {
+    if (shib_auth_config('enable_custom_mail')) {
       //mail textfield is writable, if define_username variable is true
       $form['custom_mail'] = array(
         '#type' => 'textfield',
