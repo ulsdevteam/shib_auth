@@ -138,7 +138,7 @@ function shib_auth_custom_data($form, &$form_state) {
   //register a new user with the data given here
   else {
     //username textfield is writable, if define_username variable is true
-    if (shib_auth_config('define_username') && (!$user->uid || shib_auth_config('account_linking'))) {
+    if (shib_auth_config('define_username')) {
       $form['custom_username'] = array(
         '#type' => 'textfield',
         '#title' => t('Desired username'),
@@ -149,16 +149,16 @@ function shib_auth_custom_data($form, &$form_state) {
     //username textfield is not writable, if define_username variable is false
     else {
       $form['custom_usernamem'] = array(
-        '#value' => t('<b>Username:</b> <br />'),
+        '#markup' => t('<b>Username:</b> <br />'),
       );
 
       $form['custom_username'] = array(
-        '#value' => $_SERVER[shib_auth_config('username_variable')],
+        '#markup' => $_SERVER[shib_auth_config('username_variable')],
         '#suffix' => '<br />',
       );
     }
 
-    if (shib_auth_config('enable_custom_mail') && (!$user->uid  || shib_auth_config('account_linking'))) {
+    if (shib_auth_config('enable_custom_mail')) {
       //mail textfield is writable, if define_username variable is true
       $form['custom_mail'] = array(
         '#type' => 'textfield',
@@ -170,11 +170,11 @@ function shib_auth_custom_data($form, &$form_state) {
     //mail textfield is not writable, if define_username variable is false
     else {
       $form['custom_mailm'] = array(
-        '#value' => t('<b>E-mail:</b> <br />'),
+        '#markup' => t('<b>E-mail:</b> <br />'),
       );
 
       $form['custom_mail'] = array(
-        '#value' => $_SERVER[shib_auth_config('email_variable')],
+        '#markup' => $_SERVER[shib_auth_config('email_variable')],
         '#suffix' => '<br />',
       );
     }
