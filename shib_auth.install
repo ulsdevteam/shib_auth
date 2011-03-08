@@ -6,34 +6,11 @@
  */
 
 /**
- * Implementation of hook_install().
- *
- * Hook to install module, and enable it as a block
- */
-function shib_auth_install() {
-  drupal_install_schema('shib_auth');
-  // Place block into the 'blocks' table manually
-  foreach (list_themes() as $key => $theme) {
-    if ($theme->status) {
-      // Delete block from database for version changes
-      $block_query = db_query("SELECT * FROM {blocks} WHERE module = 'shib_auth'");
-      if (!$block_query->fetchObject()) {
-        db_query("INSERT INTO {blocks} (visibility, pages, custom, title, module, theme, status, weight, delta, cache, region) VALUES(%d, '%s', %d, '%s', '%s', '%s', %d, %d, '%s', %d, '%s')", 0, '', 0, '', 'shib_auth', $theme->name, TRUE, 0, 0, BLOCK_NO_CACHE, 'left');
-      }
-    }
-  }
-  cache_clear_all(NULL, 'cache_block');
-
-  drupal_set_message(st('Shibboleth authentication module installed successfully.'));
-}
-
-/**
  * Implementation of hook_uninstall().
  *
  * Hook to uninstall variables and the block, witch were created and used by the module
  */
 function shib_auth_uninstall() {
-
   // Drop variables.
   $variables = array(
     'shib_auth_link_text',
@@ -64,111 +41,17 @@ function shib_auth_uninstall() {
     variable_del($variable);
   }
 
-  // Remove block from the 'blocks' table manually
-  cache_clear_all(NULL, 'cache_block');
-
-  drupal_uninstall_schema('shib_auth');
-
   drupal_set_message(t('The Shibboleth authentication module was uninstalled successfully.'));
 }
 
-/**
- * It's needed because db_table_exists() does not escape sql wildcard character '_'
- */
-function _shib_auth_db_table_exists($table) {
-  $table = preg_replace('/_/', '\_', $table);
-  $res = db_query("SHOW TABLES LIKE '{" . $table . "}'");
-  return (bool) $res->fetchObject();
-}
-
-/**
- * Implementation of hook_update().
- *
- * Hook to update module from older revisions
- * @return an array with the executed SQL commands
- */
-function shib_auth_update_6400() {
-  // NON-DESTRUCTIVE PART OF THE UPDATE -- LET IT RUN MULTIPLE TIMES
-  $ret = array();
-  $schema = shib_auth_schema();
-
-  if (!_shib_auth_db_table_exists('shib_auth')) {
-    db_create_table($ret, 'shib_auth', $schema['shib_auth']);
-  }
-  else {
-    db_add_field($ret, 'shib_auth', 'sticky', array(
-      'type' => 'int', 'size' => 'tiny', 'not null' => FALSE, 'default' => 0));
-  }
-
-  if (!_shib_auth_db_table_exists('shib_authmap')) {
-    db_create_table($ret, 'shib_authmap', $schema['shib_authmap']);
-  }
-
-  /* Hack to determine if we're already running version 4.x
-     (the 'shib_auth_version' was not set in versions before 4.x) */
-  if (variable_get('shib_auth_version', NULL)) {
-    //ABORT
-    return $ret;
-  }
-
-  /* shib_auth module version */
-  variable_set('shib_auth_version', "4.0");
-
-  //DESTRUCTIVE PART OF THE UPDATE -- this must not be run multiple times
-  variable_set('shib_auth_full_logout_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') .'/Logout');
-  variable_set('shib_auth_full_handler_url', variable_get('shib_auth_handler_protocol', 'https') .'://'. $_SERVER['HTTP_HOST'] . variable_get('shib_auth_handler_url', '/Shibboleth.sso') . variable_get('shib_auth_wayf_uri', '/DS'));
-  variable_set('shib_auth_enable_custom_mail', variable_get('shib_auth_mail_shib_only', FALSE));
-  variable_del('shib_auth_mail_shib_only');
-  variable_set('shib_auth_email_variable', variable_get('shib_auth_username_email', 'HTTP_MAIL'));
-  variable_del('shib_auth_username_email');
-  variable_set('shib_auth_logout_url', variable_get('shib_logout_url', $_SERVER['HTTP_HOST']));
-  variable_del('shib_logout_url');
-  variable_set('shib_auth_link_text', variable_get('auth_link_text', 'Shibboleth Login'));
-  variable_del('auth_link_text');
-
-
-  //copy the elements of authmap to the database shib_auth module uses, and left idp field empty
-  $entries = db_query("SELECT * FROM {authmap} WHERE module='shib_auth'");
-  while ($entry = $entries->fetchAssoc()) {
-    if ($entry['uid']>1) {
-      $ret[] = update_sql("INSERT INTO {shib_authmap} (uid, targeted_id, created) VALUES  ('". $entry['uid'] ."',
-                                                                                           '". $entry['authname'] ."',
-                                                                                           '". date("Y-m-d H:i:s") ."')");
-    }
-  }
-
-  //update shib elements to
-  $entries = db_query("SELECT * FROM {shib_auth}");
-  while ($entry = $entries->fetchAssoc()) {
-    $old_role = unserialize(urldecode($entry['role']));
-    if ($old_role) {
-      $new_role = serialize(array_keys($old_role));
-      db_query("UPDATE {shib_auth} SET role='%s' WHERE id=%d", $new_role, $entry['id']);
-    }
-  }
-  return $ret;
-}
-
-/**
- * Implementation of hook_update().
- *
- * Hook to update module from older revisions
- * @return an array with the executed SQL commands
- */
-function shib_auth_update_6401() {
-  // This update is a helper to rebuild menu tree, because of the new menu item 
-  // This is useful for those, who are updating from a previous 4.x release
-  menu_rebuild();
-  // For some reason, update.php insists to have a returned array. Let it be then.
-  $returned = array();
-  return $returned;
-}
 /**
  * Implementation of hook_schema().
  *
  * This is how the schema of the module will look like
  */
 function shib_auth_schema() {
+  $schema = array();
+
   $schema['shib_authmap'] = array(
     'description' => 'Stores shibboleth authentication mapping from persistend IDs to drupal users.',
     'fields' => array(
@@ -207,7 +90,7 @@ function shib_auth_schema() {
         'type' => 'int',
         'default' => 0,
         'not null' => TRUE,
-        'description' => 'Date and time the mapping was created',
+        'description' => 'Timestamp the mapping was created',
       ),
     ),
     'primary key' => array('id'),
