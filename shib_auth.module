@@ -910,7 +910,7 @@ function shib_auth_block_info() {
     'status'     => 1,
     'visibility' => 1,
     'weight'     => 0,
-    'region'     => 'left'
+    'region'     => 'sidebar_first'
   );
   return $blocks;
 } //function shib_auth_block_info
