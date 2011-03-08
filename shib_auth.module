@@ -167,18 +167,19 @@ function shib_auth_debug() {
           'roles' => $user->roles
         );
 
-        $debug_message = '<b>$user:</b><br /><pre>'. print_r($userinfo, TRUE) . '</pre>';
-        drupal_set_message($debug_message);
+        $debug_message = '<b>$user:</b><br /><pre>' . print_r($userinfo, TRUE) . '</pre>';
+        drupal_set_message(t('@msg', array('@msg' => $debug_message)));
       }
       // Work around that drupal_set_message() keeps previous messages in $_SESSION
       $session_copy = $_SESSION;
-      if (isset ($session_copy['messages']))
-        unset ($session_copy['messages']);
+      if (isset($session_copy['messages'])) {
+        unset($session_copy['messages']);
+      }
       $debug_message = '<b>$_SESSION:</b><br /><pre>' . print_r($session_copy, TRUE) . '</pre>';
-      unset ($session_copy); // end of workaround
-      drupal_set_message($debug_message);
+      unset($session_copy); // end of workaround
+      drupal_set_message(t('@msg', array('@msg' => $debug_message)));
       $debug_message = '<b>$_SERVER:</b><br /><pre>' . print_r($_SERVER, TRUE) . '</pre>';
-      drupal_set_message($debug_message);
+      drupal_set_message(t('@msg', array('@msg' => $debug_message)));
     }
   }
 } //function shib_auth_debug
@@ -265,12 +266,12 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       user_external_login_register($custom_uname, 'shib_auth');
     }
     if (!user_get_authmaps($user->name)) {
-      user_set_authmaps($user,array('auth_shib_auth' => $user->name));
+      user_set_authmaps($user, array('auth_shib_auth' => $user->name));
     }
     $_SESSION['shib_auth_authentication'] = 'shib_auth';
     if (!$user) {
       // Something really bad happened
-      shib_auth_error ('Fatal error while saving mail address');
+      shib_auth_error('Fatal error while saving mail address');
       return;
     }
     $idp = shib_auth_get_idp();
@@ -286,7 +287,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       ->execute();
     if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
       unset($_SESSION['shib_auth_account_linking']);
-      drupal_set_message('Account successfully linked to new shibboleth id!');
+      drupal_set_message(t('Account successfully linked to new shibboleth id!'));
     }
     else {
       //rewrite e-mail address
@@ -327,10 +328,10 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
         }
         //if everything is allright, modify the mail address of the user.
         else {
-          $user = shib_auth_save_mail ($user, $umail_single);
+          $user = shib_auth_save_mail($user, $umail_single);
           if (!$user) {
             // Something really bad happened
-            shib_auth_error ('Fatal error while saving mail address');
+            shib_auth_error('Fatal error while saving mail address');
             return;
           }
         }
@@ -340,9 +341,9 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
         drupal_goto(shib_auth_config('login_url'));
       }
     }
-    else shib_auth_error('Couldn\'t login user: '. $authmap_username['name']);
+    else shib_auth_error('Couldn\'t login user: ' . $authmap_username['name']);
   }
-  else shib_auth_error('Couldn\'t login user: '. $authmap_username['name']);
+  else shib_auth_error('Couldn\'t login user: ' . $authmap_username['name']);
   //redirect user to a predefined page, or a page, she wanted to see before clicking on login
   shib_auth_submit_redirect();
 } //function shib_login_authmap
@@ -500,13 +501,13 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
     // if there already is a POST-ed form, save received values as a variable
     if ($_POST['form_id'] == 'shib_auth_custom_data') {
       if ($_POST['custom_mail']) {
-        $custom_mail = $_POST['custom_mail'];
+        $custom_mail = filter_xss($_POST['custom_mail']);
       }
       if ($_POST['custom_username']) {
-        $custom_username = $_POST['custom_username'];
+        $custom_username = filter_xss($_POST['custom_username']);
       }
       if ($_POST['accept']) {
-        $consent_accepted = $_POST['accept'];
+        $consent_accepted = filter_xss($_POST['accept']);
       }
     }
     //If the consent is accepted or it isn't configured
@@ -546,18 +547,16 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
 } //function shib_auth_custom_form
 
 /**
- * This function updates the accepted consent version number of the user to the current one 
-*/
+ * This function updates the accepted consent version number of the user to the current one
+ */
 function shib_auth_consent_update($uname, $umail_single, $uid) {
   $sql = "UPDATE {shib_authmap} SET consentver='%s' WHERE targeted_id='%s'";
   // TODO Please review the conversion of this statement to the D7 database API syntax.
   /* db_query($sql, shib_auth_config('terms_ver'), $uname) */
   $result = db_update('shib_authmap')
-  ->fields(array(
-    'consentver' => shib_auth_config('terms_ver'),
-  ))
-  ->condition('targeted_id', $uname)
-  ->execute();
+    ->fields(array('consentver' => shib_auth_config('terms_ver')))
+    ->condition('targeted_id', $uname)
+    ->execute();
   shib_login_authmap($uname, $umail_single, $uid);
 } //function shib_auth_consent_update
 
@@ -573,8 +572,6 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
  */
 function shib_auth_init() {
   global $user;
-  global $shib_auth_logout;
-  $shib_auth_logout = FALSE;
 
   //add theme css
   drupal_add_css(drupal_get_path('module', 'shib_auth') . '/shib_auth.css');
@@ -651,9 +648,8 @@ function shib_auth_init() {
 
   //Check whether CONSENT VERSION is CHANGED, if so, users have to accept it again
   if ($_POST['form_id'] == 'shib_auth_custom_data' && $_POST['accept']) {
-    $consent_accepted = $_POST['accept'];
+    $consent_accepted = filter_xss($_POST['accept']);
   }
-  //drupal_set_message("Old user, accept, consentver: ".(int)$existing_authmap.",".(int)$consent_accepted.",".(int)$existing_authmap['consentver'], 'error');
 
   //*********** LOGIN EXISTING USER ***************
   //The user exists in the authmap, and the consent version check is switched off, or she/he had accepted the newest consent version
@@ -697,18 +693,18 @@ function shib_auth_init() {
   //********* END OF REGISTERING *************
   if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
     unset($_SESSION['shib_auth_account_linking']);
-    drupal_set_message('End of account linking session');
+    drupal_set_message(t('End of account linking session'));
   }
 }// function shib_auth_init()
 
 /**
- * Implemets of the hook_exit
+ * Implements hook_exit().
  *
  */
 function shib_auth_exit() {
-  global $shib_auth_logout;
+  global $_shib_auth_logout;
 
-  if (isset($shib_auth_logout) AND $shib_auth_logout === TRUE) {
+  if (isset($_shib_auth_logout) AND $_shib_auth_logout === TRUE) {
     $logouthandler = shib_auth_config('full_logout_url');
     $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
     drupal_goto("$logouthandler?return=$logout_redirect");
@@ -741,7 +737,7 @@ function shib_auth_get_handler_base() {
  * @param account The user object on which the operation is being performed.
  */
 function shib_auth_user_logout($account) {
-  global $shib_auth_logout;
+  global $_shib_auth_logout;
   $shib_auth_logout = TRUE;
 }
 
@@ -827,7 +823,7 @@ function shib_auth_menu() {
     'access callback'  => 'access_shib_login',
     'file'             => 'shib_auth_forms.inc',
   );
-  
+
   $items['shib_link'] = array(
     'page callback'    => 'shib_auth_link',
     'type'             => MENU_CALLBACK,
@@ -1013,7 +1009,7 @@ function access_shib_login() {
 } //function access_shib_login
 
 /**
- * Implement of the hook_theme()
+ * Implements hook_theme().
  */
 function shib_auth_theme($existing, $type, $theme, $path) {
   return array(
@@ -1183,7 +1179,7 @@ function shib_auth_save_mail($account, $mail) {
     ->execute();
   if (!$success) {
     // Failed for some reason?
-    shib_auth_error ('Error saving mail');
+    shib_auth_error(t('Error saving mail'));
     return FALSE;
   }
 

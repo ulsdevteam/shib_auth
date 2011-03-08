@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  *
  * Hook to uninstall variables and the block, witch were created and used by the module
  */
@@ -45,7 +45,7 @@ function shib_auth_uninstall() {
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  *
  * This is how the schema of the module will look like
  */

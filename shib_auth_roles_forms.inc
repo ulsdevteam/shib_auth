@@ -23,7 +23,7 @@ function shib_auth_edit_form($options) {
     '#type'           => 'textfield',
     '#default_value'  => $options[1],
     '#require'        => TRUE,
-    '#description'    => t('More properly: <b>!server</b> field name; enable DEBUG mode to list available fields. <br/>Note that it might differ from your users\' fields.', array('!server' => $_SERVER)),
+    '#description'    => t('More properly: <b>@server</b> field name; enable DEBUG mode to list available fields. <br/>Note that it might differ from your users\' fields.', array('@server' => $_SERVER)),
   );
 
   $form['shib_auth_new_regexp'] = array(
@@ -87,9 +87,9 @@ function _shib_auth_clone_rule($id) {
  */
 function _shib_auth_delete_rule($id) {
   db_delete('shib_auth')
-  ->condition('id', $id)
-  ->execute();
-  drupal_set_message(t('Rule <strong>#!id</strong> has been deleted.', array('!id' => $id)), 'warning');
+    ->condition('id', $id)
+    ->execute();
+  drupal_set_message(t('Rule <strong>#@id</strong> has been deleted.', array('@id' => $id)), 'warning');
   drupal_goto('admin/config/people/shib_auth/rules');
 } //function _shib_auth_delete_rule
 
@@ -109,7 +109,7 @@ function _shib_auth_list_rules() {
     }
     //     if (!empty($roles)) $roles_list = implode(', ', $roles);
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
-    $retval .= '<tr><td>' . $rule['field'] . '</td><td>' . urldecode($rule['regexpression']) . '</td><td>' . $roles_list . '</td><td>' . $sticky  . '</td>';
+    $retval .= '<tr><td>' . $rule['field'] . '</td><td>' . urldecode($rule['regexpression']) . '</td><td>' . $roles_list . '</td><td>' . $sticky . '</td>';
     $retval .= '<td stype="text-align: right;">';
     $retval .= '<a href="' . url('admin/config/people/shib_auth/clone/' . $rule['id']) . '">' . t('Clone') . '</a> | ';
     $retval .= '<a href="' . url('admin/config/people/shib_auth/edit/' . $rule['id']) . '">' . t('Edit') . '</a> | ';
