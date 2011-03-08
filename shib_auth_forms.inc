@@ -121,9 +121,10 @@ function shib_auth_admin_general() {
  * Generate the custom e-mail and username provider form
  * @returns HTML text of the custom data form
  */
-function shib_auth_custom_data() {
+function shib_auth_custom_data($form, &$form_state) {
   global $user;
 
+  //drupal_set_message("Old user, accept, consentver: ".(int)$existing_authmap.",".(int)$consent_accepted.",".(int)$existing_authmap['consentver'], 'error');
   $form = array();
   //Decide if the user is already registered, but a new consent version is present
   $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $_SERVER[shib_auth_config('username_variable')]));

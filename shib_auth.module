@@ -813,7 +813,7 @@ function shib_auth_menu() {
     'page callback'    => 'drupal_get_form',
     'page arguments'   => array('shib_auth_custom_data'),
     'access callback' => 'access_shib_login',
-    'type'             => MENU_CALLBACK,
+    'type'             => MENU_VISIBLE_IN_BREADCRUMB,
     'file'             => 'shib_auth_forms.inc',
   );
 
