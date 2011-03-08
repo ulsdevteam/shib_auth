@@ -168,7 +168,7 @@ function shib_auth_debug() {
         );
 
         $debug_message = '<b>$user:</b><br /><pre>' . print_r($userinfo, TRUE) . '</pre>';
-        drupal_set_message(t('@msg', array('@msg' => $debug_message)));
+        drupal_set_message(t('!msg', array('!msg' => $debug_message)));
       }
       // Work around that drupal_set_message() keeps previous messages in $_SESSION
       $session_copy = $_SESSION;
@@ -177,9 +177,9 @@ function shib_auth_debug() {
       }
       $debug_message = '<b>$_SESSION:</b><br /><pre>' . print_r($session_copy, TRUE) . '</pre>';
       unset($session_copy); // end of workaround
-      drupal_set_message(t('@msg', array('@msg' => $debug_message)));
+      drupal_set_message(t('!msg', array('!msg' => $debug_message)));
       $debug_message = '<b>$_SERVER:</b><br /><pre>' . print_r($_SERVER, TRUE) . '</pre>';
-      drupal_set_message(t('@msg', array('@msg' => $debug_message)));
+      drupal_set_message(t('!msg', array('!msg' => $debug_message)));
     }
   }
 } //function shib_auth_debug
