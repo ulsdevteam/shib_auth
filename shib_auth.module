@@ -1058,7 +1058,8 @@ function shib_auth_assignroles() {
   // If the user roles array has been changed then reset the permission cache
   if (serialize($user->roles) != $former_roles) {
     // Hack to reset the permissions
-    user_access('access content', $account, TRUE);
+    // Clear the user access cache.
+  drupal_static_reset('user_access');
   }
   $_SESSION['shib_auth_rolelog'] = '1';
 } //function shib_auth_assignroles
