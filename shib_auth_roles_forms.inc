@@ -23,7 +23,7 @@ function shib_auth_edit_form($options) {
     '#type'           => 'textfield',
     '#default_value'  => $options[1],
     '#require'        => TRUE,
-    '#description'    => t('More properly: <b>@server</b> field name; enable DEBUG mode to list available fields. <br/>Note that it might differ from your users\' fields.', array('@server' => $_SERVER)),
+    '#description'    => t('More properly: <b>@server</b> field name; enable DEBUG mode to list available fields. <br/>Note that it might differ from your users\' fields.', array('@server' => '$_SERVER')),
   );
 
   $form['shib_auth_new_regexp'] = array(
