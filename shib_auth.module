@@ -248,7 +248,7 @@ function shib_auth_session_isShib2x() {
 } //function shib_auth_session_isShib2x
 
 /**
- * Save an entry into shib_authmap
+ * Saves an entry into shib_authmap and also saves mail if changed
  * A row in the authmap contains the drupal user id, the targeted id from 
  * Shibboleth, the IdP name, the date the user was created, and user consent 
  * version number.
@@ -296,7 +296,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       unset($_SESSION['shib_auth_account_linking']);
       drupal_set_message('Account successfully linked to new shibboleth id!');
     }
-    else {
+    if (!shib_auth_config('enable_custom_mail')) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
       $null = NULL;
