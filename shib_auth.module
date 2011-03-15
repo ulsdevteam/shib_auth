@@ -608,7 +608,7 @@ function shib_auth_init() {
   module_load_include('inc', 'shib_auth_roles', 'forms');
   //generate cache if it doesn't exists
   shib_auth_generate_rolenames(FALSE);
-  if (shib_auth_session_valid() && !user_is_anonymous()) {
+  if (shib_auth_session_valid() && !user_is_anonymous() && empty($_SESSION['shib_auth_account_linking'])) {
     shib_auth_assignroles();
   }
 
