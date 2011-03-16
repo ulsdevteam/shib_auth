@@ -34,8 +34,8 @@ function shib_auth_config($variable) {
                      'login_url' => '',
                      'logout_url' => url('<front>'),
                      'link_text' => t('Shibboleth Login'),
-                     'full_handler_url' => shib_auth_get_handler_base() . variable_get('wayf_uri', '/DS'),
-                     'full_logout_url' => shib_auth_get_handler_base() . '/Logout',
+                     'full_handler_url' => shib_auth_get_handler_base() . variable_get('shib_auth_wayf_uri', '/DS'),
+                     'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
   );
   //check, if it exists in the array above, and get its value
   if (array_key_exists($variable, $var_store)) {
@@ -131,7 +131,7 @@ function shib_auth_session_check($uname) {
   }
 
   if (isset($_SESSION['shib_auth_username'])) {
-    if ($_SESSION['shib_auth_username'] != $uname && $_SESSION['shib_auth_account_linking'] != TRUE) {
+    if ($_SESSION['shib_auth_username'] != $uname && empty($_SESSION['shib_auth_account_linking'])) {
       /*  See SA-CONTRIB-2009-070
       If we reach here, a new federated user was given an existing Drupal session of
       an old user. This can happen when using Single Logout.
@@ -193,8 +193,9 @@ function shib_auth_get_idp() {
   }
   elseif (isset($_SERVER['Shib_Identity_Provider'])) {
     return $_SERVER['Shib_Identity_Provider'];
-  }
-  return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
+  elseif (isset ($_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']))
+    return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
+  return '';
 } //function shib_auth_get_idp
 
 /**
@@ -238,9 +239,9 @@ function shib_auth_session_isShib2x() {
 } //function shib_auth_session_isShib2x
 
 /**
- * Save an entry into shib_authmap
- * A row in the authmap contains the drupal user id, the targeted id from
- * Shibboleth, the IdP name, the date the user was created, and user consent
+ * Saves an entry into shib_authmap and also saves mail if changed
+ * A row in the authmap contains the drupal user id, the targeted id from 
+ * Shibboleth, the IdP name, the date the user was created, and user consent 
  * version number.
  * @uname the username got from IdP
  * @custom_uname the customized username
@@ -251,13 +252,13 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   $email_already_used_query = db_query("SELECT * FROM {users} WHERE mail = :mail", array(':mail' => $umail_single));
   $email_already_used = $email_already_used_query->fetchObject();
   // If the mail address is used, give an error
-  if ($email_already_used) {
+  if ($email_already_used && !(!empty($_SESSION['shib_auth_account_linking']) && $email_already_used->uid == $user->uid)) {
     shib_auth_error('Error saving user account. E-mail address is already used.');
   }
   //else register the user with the given information
   else {
     //if linking an account with shib: don't login / register again
-    if (!($user->uid > 1 && $_SESSION['shib_auth_account_linking'])) {
+    if (!($user->uid > 1 && !empty($_SESSION['shib_auth_account_linking']))) {
       if (user_is_blocked($custom_uname)) {
         //register a new user with this username, and login
         shib_auth_error('This user is blocked');
@@ -289,7 +290,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       unset($_SESSION['shib_auth_account_linking']);
       drupal_set_message(t('Account successfully linked to new shibboleth id!'));
     }
-    else {
+    if (!shib_auth_config('enable_custom_mail')) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
       $null = NULL;
@@ -479,7 +480,7 @@ function shib_auth_cancel_custom() {
     array('absolute' => TRUE)
   );
   unset($_SESSION['shib_auth_custom_form_url']);
-  drupal_goto("$logouthandler?return=$redirect_url");
+  drupal_goto($logouthandler, "return=$redirect_url");
   }
 }
 
@@ -620,7 +621,7 @@ function shib_auth_init() {
   module_load_include('inc', 'shib_auth_roles', 'forms');
   //generate cache if it doesn't exists
   shib_auth_generate_rolenames(FALSE);
-  if (shib_auth_session_valid() && !user_is_anonymous()) {
+  if (shib_auth_session_valid() && !user_is_anonymous() && empty($_SESSION['shib_auth_account_linking'])) {
     shib_auth_assignroles();
   }
 
@@ -628,7 +629,7 @@ function shib_auth_init() {
   shib_auth_debug();
 
   // Do nothing if the user is logged in and we're not doing account linking
-  if ($user->uid && !$_SESSION['shib_auth_account_linking'])
+  if ($user->uid && empty($_SESSION['shib_auth_account_linking']))
     return;
 
   // Do virtually nothing when we need to display the custom data form
@@ -671,7 +672,7 @@ function shib_auth_init() {
     //If it is account linking and the terms are accepted or forcing an existing user to accept termsandconditions
 
     //If we have an e-mail address from the shib server, and there isn't any user with this address, create an account with these infos
-    if ($_SESSION['shib_auth_account_linking'] || $umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') &&
+    if (!empty($_SESSION['shib_auth_account_linking']) || $umail_single && !shib_auth_config('enable_custom_mail') && !shib_auth_config('define_username') &&
     !shib_auth_config('terms_accept')) {
       shib_auth_save_authmap($uname, $uname, $umail_single);
     }
@@ -717,8 +718,8 @@ function shib_auth_exit() {
  * @return handler base
  */
 function shib_auth_get_handler_base() {
-  $handlerurl = variable_get('handler_url', '/Shibboleth.sso');
-  $handlerprotocol = variable_get('handler_protocol', 'https');
+  $handlerurl = variable_get('shib_auth_handler_url', '/Shibboleth.sso');
+  $handlerprotocol = variable_get('shib_auth_handler_protocol', 'https');
   if (preg_match('#^http[s]{0,1}://#', $handlerurl) ) {
     // If handlerurl is an absolute path
     return $handlerurl;
