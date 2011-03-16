@@ -486,7 +486,7 @@ function shib_auth_cancel_custom() {
     array('absolute' => TRUE)
   );
   unset($_SESSION['shib_auth_custom_form_url']);
-  drupal_goto("$logouthandler?return=$redirect_url");
+  drupal_goto($logouthandler, "return=$redirect_url");
   }
 }
 
@@ -726,7 +726,7 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
         shib_auth_config('logout_url'),
         array('absolute' => TRUE)
       );
-      drupal_goto("$logouthandler?return=$logout_redirect");
+      drupal_goto($logouthandler, "return=$logout_redirect");
     }
   }
   elseif ($op == 'delete') {
