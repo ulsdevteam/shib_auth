@@ -51,7 +51,7 @@ function shib_auth_config($variable) {
                      'login_url' => '',
                      'logout_url' => url('<front>'),
                      'link_text' => t('Shibboleth Login'),
-                     'full_handler_url' => shib_auth_get_handler_base() . variable_get('wayf_uri', '/DS'),
+                     'full_handler_url' => shib_auth_get_handler_base() . variable_get('shib_auth_wayf_uri', '/DS'),
                      'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
   );
   //check, if it exists in the array above, and get its value
@@ -692,8 +692,8 @@ function shib_auth_init() {
  * @return handler base
  */
 function shib_auth_get_handler_base() {
-  $handlerurl = variable_get('handler_url', '/Shibboleth.sso');
-  $handlerprotocol = variable_get('handler_protocol', 'https');
+  $handlerurl = variable_get('shib_auth_handler_url', '/Shibboleth.sso');
+  $handlerprotocol = variable_get('shib_auth_handler_protocol', 'https');
   if (preg_match('#^http[s]{0,1}://#', $handlerurl) ) {
     // If handlerurl is an absolute path
     return $handlerurl;
