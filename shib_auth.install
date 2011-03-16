@@ -163,6 +163,25 @@ function shib_auth_update_6401() {
   $returned = array();
   return $returned;
 }
+function shib_auth_update_6402() {
+  // This update is useful for those, who already linked existing accounts to shibboleth with versions prior to RC4, but link didn't create authmap entry
+  $ret = array();
+  //copy the elements of shib_authmap to authmap, which isn't there already
+  $entries = db_query("SELECT uid, name FROM {users} WHERE (uid) IN 
+  (SELECT DISTINCT uid
+FROM {shib_authmap}
+WHERE (uid) NOT IN
+  (SELECT uid FROM {authmap})
+)");
+  while ($entry = db_fetch_array($entries)) {
+    if ($entry['uid']>1) {
+      $ret[] = update_sql("INSERT INTO {authmap} (uid, authname, module) VALUES  ('". $entry['uid'] ."',
+      '". $entry['name'] ."',
+      'shib_auth')");
+    }
+  }
+  return $ret;
+}
 /**
  * Implementation of hook_schema().
  *
