@@ -616,7 +616,7 @@ function shib_auth_init() {
   }
 
   /* Time to retrevie the mail and begin some work */
-  $umail = $_SERVER[shib_auth_config('email_variable')];
+  $umail = isset($_SERVER[shib_auth_config('email_variable')]) ? $_SERVER[shib_auth_config('email_variable')] : '';
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
 
   //********* ROLE ASSIGMENT STARTING ********
