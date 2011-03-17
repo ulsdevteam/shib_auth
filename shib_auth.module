@@ -124,7 +124,8 @@ function shib_auth_terminate_session($msg = '') {
 function shib_auth_session_check($uname) {
   global $user;
   // if the user IS logged in as non-admin, but we're missing Shibboleth identity
-  if (!shib_auth_session_valid() && $_SESSION['shib_auth_authentication'] == 'shib_auth' &&
+  if (!shib_auth_session_valid() && 
+      isset($_SESSION['shib_auth_authentication']) && $_SESSION['shib_auth_authentication'] == 'shib_auth' &&
       shib_auth_config('auto_destroy_session') && $user->uid > 1) {
     shib_auth_terminate_session('Your session is expired. Please log in again.');
     return FALSE;
@@ -613,7 +614,7 @@ function shib_auth_init() {
   }
 
   /* Time to retrevie the mail and begin some work */
-  $umail = $_SERVER[shib_auth_config('email_variable')];
+  $umail = isset($_SERVER[shib_auth_config('email_variable')]) ? $_SERVER[shib_auth_config('email_variable')] : '';
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
 
   //********* ROLE ASSIGMENT STARTING ********
@@ -647,7 +648,8 @@ function shib_auth_init() {
   $existing_authmap = shib_auth_load_from_authmap($uname);
 
   //Check whether CONSENT VERSION is CHANGED, if so, users have to accept it again
-  if ($_POST['form_id'] == 'shib_auth_custom_data' && $_POST['accept']) {
+  if (isset($POST['form_id']) && $_POST['form_id'] == 'shib_auth_custom_data' && 
+      !empty($_POST['accept'])) {
     $consent_accepted = filter_xss($_POST['accept']);
   }
 
