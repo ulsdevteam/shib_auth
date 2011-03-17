@@ -199,27 +199,6 @@ function shib_auth_get_idp() {
 } //function shib_auth_get_idp
 
 /**
- * Adds a record to {shib_authmap}
- *
- * @param $uid Drupal uid (number)
- * @param $federated_id federated identifier (max. 255 characters)
- * @param $consentver='' accepted terms&conditions version
- * @return FALSE on error, TRUE otherwise
- */
-function shib_auth_add_authmap($uid, $federated_id, $consentver = '') {
-  // Check if $federated_id exists in {shib_authmap}
-  $query_fed_id = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $federated_id));
-  if ($query_fed_id->fetchObject()) {
-    return shib_auth_error('Cannot link federated login to multiple accounts');
-  }
-  $sql = "INSERT INTO {shib_authmap} (uid, targeted_id, idp, created, consentver) "
-      . "VALUES  (:uid, ':tid', ':idp', :created, ':consentver')";
-  $params = array(':uid' => $uid, ':tid' => $federated_id, ':idp' => shib_auth_get_idp(), ':created' => time(), ':consentver' => $consentver);
-  // TODO Please convert this statement to the D7 database API syntax.
-  return db_query($sql, $params);
-} //function shib_auth_add_authmap
-
-/**
  * Checks whether Shibboleth SP has set the Identity Provider $_SERVER field. It is always set
  * if there is a Shibboleth SP session.
  * @return true if there is a valid Shibboleth session
@@ -290,7 +269,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
       unset($_SESSION['shib_auth_account_linking']);
       drupal_set_message(t('Account successfully linked to new shibboleth id!'));
     }
-    if (!shib_auth_config('enable_custom_mail')) {
+    if (!shib_auth_config('enable_custom_mail') || empty($_SESSION['shib_auth_account_linking'])) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
       $null = NULL;
@@ -396,21 +375,7 @@ function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
   }
   //if the username is also enabled
   elseif ((shib_auth_config('define_username') == 1) && isset($custom_username) && $custom_username) {
-    if ($error = user_validate_name($custom_username)) {
-      shib_auth_error($error);
-    }
-    else {
-      // and it isn't used by another registered drupal user
-      $un_already_used_query = db_query("SELECT * FROM {users} WHERE name = :name", array(':name' => $custom_username));
-      $un_already_used = $un_already_used_query->fetchObject();
-      if ($un_already_used) {
-        shib_auth_error('Error saving user account. User name is already used.');
-      }
-      //register the user with the given address, and the shib provided username
-      else {
-        shib_auth_save_authmap($uname, $custom_username, $custom_mail);
-      }
-    }
+    shib_auth_custom_username($uname, $custom_username, $custom_mail);
   }
 } //function shib_auth_custom_mail
 
@@ -423,9 +388,8 @@ function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
  */
 function shib_auth_custom_username($uname, $custom_username, $umail_single) {
   //validate it
-  if ($error = user_validate_name($custom_username)) {
+  if ($error = user_validate_name($custom_username))
     shib_auth_error($error);
-  }
   else {
     //check if username already exists
     $un_already_used_query = db_query("SELECT * FROM {users} WHERE name = :name", array(':name' => $custom_username));
