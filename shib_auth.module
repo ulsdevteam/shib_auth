@@ -188,10 +188,9 @@ function shib_auth_debug() {
   * @return IdP name
   */
 function shib_auth_get_idp() {
-  if (isset($_SERVER['Shib-Identity-Provider'])) {
+  if (isset($_SERVER['Shib-Identity-Provider'])) 
     return $_SERVER['Shib-Identity-Provider'];
-  }
-  elseif (isset($_SERVER['Shib_Identity_Provider'])) {
+  elseif (isset($_SERVER['Shib_Identity_Provider'])) 
     return $_SERVER['Shib_Identity_Provider'];
   elseif (isset ($_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']))
     return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
