@@ -1054,6 +1054,9 @@ function shib_auth_process_rule($rule) {
         }
 
         foreach ($roles as $role_id) {
+          if(!$role_id)
+            continue; // Zero is not allowed as a role_id
+
           $role_name = shib_auth_get_rolename($role_id);
           if (!empty ($user->roles[$role_id]) && $user->roles[$role_id] == $role_name) {
             continue; // NOP if the user already has the given role
