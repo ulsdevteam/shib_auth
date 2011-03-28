@@ -105,6 +105,7 @@ function _shib_auth_list_rules() {
     $roles = unserialize($rule['role']);
     $roles_list = '';
     foreach ($roles as $role) {
+      if(!$role) continue;
       $roles_list .= shib_auth_get_rolename($role) . ' ';
     }
     //     if (!empty($roles)) $roles_list = implode(', ', $roles);
