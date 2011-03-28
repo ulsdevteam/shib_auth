@@ -464,19 +464,19 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
      ($umail_single && shib_auth_config('define_username')) ||
      (shib_auth_config('enable_custom_mail') || $umail_single) && shib_auth_config('terms_accept')) {
     // if there already is a POST-ed form, save received values as a variable
-    if ($_POST['form_id'] == 'shib_auth_custom_data') {
-      if ($_POST['custom_mail']) {
+    if (isset($_POST['form_id']) && $_POST['form_id'] == 'shib_auth_custom_data') {
+      if (!empty($_POST['custom_mail'])) {
         $custom_mail = filter_xss($_POST['custom_mail']);
       }
-      if ($_POST['custom_username']) {
+      if (!empty($_POST['custom_username'])) {
         $custom_username = filter_xss($_POST['custom_username']);
       }
-      if ($_POST['accept']) {
+      if (!empty($_POST['accept'])) {
         $consent_accepted = filter_xss($_POST['accept']);
       }
     }
     //If the consent is accepted or it isn't configured
-    if (($consent_accepted && shib_auth_config('terms_accept')) || !shib_auth_config('terms_accept')) {
+    if (!shib_auth_config('terms_accept') || (!empty($consent_accepted) && shib_auth_config('terms_accept')) ) {
       // ****** CUSTOM MAIL **********
       //if the user provided the custom mail string on the custom data form, and it is not empty
       if (isset($custom_mail) && $custom_mail) {
@@ -484,11 +484,11 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
       }
       // ****** CUSTOM USERNAME **********
       //if there is no custom email option, but the user can define custom username
-      elseif (shib_auth_config('define_username') && isset($custom_username) && $custom_username) {
+      elseif (shib_auth_config('define_username') && !empty($custom_username)) {
         shib_auth_custom_username($uname, $custom_username, $umail_single);
       }
       // ****** USER CONSENT **********
-      elseif ($consent_accepted && shib_auth_config('terms_accept')) {
+      elseif (shib_auth_config('terms_accept') && !empty($consent_accepted)) {
         //register user
         shib_auth_save_authmap($uname, $uname, $umail_single);
       }
@@ -1055,7 +1055,7 @@ function shib_auth_process_rule($rule) {
 
         foreach ($roles as $role_id) {
           $role_name = shib_auth_get_rolename($role_id);
-          if ($user->roles[$role_id] == $role_name) {
+          if (!empty ($user->roles[$role_id]) && $user->roles[$role_id] == $role_name) {
             continue; // NOP if the user already has the given role
           }
 
@@ -1162,7 +1162,9 @@ function shib_auth_save_mail($account, $mail) {
 } // function shib_auth_save_mail
 
 /**
- * This function gets the username
+ * Generate role name cache. 
+ * Retrieves all roles from database and stores the id->name mapping
+ * in the users' session
  * @param $force If it is TRUE, the cache is regenerated
  */
 function shib_auth_generate_rolenames($force) {
@@ -1177,10 +1179,15 @@ function shib_auth_generate_rolenames($force) {
 } //function shib_auth_generate_rolenames
 
 /**
- * This function gets the username
+ * Retrieve role name from role id using the role cache
  * @param $rid the id of the role
  * @return the role name from the cache
  */
 function shib_auth_get_rolename($rid) {
-  return $_SESSION['shib_auth_rolecache'][$rid];
+  if (isset($_SESSION['shib_auth_rolecache'][$rid]))
+    return $_SESSION['shib_auth_rolecache'][$rid];
+
+  // For some reason we don't have the name for the role id
+  shib_auth_error("Internal error: no name for role_id '$rid'");
+  return NULL;
 } //function shib_auth_get_rolename
