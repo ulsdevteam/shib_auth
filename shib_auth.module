@@ -913,6 +913,8 @@ function shib_auth_block_save($delta = '', $edit = array()) {
  * @returns associative array whith the config form structure
  */
 function shib_auth_block_view($delta = '') {
+  $block = array();
+
   switch ($delta) {
     case 'login_box':
       $block = array(
