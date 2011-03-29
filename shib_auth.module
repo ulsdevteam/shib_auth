@@ -674,7 +674,7 @@ function shib_auth_exit() {
     $_shib_auth_logout = FALSE;
     $logouthandler = shib_auth_config('full_logout_url');
     $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
-    drupal_goto("$logouthandler?return=$logout_redirect");
+    drupal_goto("$logouthandler","return=$logout_redirect");
   }
 }
 
