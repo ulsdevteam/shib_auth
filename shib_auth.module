@@ -272,8 +272,6 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     if (!shib_auth_config('enable_custom_mail') || empty($_SESSION['shib_auth_account_linking'])) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
-      $null = NULL;
-      user_module_invoke('insert', $null, $user);
     }
   }
 } //function shib_auth_save_authmap
