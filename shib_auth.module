@@ -442,7 +442,7 @@ function shib_auth_cancel_custom() {
     array('absolute' => TRUE)
   );
   unset($_SESSION['shib_auth_custom_form_url']);
-  drupal_goto($logouthandler, "return=$redirect_url");
+  shib_auth_redirect($logouthandler, $redirect_url);
   }
 }
 
@@ -662,17 +662,34 @@ function shib_auth_init() {
 }// function shib_auth_init()
 
 /**
+ * Redirects user to the handler url, and handles return option
+ * @param handlerurl url of the login / logout handler
+ * @param return the path the user will be redirected after Shibboleth processing
+ */
+function shib_auth_redirect($handlerurl, $return = NULL) {
+  $options = array();
+  //recognize, if logout handler contains variables
+  $handler = explode('?', $handlerurl);
+  if (isset($handler[1])) {
+    parse_str($handler[1], $options);
+  }
+  if (isset($return))
+    $options['return'] = $return;
+  drupal_goto($handler[0], array('query' => $options));
+}
+
+/**
  * Implements hook_exit().
  *
  */
 function shib_auth_exit() {
   global $_shib_auth_logout;
-
+ 
   if (isset($_shib_auth_logout) AND $_shib_auth_logout === TRUE) {
     $_shib_auth_logout = FALSE;
     $logouthandler = shib_auth_config('full_logout_url');
     $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
-    drupal_goto("$logouthandler",array('query' => array('return' => $logout_redirect)));
+    shib_auth_redirect($logouthandler, $logout_redirect);
   }
 }
 
@@ -733,6 +750,7 @@ function shib_auth_permission() {
  * Generates shibboleth login url based on configuration
  */
 function shib_auth_generate_login_url() {
+  $sep='?';
   $sessioninitiator = shib_auth_config('full_handler_url');
   $forceauthn = '';
   //append forceAuthN variable to the login string
@@ -745,8 +763,9 @@ function shib_auth_generate_login_url() {
                            . '://' . $_SERVER['HTTP_HOST']
                            . url('shib_login/')
                            . $_GET['q'];
-
-  return "$sessioninitiator?target=" . urlencode($url_to_return) . $forceauthn;
+  if (preg_match('/\?/',$sessioninitiator))
+    $sep='&';
+  return $sessioninitiator . $sep . "target=" . urlencode($url_to_return) . $forceauthn;
 } //function shib_auth_generate_login_url
 
 /**
