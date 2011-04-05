@@ -75,6 +75,7 @@ function shib_auth_footer() {
     $my_settings = array( 'login_url' => shib_auth_generate_login_url());
     drupal_add_js(array('shib_auth' => $my_settings), 'setting');
     drupal_add_js($base .'/isPassive.js', 'module', 'footer');
+    print drupal_get_js();
   }
 } //function shib_auth_footer
 
