@@ -723,8 +723,7 @@ function shib_auth_generate_login_url() {
                    (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https') ?
                    'https' : 'http')
                            .'://'. $_SERVER['HTTP_HOST']
-                           . url('shib_login/')
-                           . $_GET['q'];
+                           . url('shib_login/', array('query' => $_GET));
 
   return "$sessioninitiator?target=" . urlencode($url_to_return) . $forceauthn;
 } //function shib_auth_generate_login_url
