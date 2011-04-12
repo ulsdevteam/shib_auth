@@ -58,6 +58,7 @@ function shib_auth_page_alter() {
     $my_settings = array('login_url' => shib_auth_generate_login_url());
     drupal_add_js(array('shib_auth' => $my_settings), array('type' => 'setting', 'scope' => JS_DEFAULT));
     drupal_add_js($base . '/isPassive.js', array('scope' => 'footer'));
+    print drupal_get_js();
   }
 } //function shib_auth_page_alter
 
@@ -761,8 +762,7 @@ function shib_auth_generate_login_url() {
                    (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https') ?
                    'https' : 'http')
                            . '://' . $_SERVER['HTTP_HOST']
-                           . url('shib_login/')
-                           . $_GET['q'];
+                           . url('shib_login/', array('query' => $_GET));
   if (preg_match('/\?/',$sessioninitiator))
     $sep='&';
   return $sessioninitiator . $sep . "target=" . urlencode($url_to_return) . $forceauthn;
