@@ -1045,6 +1045,7 @@ function shib_auth_assignroles() {
     // Hack to reset the permissions
     // Clear the user access cache.
   drupal_static_reset('user_access');
+  drupal_static_reset('menu_get_item');
   }
   $_SESSION['shib_auth_rolelog'] = '1';
 } //function shib_auth_assignroles
