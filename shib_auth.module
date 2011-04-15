@@ -751,7 +751,9 @@ function shib_auth_permission() {
  * Generates shibboleth login url based on configuration
  */
 function shib_auth_generate_login_url() {
-  $sep='?';
+  $sep = '?';
+  $queries = $_GET;
+  $queries['q']='shib_login/'. $queries['q'];
   $sessioninitiator = shib_auth_config('full_handler_url');
   $forceauthn = '';
   //append forceAuthN variable to the login string
@@ -762,7 +764,7 @@ function shib_auth_generate_login_url() {
                    (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https') ?
                    'https' : 'http')
                            . '://' . $_SERVER['HTTP_HOST']
-                           . url('shib_login/', array('query' => $_GET));
+                           . url('', array('query' => $queries));
   if (preg_match('/\?/',$sessioninitiator))
     $sep='&';
   return $sessioninitiator . $sep . "target=" . urlencode($url_to_return) . $forceauthn;
