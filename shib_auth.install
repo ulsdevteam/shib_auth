@@ -136,3 +136,50 @@ function shib_auth_schema() {
 
   return $schema;
 }
+
+/**
+ * D7 database API don't support datetime type anymore, so we change the database structure.
+ */
+function shib_auth_update_7000(&$sandbox) {
+  //save the created datetime temporaly
+  $result = db_select('shib_authmap', 'sa')
+    ->fields('sa', array('id', 'created'))
+    ->execute()
+    ->fetchAll();
+
+  //fill the created column whit NULL to the script can change the field type
+  db_update('shib_authmap')
+      ->fields(array(
+        'created' => NULL,
+      ))
+      ->execute();
+
+  //change the created column type from datetime to int
+  db_change_field(
+    'shib_authmap',
+    'created',
+    'created',
+    array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+    )
+  );
+
+  //fill the database with unixtimestamps
+  foreach($result as $row) {
+    if(!$created_unix = strtotime($row->created)) {
+      $created_unix = $row->created;
+    }
+
+    db_update('shib_authmap')
+      ->fields(array(
+        'created' => $created_unix,
+        ))
+      ->condition('id', $row->id, '=')
+      ->execute();
+  }
+
+  //update the menu system cache
+  menu_rebuild();
+  return;
+}
