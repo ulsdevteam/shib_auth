@@ -686,8 +686,10 @@ function shib_auth_redirect($handlerurl, $return = NULL) {
 function shib_auth_exit() {
   global $_shib_auth_logout;
  
-  if (isset($_shib_auth_logout) AND $_shib_auth_logout === TRUE) {
+  if ($_SESSION['shib_auth_authentication'] === 'shib_auth' && isset($_shib_auth_logout) && $_shib_auth_logout === TRUE) {
     $_shib_auth_logout = FALSE;
+    unset($_SESSION['shib_auth_rolelog']);
+    unset($_SESSION['shib_auth_authentication']);
     $logouthandler = shib_auth_config('full_logout_url');
     $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
     shib_auth_redirect($logouthandler, $logout_redirect);
