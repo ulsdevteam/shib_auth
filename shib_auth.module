@@ -686,7 +686,7 @@ function shib_auth_redirect($handlerurl, $return = NULL) {
 function shib_auth_exit() {
   global $_shib_auth_logout;
  
-  if ($_SESSION['shib_auth_authentication'] === 'shib_auth' && isset($_shib_auth_logout) && $_shib_auth_logout === TRUE) {
+  if (isset($_shib_auth_logout) && $_shib_auth_logout === TRUE) {
     $_shib_auth_logout = FALSE;
     unset($_SESSION['shib_auth_rolelog']);
     unset($_SESSION['shib_auth_authentication']);
@@ -723,7 +723,8 @@ function shib_auth_get_handler_base() {
  */
 function shib_auth_user_logout($account) {
   global $_shib_auth_logout;
-  $_shib_auth_logout = TRUE;
+  if ($_SESSION['shib_auth_authentication'] === 'shib_auth')            
+    $_shib_auth_logout = TRUE;
 }
 
 /**
