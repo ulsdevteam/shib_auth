@@ -266,13 +266,13 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
         'consentver' => shib_auth_config('terms_ver'),
         ))
       ->execute();
-    if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
-      unset($_SESSION['shib_auth_account_linking']);
-      drupal_set_message(t('Account successfully linked to new shibboleth id!'));
-    }
     if (!shib_auth_config('enable_custom_mail') || empty($_SESSION['shib_auth_account_linking'])) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
+    }
+    if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
+      unset($_SESSION['shib_auth_account_linking']);
+      drupal_set_message(t('Account successfully linked to new shibboleth id!'));
     }
   }
 } //function shib_auth_save_authmap
