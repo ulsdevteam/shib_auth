@@ -621,7 +621,11 @@ function shib_auth_init() {
   //Then let the user log in
   if ($existing_authmap &&
       (!shib_auth_config('terms_accept') || ($existing_authmap['consentver'] == shib_auth_config('terms_ver')))) {
-    shib_login_authmap($uname, $umail_single, $existing_authmap['uid'], $alreadyloggedin);
+    if (empty($_SESSION['shib_auth_account_linking']))
+      shib_login_authmap($uname, $umail_single, $existing_authmap['uid'], $alreadyloggedin);
+    else 
+      shib_auth_terminate_session('This ID has already been registered, please log in again');
+
   }
   //The user exists in the authmap, and she had just accepted the new consent version
   //Write the new version number into the her authmap row, and log her in
