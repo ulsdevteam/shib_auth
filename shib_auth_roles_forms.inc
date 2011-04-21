@@ -188,7 +188,8 @@ function shib_auth_save_rule($form_state, $update) {
   $roles = array();
   if (is_array($form_state['values']['shib_auth_roles'])) {
     foreach ($form_state['values']['shib_auth_roles'] as $role_id) {
-      $roles[] = $role_id;
+      if ($role_id)
+        $roles[] = $role_id;
     }
   }
   //save the new element into an array
