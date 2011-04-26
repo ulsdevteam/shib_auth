@@ -142,42 +142,49 @@ function shib_auth_schema() {
  */
 function shib_auth_update_7000(&$sandbox) {
   //save the created datetime temporaly
-  $result = db_select('shib_authmap', 'sa')
+  $res = db_select('shib_authmap', 'sa')
     ->fields('sa', array('id', 'created'))
     ->execute()
     ->fetchAll();
 
-  //fill the created column whit NULL to the script can change the field type
-  db_update('shib_authmap')
-      ->fields(array(
-        'created' => NULL,
-      ))
-      ->execute();
-
-  //change the created column type from datetime to int
-  db_change_field(
+  //change to the created column type from datetime to int
+  db_add_field(
     'shib_authmap',
-    'created',
-    'created',
+    'created_unix',
     array(
       'type' => 'int',
       'unsigned' => TRUE,
+      'not null' => FALSE,
     )
   );
 
   //fill the database with unixtimestamps
-  foreach($result as $row) {
+  foreach($res as $row) {
     if(!$created_unix = strtotime($row->created)) {
       $created_unix = $row->created;
     }
 
     db_update('shib_authmap')
       ->fields(array(
-        'created' => $created_unix,
+        'created_unix' => $created_unix,
         ))
       ->condition('id', $row->id, '=')
       ->execute();
   }
+
+  db_drop_field(
+    'shib_authmap',
+    'created'
+  );
+
+  db_change_field(
+    'shib_authmap',
+    'created_unix',
+    'created',
+    array(
+      'type' => 'int',
+    )
+  );
 
   //update the menu system cache
   menu_rebuild();
