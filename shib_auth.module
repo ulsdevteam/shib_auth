@@ -266,13 +266,13 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
         'consentver' => shib_auth_config('terms_ver'),
         ))
       ->execute();
-    if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
-      unset($_SESSION['shib_auth_account_linking']);
-      drupal_set_message(t('Account successfully linked to new shibboleth id!'));
-    }
     if (!shib_auth_config('enable_custom_mail') || empty($_SESSION['shib_auth_account_linking'])) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
+    }
+    if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
+      unset($_SESSION['shib_auth_account_linking']);
+      drupal_set_message(t('Account successfully linked to new shibboleth id!'));
     }
   }
 } //function shib_auth_save_authmap
@@ -621,7 +621,11 @@ function shib_auth_init() {
   //Then let the user log in
   if ($existing_authmap &&
       (!shib_auth_config('terms_accept') || ($existing_authmap['consentver'] == shib_auth_config('terms_ver')))) {
-    shib_login_authmap($uname, $umail_single, $existing_authmap['uid'], $alreadyloggedin);
+    if (empty($_SESSION['shib_auth_account_linking']))
+      shib_login_authmap($uname, $umail_single, $existing_authmap['uid'], $alreadyloggedin);
+    else 
+      shib_auth_terminate_session('This ID has already been registered, please log in again');
+
   }
   //The user exists in the authmap, and she had just accepted the new consent version
   //Write the new version number into the her authmap row, and log her in
@@ -686,8 +690,10 @@ function shib_auth_redirect($handlerurl, $return = NULL) {
 function shib_auth_exit() {
   global $_shib_auth_logout;
  
-  if (isset($_shib_auth_logout) AND $_shib_auth_logout === TRUE) {
+  if (isset($_shib_auth_logout) && $_shib_auth_logout === TRUE) {
     $_shib_auth_logout = FALSE;
+    unset($_SESSION['shib_auth_rolelog']);
+    unset($_SESSION['shib_auth_authentication']);
     $logouthandler = shib_auth_config('full_logout_url');
     $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
     shib_auth_redirect($logouthandler, $logout_redirect);
@@ -721,7 +727,8 @@ function shib_auth_get_handler_base() {
  */
 function shib_auth_user_logout($account) {
   global $_shib_auth_logout;
-  $_shib_auth_logout = TRUE;
+  if ($_SESSION['shib_auth_authentication'] === 'shib_auth')            
+    $_shib_auth_logout = TRUE;
 }
 
 /**
