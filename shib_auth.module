@@ -792,7 +792,7 @@ function shib_auth_menu() {
   );
   
   $items['shib_link'] = array(
-    'page callback'    => 'shib_auth_link',
+    'page callback'    => 'shib_auth_account_link',
     'type'             => MENU_CALLBACK,
     'access arguments' => array('access content'),
     'file'             => 'shib_auth_forms.inc',

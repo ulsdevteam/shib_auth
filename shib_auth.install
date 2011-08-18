@@ -182,6 +182,13 @@ WHERE (uid) NOT IN
   }
   return $ret;
 }
+function shib_auth_update_6403() {
+  // This update is a helper to rebuild menu tree, because of the modified menu item 
+  menu_rebuild();
+  // For some reason, update.php insists to have a returned array. Let it be then.
+  $returned = array();
+  return $returned;
+}
 /**
  * Implementation of hook_schema().
  *
