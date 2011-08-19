@@ -80,8 +80,8 @@ function shib_auth_help($path, $arg) {
         array('@wiki' => url('https://wiki.aai.niif.hu/index.php/Drupal_Shibboleth_module')));
       break;
     case 'admin/config/people/shib_auth':
-      $output = t('<p>The text shown in the block and on other login pages can be changed on the <a href=\"@block\">block settings page</a></p>',
-        array('@block' => url('admin/structure/block/configure/shib_auth/0')));
+      $output = t('<p>The text shown in the block and on other login pages can be changed on the <a href="@block">block settings page</a></p>',
+        array('@block' => url('admin/structure/block/manage/shib_auth/login_box/configure')));
       break;
   }
   return $output;
