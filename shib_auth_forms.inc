@@ -131,8 +131,11 @@ function shib_auth_custom_data($form, &$form_state) {
   //drupal_set_message("Old user, accept, consentver: ".(int)$existing_authmap.",".(int)$consent_accepted.",".(int)$existing_authmap['consentver'], 'error');
   $form = array();
   //Decide if the user is already registered, but a new consent version is present
-  $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $_SERVER[shib_auth_config('username_variable')]));
-  $authmap_username = $auth_map_un_query->fetchAssoc();
+  $authmap_username = db_select('shib_authmap', 'c')
+                         ->fields('c')
+                         ->condition('targeted_id', $_SERVER[shib_auth_config('username_variable')], '=')
+                         ->execute()
+                         ->fetchAssoc();
   //if the user already registered, display a message about consent version change
   if ($authmap_username) {
     $form['consent'] = array(

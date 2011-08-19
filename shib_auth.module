@@ -268,8 +268,11 @@ function shib_auth_session_isShib2x() {
 function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
   global $user;
 
-  $email_already_used_query = db_query("SELECT * FROM {users} WHERE mail = :mail", array(':mail' => $umail_single));
-  $email_already_used = $email_already_used_query->fetchObject();
+  $email_already_used = db_select('users', 'c')
+                          ->fields('c')
+                          ->condition('mail', $umail_single, '=')
+                          ->execute()
+                          ->fetchObject();
 
   // If the mail address is used, give an error
   if ($email_already_used && !(!empty($_SESSION['shib_auth_account_linking']) && $email_already_used->uid == $user->uid)) {
@@ -342,8 +345,11 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
   global $user;
 
   //First, we want to get the name of the user with the given uid
-  $auth_map_un_query = db_query("SELECT name FROM {users} WHERE uid = :uid", array(':uid' => $uid));
-  $authmap_username = $auth_map_un_query->fetchAssoc();
+  $authmap_username = db_select('users', 'c')
+                        ->fields('c')
+                        ->condition('uid', $uid, '=')
+                        ->execute()
+                        ->fetchAssoc();
 
   //We load this account to make operations with
   $account = user_external_load($authmap_username['name']);
@@ -356,8 +362,12 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
       //Shibboleth mail address override was enabled in the admin config
       if (shib_auth_config('enable_custom_mail') == 0) {
         //check if there isn't any user with this e-mail (whose name is different)
-        $email_for_other_user_query = db_query("SELECT * FROM {users} WHERE mail = :mail AND name <> :name", array(':mail' => $umail_single, ':name' => $uname));
-        $email_for_other_user = $email_for_other_user_query->fetchObject();
+        $email_for_other_user = db_select('users', 'c')
+                                  ->fileds('c')
+                                  ->condition('mail', $umail_single, '=')
+                                  ->condition('name', $uname, '<>')
+                                  ->execute()
+                                  ->fetchObject();
 
         if ($email_for_other_user) {
           shib_auth_error('Error saving user account. E-mail address is already used.');
@@ -413,8 +423,11 @@ function shib_auth_check_identifier($uname) {
  *  The authmap item in array if found, NULL otherwise.
  */
 function shib_auth_load_from_authmap($uname) {
-  $auth_map_query = db_query('SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id', array(':targeted_id' => $uname));
-  return $auth_map_query->fetchAssoc();
+  return db_select('shib_authmap', 'c')
+           ->fields('c')
+           ->condition('targeted_id', $uname, '=')
+           ->execute()
+           ->fetchAssoc();
 } //function shib_auth_load_from_authmap
 
 /**
@@ -464,8 +477,11 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
     shib_auth_error($error);
   else {
     //check if username already exists
-    $un_already_used_query = db_query("SELECT * FROM {users} WHERE name = :name", array(':name' => $custom_username));
-    $un_already_used = $un_already_used_query->fetchObject();
+    $un_already_used = db_select('users', 'c')
+                         ->fields('c')
+                         ->conditions('name', $custom_username, '=')
+                         ->execute()
+                         ->fetchObject();
 
     if ($un_already_used) {
       shib_auth_error('Error saving user account. User name is already used.');
@@ -1143,7 +1159,10 @@ function shib_auth_assignroles() {
   $former_roles = serialize($user->roles);
 
   // Sticky rules come first
-  $rules = db_query("SELECT * FROM {shib_auth} ORDER BY sticky DESC");
+  $rules = db_select('shib_auth', 'c')
+             ->fields('c')
+             ->orderBy('sticky', 'DESC')
+             ->execute();
 
   while ($rule = $rules->fetchAssoc()) {
     if ($profile_changed && !$rule['sticky']) {
@@ -1325,10 +1344,15 @@ function shib_auth_save_mail($account, $mail) {
 function shib_auth_generate_rolenames($force) {
   if (!isset($_SESSION['shib_auth_rolecache']) || $force) {
     $_SESSION['shib_auth_rolecache'] = array();
-    $query = db_query('SELECT rid, name FROM {role}');
-    while ($item = $query->fetchAssoc()) {
+    $roles = db_select('role')
+               ->fields('role', array('rid', 'name'))
+               ->execute();
+
+    $rolecache = array();
+    while ($item = $roles->fetchAssoc()) {
       $rolecache[$item['rid']] = $item['name'];
     }
+
     $_SESSION['shib_auth_rolecache'] = $rolecache;
   }
 } //function shib_auth_generate_rolenames()
