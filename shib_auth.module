@@ -252,8 +252,8 @@ function shib_auth_session_isShib2x() {
 
 /**
  * Saves an entry into shib_authmap and also saves mail if changed
- * A row in the authmap contains the drupal user id, the targeted id from 
- * Shibboleth, the IdP name, the date the user was created, and user consent 
+ * A row in the authmap contains the drupal user id, the targeted id from
+ * Shibboleth, the IdP name, the date the user was created, and user consent
  * version number.
  *
  * @param string $uname
@@ -773,7 +773,7 @@ function shib_auth_init() {
 
 /**
  * Redirects user to the handler url, and handles return option
- * 
+ *
  * @param string $handlerurl
  *  URL of the login / logout handler.
  *
@@ -802,7 +802,7 @@ function shib_auth_redirect($handlerurl, $return = NULL) {
  */
 function shib_auth_exit() {
   global $_shib_auth_logout;
- 
+
   if (isset($_shib_auth_logout) && $_shib_auth_logout === TRUE) {
     $_shib_auth_logout = FALSE;
     unset($_SESSION['shib_auth_rolelog']);
