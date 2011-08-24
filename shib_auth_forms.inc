@@ -25,14 +25,14 @@ function shib_auth_admin_general() {
     '#type'          => 'textfield',
     '#title'         => t('Shibboleth login handler URL'),
     '#default_value' => shib_auth_config('full_handler_url'),
-    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
+    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso/DS; /Shibboleth.sso/DS'),
   );
 
   $form['shib_handler_settings']['shib_auth_full_logout_url'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Shibboleth logout handler URL'),
     '#default_value' => shib_auth_config('full_logout_url'),
-    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
+    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso/Logout; /Shibboleth.sso/Logout'),
   );
 
   $form['shib_handler_settings']['shib_auth_link_text'] = array(

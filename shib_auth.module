@@ -446,7 +446,7 @@ function shib_auth_submit_redirect() {
  * Cancel button is pressed, redirect user to shib logout, and then to the page he came from / loginurl
  */
 function shib_auth_cancel_custom() {
-  $logouthandler = shib_auth_config('full_logout_url');
+  $logouthandler = shib_auth_get_redirect_base(shib_auth_config('full_logout_url'));
   if (isset($_SESSION['shib_auth_custom_form_url'])) {
   $redirect_url = url(
     $_SESSION['shib_auth_custom_form_url'],
@@ -670,8 +670,22 @@ function shib_auth_redirect($handlerurl, $return = NULL) {
   }
   if (isset($return))
     $options['return'] = $return;
-  drupal_goto($handler[0], $options);
+  drupal_goto($handler[0], $options,
+    array('absolute' => TRUE));
 }// function shib_auth_redirect()
+
+
+function shib_auth_get_redirect_base($handlerurl) {
+  $handlerprotocol = 'http';
+  if ($handlerurl[0] == '/') {
+    if (isset($_SERVER['HTTPS']) || shib_auth_config('force_https'))
+      $handlerprotocol = 'https'; 
+      
+    return $handlerprotocol .'://'. $_SERVER['HTTP_HOST'] . $handlerurl;
+  }
+  return $handlerurl;
+}
+
 
 /**
  * Get Shibboleth handler base as an absolute URI (such as https://example.com/Shibboleth.sso)
@@ -706,7 +720,7 @@ function shib_auth_user($op, &$edit, &$account, $category = NULL) {
   if ($op == 'logout') {
     if ($_SESSION['shib_auth_authentication'] === 'shib_auth') {
       unset($_SESSION['shib_auth_rolelog']);
-      $logouthandler = shib_auth_config('full_logout_url');
+      $logouthandler = shib_auth_get_redirect_base(shib_auth_config('full_logout_url'));
       unset($_SESSION['shib_auth_authentication']);
       $logout_redirect = url(
         shib_auth_config('logout_url'),
@@ -734,7 +748,7 @@ function shib_auth_perm() {
 function shib_auth_generate_login_url() {
   $queries = $_GET;
   $sep = "?";
-  $sessioninitiator = shib_auth_config('full_handler_url');
+  $sessioninitiator = shib_auth_get_redirect_base(shib_auth_config('full_handler_url'));
   $forceauthn = '';
   //append forceAuthN variable to the login string
   if (shib_auth_config('forceauthn'))
