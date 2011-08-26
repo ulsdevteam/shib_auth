@@ -262,7 +262,7 @@ function shib_auth_save_rule($form_state, $update) {
 
   // if it wasn't an error
   if (empty($update)) {
-    if ($ret = SAVED_NEW) {
+    if ($ret === SAVED_NEW) {
       drupal_set_message(t('New rule has been stored.'));
     }
     else {
@@ -271,7 +271,7 @@ function shib_auth_save_rule($form_state, $update) {
   }
   //an existing rule was updated
   else {
-    if ($ret = SAVED_UPDATED) {
+    if ($ret === SAVED_UPDATED) {
       drupal_set_message(t('The rule has been modified.'));
     }
     else {
