@@ -281,24 +281,3 @@ function shib_auth_save_rule($form_state, $update) {
 
   drupal_goto('admin/config/people/shib_auth/rules');
 } //function shib_auth_save_rule
-
-/**
- * Admin users group membership validate
- *
- * @param $form data of the form
- * @param &$form_state contains all of the data of the form
- */
-function shib_auth_admin_groups_validate($form, &$form_state) {
-
-} //function shib_auth_admin_groups
-
-/**
- * Admin users group membership submit
- *
- * @param $form data of the form
- * @param &$form_state contains all of the data of the form
- */
-function shib_auth_admin_groups_submit($form, &$form_state) {
-  variable_set('shib_auth_affilate_attrib', $form_state['values']['shib_auth_affilate_attrib']);
-  drupal_set_message(t('Your changes are saved.'));
-} //function shub_auth_groups_submit

@@ -251,29 +251,6 @@ function shib_auth_link() {
 }
 
 /**
- * Admin users group membership validate
- * Form constructor for the shib_auth admin advanced page
- *
- * @param $form data of the form
- * @param &$form_state contains all of the data of the form
- */
-function shib_auth_admin_groups_validate($form, &$form_state) { }
-//function shib_auth_admin_groups
-
-/**
- * Admin users group membership submit
- *
- * @param $form data of the form
- * @param &$form_state contains all of the data of the form
- */
-function shib_auth_admin_groups_submit($form, &$form_state) {
-  variable_set('shib_auth_affilate_attrib', $form_state['values']['shib_auth_affilate_attrib']);
-  drupal_set_message(t('Your changes have been saved.'));
-}
-//function shub_auth_groups_submit
-
-
-/**
  * Form constructor for the shib_auth admin advanced page
  *
  * @ingroup forms
