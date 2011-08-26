@@ -7,10 +7,14 @@
 /**
  * Generate the shibboleth rule adding form
  *
- * @param $options contains the data, we want to fill the form with
- * @returns the edit form, with the fields already filled in with the elements of the options array
+ * @param array $options
+ *  Contains the data, we want to fill the form with
+ *
+ * @returns
+ *  The edit form, with the fields already filled in with the elements of the options array.
  */
 function shib_auth_edit_form($options) {
+  $form = array();
 
   $form['shib_auth_new_id'] = array(
     '#title'          => t('Entry id'),
@@ -64,13 +68,18 @@ function shib_auth_edit_form($options) {
 /**
  * This function enables the administrator to clone an existing rule, this is useful,
  * when we want to create a rule, which is simiral to another one
- * @param id rule identifier
+ *
+ * @param integer $id
+ *  Rule identifier.
  */
+//TODO: see whole function!!!
 function _shib_auth_clone_rule($id) {
+  $update = array();
+
   $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
   $db_entry = $rule->fetchAssoc();
   $db_entry['id'] = NULL;
-  $update = array();
+
   $ret = drupal_write_record('shib_auth', $db_entry, $update);
   if ($ret = SAVED_NEW) {
     drupal_set_message(t('The rule has been successfully cloned.'));
@@ -83,7 +92,9 @@ function _shib_auth_clone_rule($id) {
 
 /**
  * This function lets the admin to delete an existing rule
- * @param id rule identifier
+ *
+ * @param integer $id
+ *  Rule identifier.
  */
 function _shib_auth_delete_rule($id) {
   db_delete('shib_auth')
@@ -95,7 +106,9 @@ function _shib_auth_delete_rule($id) {
 
 /**
  * This function lists all rules, and let the admin to do certain actions with them
- * @returns HTML table containing the attribute, RegExp, role and the actions, which can be done with each role
+ *
+ * @returns
+ *  HTML table containing the number of rule, attribute, RegExp, role and the actions which can be done with each role.
  */
 function _shib_auth_list_rules() {
   $rules = db_query("SELECT * FROM {shib_auth}");
@@ -129,9 +142,8 @@ function _shib_auth_list_rules() {
 } //function _shib_auth_list_rules
 
 /**
- * Validates a new rule
- * @param $form - the identifier of the form, which we have just received
- * @param $form_state - the state of the form, which we have just received, including all of the variables
+ * Validates a new rule form
+ * 
  */
 function shib_auth_new_rule_validate($form, &$form_state) {
   if (empty($form_state['values']['shib_auth_new_attrib'])) {
@@ -145,21 +157,20 @@ function shib_auth_new_rule_validate($form, &$form_state) {
 /**
  * Creates a new rule by calling universal create/edit form
  */
-function shib_auth_new_rule() {
+function shib_auth_new_rule($form, &$form_state) {
   return shib_auth_edit_form(array(0, '', '', '', 'Add rule', 0));
 } //function shib_auth_new_rule
 
 /**
- * Creates a new rule, containing he rule name, the server attrubite, the RegExp, and the role names by calling save rule
+ * Submit the new rule from
  */
 function shib_auth_new_rule_submit($form, &$form_state) {
   shib_auth_save_rule($form_state, array());
 } //function shib_auth_new_rule_submit
 
 /**
- * Validates rule edit
- * @param $form - the identifier of the form, which we have just received
- * @param $form_state - the state of the form, which we have just received, including all of the variables
+ * Validates rule edit form
+ *
  */
 function shib_auth_edit_rule_validate($form, &$form_state) {
   if (empty($form_state['values']['shib_auth_new_attrib'])) {
@@ -171,7 +182,7 @@ function shib_auth_edit_rule_validate($form, &$form_state) {
 } //function shib_auth_edit_rule_validate
 
 /**
- * Edits a rule, containing he rule name, the server attrubite, the RegExp, and the role names by calling save rule
+ * Submit rule edit form
  */
 function shib_auth_edit_rule_submit($form, &$form_state) {
   shib_auth_save_rule($form_state, "id");
@@ -179,29 +190,38 @@ function shib_auth_edit_rule_submit($form, &$form_state) {
 
 /**
  * Saves a new rule into database
- * @param $update - decides if it is a new rule (NULL), or we're just modifing one ('id')
- * @param $form_state - the state of the form, which we have just received, including all of the variables
+ *
+ * @param integer $update
+ *  Decides if it is a new rule (NULL), or we're just modifing one rule id.
+ *
+ * @param array $form_state
+ *  The state of the form, which we have just received, including all of the variables.
  */
 function shib_auth_save_rule($form_state, $update) {
-  $new_id = $form_state['values']['shib_auth_new_id'] == '0' ? NULL : (int) $form_state['values']['shib_auth_new_id'];
+  $v = $form_state['values'];
+  $new_id = $v['shib_auth_new_id'] == '0' ? NULL : (int) $v['shib_auth_new_id'];
+
   // collect ther roles into an array
   $roles = array();
-  if (is_array($form_state['values']['shib_auth_roles'])) {
-    foreach ($form_state['values']['shib_auth_roles'] as $role_id) {
-      if ($role_id)
+  if (is_array($v['shib_auth_roles'])) {
+    foreach ($v['shib_auth_roles'] as $role_id) {
+      if (!empty($role_id))
         $roles[] = $role_id;
     }
   }
+
   //save the new element into an array
   $new_element = array(
       'id'            => $new_id,
-      'field'         => urlencode($form_state['values']['shib_auth_new_attrib']),
-      'regexpression' => urlencode($form_state['values']['shib_auth_new_regexp']),
+      'field'         => urlencode($v['shib_auth_new_attrib']),
+      'regexpression' => urlencode($v['shib_auth_new_regexp']),
       'role'          => serialize($roles),
-      'sticky'        => urlencode($form_state['values']['shib_auth_new_sticky']),
+      'sticky'        => urlencode($v['shib_auth_new_sticky']),
   );
+
   //write it in a record
   $ret = drupal_write_record('shib_auth', $new_element, $update);
+
   // if it wasn't an error
   if (empty($update)) {
     if ($ret = SAVED_NEW) {
@@ -220,12 +240,12 @@ function shib_auth_save_rule($form_state, $update) {
       drupal_set_message(t('Unexpected error has been detected.'));
     }
   }
-  //if everything was fine, print the rules with the newly added/modified one
+
   drupal_goto('admin/config/people/shib_auth/rules');
 } //function shib_auth_save_rule
 
 /**
- * Edits a rule by calling universal create/edit form
+ * Cunstructor of the rule edit form
  */
 function shib_auth_edit_rule($form, &$form_state) {
   $id = $form_state['build_info']['args'][0];
