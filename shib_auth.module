@@ -632,11 +632,6 @@ function shib_auth_init() {
   // Make sure that the user module is already loaded.
   drupal_load('module', 'user');
 
-  /* In your Service Provider 2.x shibboleth.xml file, add redirectErrors="#THIS PAGE#" to the Error element.
-   Make sure #THIS PAGE# is protected with a lazy session (no Shibboleth session is enforced but attribute
-   are made available to application in case a user has a session) footer currently contains only ispassive
-   script, if it was enabled */
-
   $consent_accepted = FALSE;
 
   /* We want to return as early as possible if we have nothing to do.
