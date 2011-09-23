@@ -482,7 +482,7 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
     //check if username already exists
     $un_already_used = db_select('users', 'c')
                          ->fields('c')
-                         ->conditions('name', $custom_username, '=')
+                         ->condition('name', $custom_username, '=')
                          ->execute()
                          ->fetchObject();
 
