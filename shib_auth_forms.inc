@@ -30,14 +30,14 @@ function shib_auth_admin_general($form, &$form_state) {
     '#type'          => 'textfield',
     '#title'         => t('Shibboleth login handler URL'),
     '#default_value' => shib_auth_config('full_handler_url'),
-    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
+    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso/DS; /Shibboleth.sso/DS'),
   );
 
   $form['shib_handler_settings']['shib_auth_full_logout_url'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Shibboleth logout handler URL'),
     '#default_value' => shib_auth_config('full_logout_url'),
-    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso; /Shibboleth.sso'),
+    '#description'   => t('The URL can be absolute or relative to the server base url: http://www.example.com/Shibboleth.sso/Logout; /Shibboleth.sso/Logout'),
   );
 
   $form['shib_handler_settings']['shib_auth_link_text'] = array(
@@ -131,8 +131,11 @@ function shib_auth_custom_data($form, &$form_state) {
   //drupal_set_message("Old user, accept, consentver: ".(int)$existing_authmap.",".(int)$consent_accepted.",".(int)$existing_authmap['consentver'], 'error');
   $form = array();
   //Decide if the user is already registered, but a new consent version is present
-  $auth_map_un_query = db_query("SELECT * FROM {shib_authmap} WHERE targeted_id = :targeted_id", array(':targeted_id' => $_SERVER[shib_auth_config('username_variable')]));
-  $authmap_username = $auth_map_un_query->fetchAssoc();
+  $authmap_username = db_select('shib_authmap', 'c')
+                         ->fields('c')
+                         ->condition('targeted_id', $_SERVER[shib_auth_config('username_variable')], '=')
+                         ->execute()
+                         ->fetchAssoc();
   //if the user already registered, display a message about consent version change
   if ($authmap_username) {
     $form['consent'] = array(
@@ -245,7 +248,7 @@ function shib_auth_login() {
 /**
  * This function manages account linking
  */
-function shib_auth_link() {
+function shib_auth_account_link() {
     $_SESSION['shib_auth_account_linking'] = TRUE;
     drupal_goto(shib_auth_generate_login_url());
 }
@@ -347,3 +350,5 @@ function shib_auth_admin_advanced() {
 
   return system_settings_form($form);
 }
+
+

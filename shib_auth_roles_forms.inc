@@ -11,20 +11,25 @@
  *  HTML table containing the number of rule, attribute, RegExp, role and the actions which can be done with each role.
  */
 function _shib_auth_list_rules() {
-  $rules = db_query("SELECT * FROM {shib_auth}");
   $counter = 0;
   $output = NULL;
   $rows = array();
 
+  //create rows
+  $rules = db_select('shib_auth', 'role')
+             ->fields('role')
+             ->execute();
   while ($rule = $rules->fetchAssoc()) {
     $roles = unserialize($rule['role']);
     $roles_list = '';
 
     foreach ($roles as $role) {
       if(!empty($role)) {
-        $roles_list .= shib_auth_get_rolename($role) . ' ';
+        $roles_list .= shib_auth_get_rolename($role) . ', ';
       }
     }
+    //cut off the last ', ' charaters
+    $roles_list = drupal_substr($roles_list, 0, -2);
 
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
     $rows[] = array(
@@ -38,15 +43,19 @@ function _shib_auth_list_rules() {
       l(t('Delete'), 'admin/config/people/shib_auth/delete/' . $rule['id']),
     );
   }
-  if ($counter == 0) {
-    $output = t('There is no rule in the database');
-  }
-  else {
-    $attributes = array('class' => 'shib_auth_role_table');
-    $header = array(t('#'), t('Attribute'), t('RegExp'), t('Roles'), t('Sticky'), t('Actions'));
-    $output = theme_table($header, $rows, $attributes);
-    $output .= l(t('Add new rule'), 'admin/config/people/shib_auth/new');
-  }
+
+  //create the rule list in HTML table
+  $attributes = array('class' => 'shib_auth_role_table');
+  $header = array(t('#'), t('Attribute'), t('RegExp'), t('Roles'), t('Sticky'), t('Actions'));
+  $output = theme_table(
+              array(
+                'header'     => $header,
+                'rows'       => $rows,
+                'attributes' => $attributes,
+                'empty'      => t('There is no rule in the database'),
+              )
+            );
+  $output .= l(t('Add new rule'), 'admin/config/people/shib_auth/new');
 
   return $output;
 } //function _shib_auth_list_rules
@@ -58,15 +67,15 @@ function _shib_auth_list_rules() {
  * @param integer $id
  *  Rule identifier.
  */
-//TODO: see whole function!!!
 function _shib_auth_clone_rule($id) {
-  $update = array();
+  $rule = db_select('shib_auth', 'c')
+            ->fields('c')
+            ->condition('id', $id, '=')
+            ->execute()
+            ->fetchAssoc();
+  unset($rule['id']);
 
-  $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => array($id)));
-  $db_entry = $rule->fetchAssoc();
-  $db_entry['id'] = NULL;
-
-  $ret = drupal_write_record('shib_auth', $db_entry, $update);
+  $ret = drupal_write_record('shib_auth', $rule);
   if ($ret === SAVED_NEW) {
     drupal_set_message(t('The rule has been successfully cloned.'));
   }
@@ -179,17 +188,20 @@ function shib_auth_new_rule_submit($form, &$form_state) {
 } //function shib_auth_new_rule_submit
 
 /**
- * Cunstruktor of the rule edit form
+ * Cunstructor of the rule edit form
  */
 function shib_auth_edit_rule($form, &$form_state) {
   $id = $form_state['build_info']['args'][0];
   $form = array();
   // calls the edit form, with the fields of the existing rule
   if (is_int((int) $id)) {
-    $rule = db_query("SELECT * FROM {shib_auth} WHERE id = :id", array(':id' => $id));
-    $db_entry = $rule->fetchAssoc();
+    $rule = db_select('shib_auth', 'c')
+              ->fields('c')
+              ->condition('id', $id, '=')
+              ->execute()
+              ->fetchAssoc();
     return shib_auth_edit_form(
-      array($db_entry['id'], $db_entry['field'], urldecode($db_entry['regexpression']), unserialize($db_entry['role']), 'Apply', $db_entry['sticky'])
+      array($rule['id'], $rule['field'], urldecode($rule['regexpression']), unserialize($rule['role']), 'Apply', $rule['sticky'])
     );
   }
 } //function shib_auth_edit_rule
@@ -224,13 +236,13 @@ function shib_auth_edit_rule_submit($form, &$form_state) {
  *  The state of the form, which we have just received, including all of the variables.
  */
 function shib_auth_save_rule($form_state, $update) {
-  $v = $form_state['values'];
-  $new_id = $v['shib_auth_new_id'] == '0' ? NULL : (int) $v['shib_auth_new_id'];
+  $values = $form_state['values'];
+  $new_id = $values['shib_auth_new_id'] == '0' ? NULL : (int) $values['shib_auth_new_id'];
 
   // collect ther roles into an array
   $roles = array();
-  if (is_array($v['shib_auth_roles'])) {
-    foreach ($v['shib_auth_roles'] as $role_id) {
+  if (is_array($values['shib_auth_roles'])) {
+    foreach ($values['shib_auth_roles'] as $role_id) {
       if (!empty($role_id))
         $roles[] = $role_id;
     }
@@ -239,10 +251,10 @@ function shib_auth_save_rule($form_state, $update) {
   //save the new element into an array
   $new_element = array(
       'id'            => $new_id,
-      'field'         => urlencode($v['shib_auth_new_attrib']),
-      'regexpression' => urlencode($v['shib_auth_new_regexp']),
+      'field'         => urlencode($values['shib_auth_new_attrib']),
+      'regexpression' => urlencode($values['shib_auth_new_regexp']),
       'role'          => serialize($roles),
-      'sticky'        => urlencode($v['shib_auth_new_sticky']),
+      'sticky'        => urlencode($values['shib_auth_new_sticky']),
   );
 
   //write it in a record
