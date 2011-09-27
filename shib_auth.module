@@ -803,7 +803,7 @@ function shib_auth_exit() {
     $_shib_auth_logout = FALSE;
     unset($_SESSION['shib_auth_rolelog']);
     unset($_SESSION['shib_auth_authentication']);
-    $logouthandler = shib_auth_config('full_logout_url');
+    $logouthandler = shib_auth_get_redirect_base(shib_auth_config('full_logout_url'));
     $logout_redirect = url(shib_auth_config('logout_url'), array('absolute' => TRUE));
     shib_auth_redirect($logouthandler, $logout_redirect);
   }
