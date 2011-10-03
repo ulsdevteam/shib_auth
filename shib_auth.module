@@ -366,7 +366,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
       if (shib_auth_config('enable_custom_mail') == 0) {
         //check if there isn't any user with this e-mail (whose name is different)
         $email_for_other_user = db_select('users', 'c')
-                                  ->fileds('c')
+                                  ->fields('c')
                                   ->condition('mail', $umail_single, '=')
                                   ->condition('name', $uname, '<>')
                                   ->execute()
