@@ -220,6 +220,14 @@ function shib_auth_debug() {
       drupal_set_message(t('!msg', array('!msg' => $debug_message)));
       $debug_message = filter_xss('<b>$_SERVER:</b><br /><pre>' . print_r($_SERVER, TRUE) . '</pre>', $tags);
       drupal_set_message(t('!msg', array('!msg' => $debug_message)));
+      $config_keys = shib_auth_config('', TRUE);
+      sort($config_keys);
+      $config_copy = array();
+      foreach ($config_keys as $key) {
+        $config_copy[$key] = shib_auth_config($key);
+      }
+      $debug_message = filter_xss('<b>MODULE CONFIGURATION:</b><br /><pre>' . print_r($config_copy, TRUE) . '</pre>', $tags);
+      drupal_set_message(t('!msg', array('!msg' => $debug_message)));
     }
   }
 } //function shib_auth_debug
