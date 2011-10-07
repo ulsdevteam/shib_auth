@@ -53,6 +53,10 @@ function _shib_auth_list_rules() {
                 'rows'       => $rows,
                 'attributes' => $attributes,
                 'empty'      => t('There is no rule in the database'),
+                //beacuse the theme_table hastly implemented
+                'caption'    => NULL,
+                'colgroups'  => NULL,
+                'sticky'     => NULL,
               )
             );
   $output .= l(t('Add new rule'), 'admin/config/people/shib_auth/new');
