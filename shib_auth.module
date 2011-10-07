@@ -7,41 +7,53 @@
 /**
  * Configuration handler
  *
- * Defines a database with the default values, and gets the asked variable
+ * Stores default configuration values and returns the active configuration
+ * parameter or the list of configuration parameters when $list is set to TRUE.
  *
  * @param $variable
- *  The name of the variable.
- *
- * @return
- *  The matching variable prefixed with shib_auth_.
+ *   The name of the variable.
+ * @param $list
+ *   If set to TRUE, all configuration parameter names are returned. It's only
+ *   intended to be used for debug purposes.
+ * @return mixed
+ *   The matching variable prefixed with shib_auth_, or the list of the module 
+ *   configuration variables, if $list is TRUE.
  */
-function shib_auth_config($variable) {
+function shib_auth_config($variable, $list = FALSE) {
   //building an array with the available variables, and their default values
-  $var_store = array('account_linking' => FALSE,
-                     'account_linking_text' => t('Link this account with another identity'),
-                     'auto_destroy_session' => FALSE,
-                     'debug_state' => FALSE,
-                     'define_username' => FALSE,
-                     'enable_custom_mail' => FALSE,
-                     'forceauthn' => FALSE,
-                     'force_https' => FALSE,
-                     'auto_destroy_session' => FALSE,
-                     'is_passive' => FALSE,
-                     'terms_accept' => FALSE,
-                     'debug_url' => '',
-                     'terms_ver' => '',
-                     'terms_url' => '/',
-                     'wayf_uri' => '/DS',
-                     'handler_protocol' => 'https',
-                     'handler_url' => '/Shibboleth.sso',
-                     'email_variable' => 'HTTP_SHIB_MAIL',
-                     'username_variable' => 'REMOTE_USER',
-                     'login_url' => '',
-                     'logout_url' => url('<front>'),
-                     'link_text' => t('Shibboleth Login'),
-                     'full_handler_url' => shib_auth_get_handler_base() . variable_get('shib_auth_wayf_uri', '/DS'),
-                     'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
-  );
+  static $var_store = array();
+  if (empty($var_store)) {
+    $var_store = array(
+      'account_linking' => FALSE,
+      'account_linking_text' => t('Link this account with another identity'),
+      'auto_destroy_session' => FALSE,
+      'debug_state' => FALSE,
+      'define_username' => FALSE,
+      'enable_custom_mail' => FALSE,
+      'forceauthn' => FALSE,
+      'force_https' => FALSE,
+      'auto_destroy_session' => FALSE,
+      'is_passive' => FALSE,
+      'terms_accept' => FALSE,
+      'debug_url' => '',
+      'terms_ver' => '',
+      'terms_url' => '/',
+      'wayf_uri' => '/DS',
+      'handler_protocol' => 'https',
+      'handler_url' => '/Shibboleth.sso',
+      'email_variable' => 'HTTP_SHIB_MAIL',
+      'username_variable' => 'REMOTE_USER',
+      'login_url' => '',
+      'logout_url' => url('<front>'),
+      'link_text' => t('Shibboleth Login'),
+      'full_handler_url' => shib_auth_get_handler_base() . variable_get('shib_auth_wayf_uri', '/DS'),
+      'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
+    );
+  }
+
+  if ($list) {
+    return array_keys($var_store);
+  }
 
   //check, if it exists in the array above, and get its value
   if (array_key_exists($variable, $var_store)) {
