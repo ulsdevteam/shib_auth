@@ -132,10 +132,10 @@ function shib_auth_custom_data($form, &$form_state) {
   $form = array();
   //Decide if the user is already registered, but a new consent version is present
   $authmap_username = db_select('shib_authmap', 'c')
-                         ->fields('c')
-                         ->condition('targeted_id', $_SERVER[shib_auth_config('username_variable')], '=')
-                         ->execute()
-                         ->fetchAssoc();
+                          ->fields('c')
+                          ->condition('targeted_id', $_SERVER[shib_auth_config('username_variable')], '=')
+                          ->execute()
+                          ->fetchAssoc();
   //if the user already registered, display a message about consent version change
   if ($authmap_username) {
     $form['consent'] = array(

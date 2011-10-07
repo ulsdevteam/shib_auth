@@ -159,8 +159,8 @@ function shib_auth_update_7000(&$sandbox) {
   );
 
   //fill the database with unixtimestamps
-  foreach($res as $row) {
-    if(!$created_unix = strtotime($row->created)) {
+  foreach ($res as $row) {
+    if (!$created_unix = strtotime($row->created)) {
       $created_unix = $row->created;
     }
 

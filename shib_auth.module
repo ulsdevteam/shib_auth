@@ -16,7 +16,7 @@
  *   If set to TRUE, all configuration parameter names are returned. It's only
  *   intended to be used for debug purposes.
  * @return mixed
- *   The matching variable prefixed with shib_auth_, or the list of the module 
+ *   The matching variable prefixed with shib_auth_, or the list of the module
  *   configuration variables, if $list is TRUE.
  */
 function shib_auth_config($variable, $list = FALSE) {
@@ -47,7 +47,7 @@ function shib_auth_config($variable, $list = FALSE) {
       'logout_url' => url('<front>'),
       'link_text' => t('Shibboleth Login'),
       'full_handler_url' => shib_auth_get_handler_base() . variable_get('shib_auth_wayf_uri', '/DS'),
-      'full_logout_url' => shib_auth_get_handler_base() .'/Logout',
+      'full_logout_url' => shib_auth_get_handler_base() . '/Logout',
     );
   }
 
@@ -88,7 +88,7 @@ function shib_auth_help($path, $arg) {
   switch ($path) {
     case 'admin/help#shib_auth':
       $output  = t('<p>The Shibboleth authentication module lets you utilize the advantages of the Single Sign On (SSO) methods.</p>');
-      $output .= t('<p<For more help related to Shibboleth and module configuration, see <a href=\"@wiki\">NIIF AAI wiki pages</a></p>',
+      $output .= t('<p>For more help related to Shibboleth and module configuration, see <a href=\"@wiki\">NIIF AAI wiki pages</a></p>',
         array('@wiki' => url('https://wiki.aai.niif.hu/index.php/Drupal_Shibboleth_module')));
       break;
     case 'admin/config/people/shib_auth':
@@ -239,9 +239,9 @@ function shib_auth_debug() {
  *  IdP name
  */
 function shib_auth_get_idp() {
-  if (isset($_SERVER['Shib-Identity-Provider'])) 
+  if (isset($_SERVER['Shib-Identity-Provider']))
     return $_SERVER['Shib-Identity-Provider'];
-  elseif (isset($_SERVER['Shib_Identity_Provider'])) 
+  elseif (isset($_SERVER['Shib_Identity_Provider']))
     return $_SERVER['Shib_Identity_Provider'];
   elseif (isset ($_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']))
     return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
@@ -447,10 +447,10 @@ function shib_auth_check_identifier($uname) {
  */
 function shib_auth_load_from_authmap($uname) {
   return db_select('shib_authmap', 'c')
-           ->fields('c')
-           ->condition('targeted_id', $uname, '=')
-           ->execute()
-           ->fetchAssoc();
+            ->fields('c')
+            ->condition('targeted_id', $uname, '=')
+            ->execute()
+            ->fetchAssoc();
 } //function shib_auth_load_from_authmap
 
 /**
@@ -501,10 +501,10 @@ function shib_auth_custom_username($uname, $custom_username, $umail_single) {
   else {
     //check if username already exists
     $un_already_used = db_select('users', 'c')
-                         ->fields('c')
-                         ->condition('name', $custom_username, '=')
-                         ->execute()
-                         ->fetchObject();
+                          ->fields('c')
+                          ->condition('name', $custom_username, '=')
+                          ->execute()
+                          ->fetchObject();
 
     if ($un_already_used) {
       shib_auth_error('Error saving user account. User name is already used.');
@@ -577,8 +577,8 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
   }
   //check if any of the customization options are enabled
   if (shib_auth_config('enable_custom_mail') ||
-     ($umail_single && shib_auth_config('define_username')) ||
-     (shib_auth_config('enable_custom_mail') || $umail_single) && shib_auth_config('terms_accept')) {
+      ($umail_single && shib_auth_config('define_username')) ||
+      (shib_auth_config('enable_custom_mail') || $umail_single) && shib_auth_config('terms_accept')) {
     // if there already is a POST-ed form, save received values as a variable
     if (isset($_POST['form_id']) && $_POST['form_id'] == 'shib_auth_custom_data') {
       if (!empty($_POST['custom_mail'])) {
@@ -638,7 +638,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
  *
  * @param string $uid
  *  Drupal UserID
-*/
+ */
 function shib_auth_consent_update($uname, $umail_single, $uid) {
   $sql = "UPDATE {shib_authmap} SET consentver='%s' WHERE targeted_id='%s'";
   $result = db_update('shib_authmap')
@@ -741,7 +741,7 @@ function shib_auth_init() {
     if (empty($_SESSION['shib_auth_account_linking'])) {
       shib_login_authmap($uname, $umail_single, $existing_authmap['uid'], $alreadyloggedin);
     }
-    else { 
+    else {
       shib_auth_terminate_session('This ID has already been registered, please log in again');
     }
   }
@@ -833,9 +833,9 @@ function shib_auth_get_redirect_base($handlerurl) {
   $handlerprotocol = 'http';
   if ($handlerurl[0] == '/') {
     if (isset($_SERVER['HTTPS']) || shib_auth_config('force_https'))
-      $handlerprotocol = 'https'; 
-      
-    return $handlerprotocol .'://'. $_SERVER['HTTP_HOST'] . $handlerurl;
+      $handlerprotocol = 'https';
+
+    return $handlerprotocol . '://' . $_SERVER['HTTP_HOST'] . $handlerurl;
   }
   return $handlerurl;
 }
@@ -869,7 +869,7 @@ function shib_auth_get_handler_base() {
 function shib_auth_user_logout() {
   global $_shib_auth_logout;
 
-  if ($_SESSION['shib_auth_authentication'] === 'shib_auth') {            
+  if ($_SESSION['shib_auth_authentication'] === 'shib_auth') {
     $_shib_auth_logout = TRUE;
   }
 }
@@ -912,16 +912,16 @@ function shib_auth_generate_login_url() {
     $forceauthn = '&forceAuthn=1';
   }
 
-  $queries['q']='shib_login/'.$queries['q'];
+  $queries['q'] = 'shib_login/' . $queries['q'];
 
-  //generate the currently viewed url to pass as an url to return from IdP 
+  //generate the currently viewed url to pass as an url to return from IdP
   $url_to_return = (isset($_SERVER['HTTPS'])||
                    (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https') ?
                    'https' : 'http')
-                           .'://'. $_SERVER['HTTP_HOST']
-                           . url('',array('query' => $queries));
+                           . '://' . $_SERVER['HTTP_HOST']
+                           . url('', array('query' => $queries));
 
-  if (preg_match('/\?/',$sessioninitiator)) {
+  if (preg_match('/\?/', $sessioninitiator)) {
     $sep='&';
   }
 
@@ -1188,9 +1188,9 @@ function shib_auth_assignroles() {
 
   // Sticky rules come first
   $rules = db_select('shib_auth', 'c')
-             ->fields('c')
-             ->orderBy('sticky', 'DESC')
-             ->execute();
+              ->fields('c')
+              ->orderBy('sticky', 'DESC')
+              ->execute();
 
   while ($rule = $rules->fetchAssoc()) {
     if ($profile_changed && !$rule['sticky']) {
@@ -1247,7 +1247,7 @@ function shib_auth_process_rule($rule) {
         }
 
         foreach ($roles as $role_id) {
-          if(!$role_id)
+          if (!$role_id)
             continue; // Zero is not allowed as a role_id
 
           $role_name = shib_auth_get_rolename($role_id);
@@ -1262,16 +1262,16 @@ function shib_auth_process_rule($rule) {
 
             if (!isset($_SESSION['shib_auth_rolelog'])) {
               watchdog('shib_grant_stick', 'Role "@id" has been permanently granted',
-                       array('@id' => $role_name), WATCHDOG_NOTICE);
+                        array('@id' => $role_name), WATCHDOG_NOTICE);
             }
           }
           else {
             if (!isset($_SESSION['shib_auth_rolelog'])) {
               watchdog('shib_grant_role', 'Role "@id" has been granted',
-                       array('@id' => $role_name), WATCHDOG_NOTICE);
-	   }
-	 }
-       }
+                        array('@id' => $role_name), WATCHDOG_NOTICE);
+            }
+          }
+        }
       }
     }
   }
@@ -1340,11 +1340,9 @@ function shib_auth_save_mail($account, $mail) {
 
   // Cross fingers, do the update
   $success = db_update('users')
-               ->fields(array(
-                 'mail' => $mail
-               ))
-               ->condition('uid', $account->uid, '=')
-               ->execute();
+                ->fields(array('mail' => $mail))
+                ->condition('uid', $account->uid, '=')
+                ->execute();
 
   if (!$success) {
     // Failed for some reason?
@@ -1374,8 +1372,8 @@ function shib_auth_generate_rolenames($force) {
   if (!isset($_SESSION['shib_auth_rolecache']) || $force) {
     $_SESSION['shib_auth_rolecache'] = array();
     $roles = db_select('role')
-               ->fields('role', array('rid', 'name'))
-               ->execute();
+                ->fields('role', array('rid', 'name'))
+                ->execute();
 
     $rolecache = array();
     while ($item = $roles->fetchAssoc()) {

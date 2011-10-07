@@ -17,14 +17,15 @@ function _shib_auth_list_rules() {
 
   //create rows
   $rules = db_select('shib_auth', 'role')
-             ->fields('role')
-             ->execute();
+              ->fields('role')
+              ->execute();
+
   while ($rule = $rules->fetchAssoc()) {
     $roles = unserialize($rule['role']);
     $roles_list = '';
 
     foreach ($roles as $role) {
-      if(!empty($role)) {
+      if (!empty($role)) {
         $roles_list .= shib_auth_get_rolename($role) . ', ';
       }
     }
@@ -38,8 +39,8 @@ function _shib_auth_list_rules() {
       urldecode($rule['regexpression']),
       $roles_list,
       $sticky,
-      l(t('Clone'), 'admin/config/people/shib_auth/clone/' . $rule['id']) .' | '.
-      l(t('Edit'), 'admin/config/people/shib_auth/edit/' . $rule['id']) .' | '.
+      l(t('Clone'), 'admin/config/people/shib_auth/clone/' . $rule['id']) . ' | ' .
+      l(t('Edit'), 'admin/config/people/shib_auth/edit/' . $rule['id']) . ' | ' .
       l(t('Delete'), 'admin/config/people/shib_auth/delete/' . $rule['id']),
     );
   }
@@ -173,7 +174,7 @@ function shib_auth_new_rule($form, &$form_state) {
 
 /**
  * Validates a new rule form
- * 
+ *
  */
 function shib_auth_new_rule_validate($form, &$form_state) {
   if (empty($form_state['values']['shib_auth_new_attrib'])) {
