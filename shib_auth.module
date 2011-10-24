@@ -1046,7 +1046,7 @@ function shib_auth_block_info() {
   $blocks['login_box'] = array(
     'info'       => t('Shibboleth authentication'),
     'status'     => 1,
-    'visibility' => 1,
+    'visibility' => BLOCK_VISIBILITY_NOTLISTED,
     'weight'     => 0,
     'region'     => 'sidebar_first'
   );
