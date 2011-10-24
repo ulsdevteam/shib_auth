@@ -920,7 +920,7 @@ function shib_auth_generate_login_url() {
       (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https')) {
     $https = TRUE;
   }
-  $url_to_return = url('<front>', array('query' => $queries, 'https' => $https, 'absolute' => TRUE));
+  $url_to_return = url('<front>', array('query' => $queries, 'https' => $https));
 
   if (preg_match('/\?/', $sessioninitiator)) {
     $sep='&';
