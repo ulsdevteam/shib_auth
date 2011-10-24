@@ -915,12 +915,11 @@ function shib_auth_generate_login_url() {
   $queries['q'] = 'shib_login/' . $queries['q'];
 
   //generate the currently viewed url to pass as an url to return from IdP
-  $https = FALSE;
-  if (isset($_SERVER['HTTPS']) ||
-      (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https')) {
-    $https = TRUE;
-  }
-  $url_to_return = url('<front>', array('query' => $queries, 'https' => $https));
+  $url_to_return = (isset($_SERVER['HTTPS'])||
+                   (shib_auth_config('force_https') && drupal_substr($sessioninitiator, 0, 5) == 'https') ?
+                   'https' : 'http')
+                           . '://' . $_SERVER['HTTP_HOST']
+                           . url('', array('query' => $queries));
 
   if (preg_match('/\?/', $sessioninitiator)) {
     $sep='&';
