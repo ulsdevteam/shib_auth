@@ -211,7 +211,10 @@ function shib_auth_debug() {
         drupal_set_message(t('!msg', array('!msg' => $debug_message)));
       }
       // Work around that drupal_set_message() keeps previous messages in $_SESSION
-      $session_copy = $_SESSION;
+      if ($_SESSION)
+        $session_copy = $_SESSION;
+      else
+        $session_copy = array();
       if (isset($session_copy['messages'])) {
         unset($session_copy['messages']);
       }
