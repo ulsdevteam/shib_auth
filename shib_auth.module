@@ -869,7 +869,7 @@ function shib_auth_get_handler_base() {
 function shib_auth_user_logout() {
   global $_shib_auth_logout;
 
-  if ($_SESSION['shib_auth_authentication'] === 'shib_auth') {
+  if (isset($_SESSION['shib_auth_authentication']) && $_SESSION['shib_auth_authentication'] === 'shib_auth') {
     $_shib_auth_logout = TRUE;
   }
 }
