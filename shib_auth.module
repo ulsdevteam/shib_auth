@@ -302,7 +302,7 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
 
   // If the mail address is used, give an error
   if ($email_already_used && !(!empty($_SESSION['shib_auth_account_linking']) && $email_already_used->uid == $user->uid)) {
-    shib_auth_error('Error saving user account. E-mail address is already used.');
+    shib_auth_error('[shib_auth_save_authmap] Error saving user account. E-mail address is already used.');
   }
   //else register the user with the given information
   else {
@@ -391,12 +391,12 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
         $email_for_other_user = db_select('users', 'c')
                                   ->fields('c')
                                   ->condition('mail', $umail_single, '=')
-                                  ->condition('name', $uname, '<>')
+                                  ->condition('uid', $user->uid, '<>')
                                   ->execute()
                                   ->fetchObject();
 
         if ($email_for_other_user) {
-          shib_auth_error('Error saving user account. E-mail address is already used.');
+          shib_auth_error('[shib_login_authmap] Error saving user account. E-mail address is already used.');
         }
         //if everything is allright, modify the mail address of the user.
         else {
