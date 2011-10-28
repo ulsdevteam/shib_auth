@@ -652,7 +652,7 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
 } //function shib_auth_consent_update
 
 /**
- * This function initiate role assignment
+ * Assign roles to the user's session
  */
 function shib_auth_role_assignment() {
   //generate role cache if it doesn't exists
