@@ -652,6 +652,17 @@ function shib_auth_consent_update($uname, $umail_single, $uid) {
 } //function shib_auth_consent_update
 
 /**
+ * This function initiate role assignment
+ */
+function shib_auth_role_assignment() {
+  //generate role cache if it doesn't exists
+  shib_auth_generate_rolenames(FALSE);
+  if (shib_auth_session_valid() && !user_is_anonymous() && empty($_SESSION['shib_auth_account_linking'])) {
+    shib_auth_assignroles();
+  }
+}
+
+/**
  * Create a new user based on informations from the Shibboleth handler if it's necessary or log in.
  *
  * If already authenticated - do nothing
@@ -701,12 +712,8 @@ function shib_auth_init() {
   $umail = isset($_SERVER[shib_auth_config('email_variable')]) ? $_SERVER[shib_auth_config('email_variable')] : '';
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
 
-  //********* ROLE ASSIGMENT STARTING ********
-  //generate cache if it doesn't exists
-  shib_auth_generate_rolenames(FALSE);
-  if (shib_auth_session_valid() && !user_is_anonymous() && empty($_SESSION['shib_auth_account_linking'])) {
-    shib_auth_assignroles();
-  }
+  //************ ROLE ASSIGMENT  **************
+  shib_auth_role_assignment();
 
   //**************** DEBUG ********************
   shib_auth_debug();
@@ -783,6 +790,9 @@ function shib_auth_init() {
       shib_auth_error('E-mail address is missing. Please contact your site administrator!');
     }
   }
+  //****** ASSIGN ROLES AFTER REGISTER *******
+  shib_auth_role_assignment();
+  
   //********* END OF REGISTERING *************
   if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
     unset($_SESSION['shib_auth_account_linking']);
