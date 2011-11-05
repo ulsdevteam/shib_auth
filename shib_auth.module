@@ -343,6 +343,11 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
     if (!shib_auth_config('enable_custom_mail') || empty($_SESSION['shib_auth_account_linking'])) {
       //rewrite e-mail address
       $user = shib_auth_save_mail($user, $umail_single);
+      if (!$user) {
+        // Something really bad happened
+        shib_auth_error('[shib_auth_save_authmap] Fatal error while saving mail address');
+        return;
+      }
     }
 
     if (isset($_SESSION['shib_auth_account_linking']) && $_SESSION['shib_auth_account_linking']) {
@@ -369,7 +374,10 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
  */
 function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = False) {
   global $user;
-
+  if (!shib_auth_config('enable_custom_mail') && !valid_email_address($umail_single)) {
+    shib_auth_error('Can\'t fetch mail attribute and it is required by the configuration');
+    return;
+  }
   //First, we want to get the name of the user with the given uid
   $authmap_username = db_select('users', 'c')
                         ->fields('c')
@@ -403,7 +411,7 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
           $user = shib_auth_save_mail($user, $umail_single);
           if (!$user) {
             // Something really bad happened
-            shib_auth_error('Fatal error while saving mail address');
+            shib_auth_error('[shib_login_authmap] Fatal error while saving mail address');
             return;
           }
         }
