@@ -248,6 +248,8 @@ function shib_auth_get_idp() {
     return $_SERVER['Shib_Identity_Provider'];
   elseif (isset ($_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']))
     return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
+  elseif (isset ($_SERVER['HTTP_SHIBIDENTITYPROVIDER']))
+    return $_SERVER['HTTP_SHIBIDENTITYPROVIDER'];
   return '';
 } //function shib_auth_get_idp
 
