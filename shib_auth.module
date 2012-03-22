@@ -248,6 +248,8 @@ function shib_auth_get_idp() {
     return $_SERVER['Shib_Identity_Provider'];
   elseif (isset ($_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']))
     return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
+  elseif (isset ($_SERVER['HTTP_SHIBIDENTITYPROVIDER']))
+    return $_SERVER['HTTP_SHIBIDENTITYPROVIDER'];
   return '';
 } //function shib_auth_get_idp
 
@@ -1132,7 +1134,7 @@ function shib_auth_block_view($delta = '') {
 function _login_url_html($is_account_linking = FALSE) {
   global $user;
 
-  if ($user->uid === 0 AND $is_account_linking === FALSE) {
+  if (!$user->uid AND $is_account_linking === FALSE) {
     // TODO Please change this theme call to use an associative array for the $variables parameter.
     return theme('shib_login_block', array('login_url' => shib_auth_generate_login_url(), 'login_text' => shib_auth_config('link_text')));
   }
