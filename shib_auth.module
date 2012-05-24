@@ -1172,7 +1172,7 @@ function shib_auth_form_alter(&$form, &$form_state, $form_id) {
       '#markup' => _login_url_html(TRUE),
     );
   }
-  if ($form_id = 'user_admin_role') {
+  if ($form_id == 'user_admin_role') {
     shib_auth_generate_rolenames(TRUE);
   }
 } //function shib_auth_form_alter
