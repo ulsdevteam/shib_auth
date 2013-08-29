@@ -63,9 +63,10 @@ function shib_auth_schema() {
       ),
       'uid' => array(
         'type' => 'int',
-        'size' => 'small',
-        'default' => -1,
-        'description' => 'The user id, which the persistent ID will be mapped to',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The {users}.uid, which the persistent ID will be mapped to',
       ),
       'targeted_id' => array(
         'type' => 'varchar',
@@ -188,4 +189,17 @@ function shib_auth_update_7000(&$sandbox) {
   //update the menu system cache
   menu_rebuild();
   return;
+}
+
+/**
+ * Alter uid field so it supports larger values.
+ */
+function shib_auth_update_7001() {
+  db_change_field('shib_authmap', 'uid', 'uid', array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'The {users}.uid, which the persistent ID will be mapped to',
+  ));
 }
