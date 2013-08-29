@@ -1163,7 +1163,7 @@ function shib_auth_form_alter(&$form, &$form_state, $form_id) {
     $form['shibboleth'] = array(
       '#type' => 'markup',
       '#weight' => -20,
-      '#value' => _login_url_html(),
+      '#markup' => _login_url_html(),
     );
   }
   if (($form_id == 'user_profile_form') && ($form['#user']->uid == $user->uid)) {
