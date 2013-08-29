@@ -126,7 +126,6 @@ function shib_auth_schema() {
       ),
       'sticky' => array(
         'type' => 'int',
-        'length' => 1,
         'default' => 0,
         'description' => 'Sticky status',
       ),
