@@ -263,20 +263,6 @@ function shib_auth_session_valid() {
 } // function shib_auth_session_valid
 
 /**
- * Check Shibboleth SP version equal or greater then 2.0
- *
- * @return
- *  TRUE if there is a valid Shibboleth session with a Shibboleth SP >= 2.0, and FALSE if not.
- */
-function shib_auth_session_isShib2x() {
-  if (shib_auth_session_valid()) {
-    return (isset($_SERVER['Shib-Identity-Provider']) || isset($_SERVER['Shib_Identity_Provider']));
-  }
-
-  return FALSE;
-} //function shib_auth_session_isShib2x
-
-/**
  * Saves an entry into shib_authmap and also saves mail if changed
  * A row in the authmap contains the drupal user id, the targeted id from
  * Shibboleth, the IdP name, the date the user was created, and user consent
