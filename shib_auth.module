@@ -242,12 +242,10 @@ function shib_auth_debug() {
  *  IdP name
  */
 function shib_auth_get_idp() {
-  if (isset($_SERVER['Shib-Identity-Provider']))
-    return $_SERVER['Shib-Identity-Provider'];
+  if (shib_auth_getenv('Shib-Identity-Provider'))
+    return shib_auth_getenv('Shib-Identity-Provider');
   elseif (isset($_SERVER['Shib_Identity_Provider']))
     return $_SERVER['Shib_Identity_Provider'];
-  elseif (isset ($_SERVER['HTTP_SHIB_IDENTITY_PROVIDER']))
-    return $_SERVER['HTTP_SHIB_IDENTITY_PROVIDER'];
   elseif (isset ($_SERVER['HTTP_SHIBIDENTITYPROVIDER']))
     return $_SERVER['HTTP_SHIBIDENTITYPROVIDER'];
   return '';
@@ -698,13 +696,7 @@ function shib_auth_init() {
 
   /* We want to return as early as possible if we have nothing to do.
   But for checking the session, we need the username first (if it's set) */
-  $uname_key = shib_auth_config('username_variable');
-  if (array_key_exists($uname_key, $_SERVER)) {
-    $uname = $_SERVER[$uname_key];
-  }
-  else {
-    $uname = NULL;
-  }
+  $uname = shib_auth_getenv(shib_auth_config('username_variable')); # Might be NULL
 
   // Storing whether the user was already logged in or not
   $alreadyloggedin = (user_is_anonymous()) ? False : True;
@@ -722,7 +714,7 @@ function shib_auth_init() {
   }
 
   /* Time to retrevie the mail and begin some work */
-  $umail = isset($_SERVER[shib_auth_config('email_variable')]) ? $_SERVER[shib_auth_config('email_variable')] : '';
+  $umail = shib_auth_getenv(shib_auth_config('email_variable')) ? shib_auth_getenv(shib_auth_config('email_variable')) : '';
   $umail_single = preg_replace('/;.*/', '', $umail); // get the first one if there're many
 
   //************ ROLE ASSIGMENT  **************
@@ -1262,8 +1254,8 @@ function shib_auth_process_rule($rule) {
   $expression = '/' . urldecode($rule['regexpression']) . '/';
 
   // if the given server field exists
-  if (isset($_SERVER[$fieldname])) {
-    foreach (explode(';', $_SERVER[$fieldname]) as $value) {
+  if (shib_auth_getenv($fieldname)) {
+    foreach (explode(';', shib_auth_getenv($fieldname)) as $value) {
       //check if the RegEx fits to one of the value of the server field
       if (preg_match($expression, trim($value))) {
         $roles = unserialize($rule['role']);
@@ -1427,3 +1419,35 @@ function shib_auth_get_rolename($rid) {
   shib_auth_error("Internal error: no name for role_id '$rid'");
   return NULL;
 } //function shib_auth_get_rolename()
+
+/**
+ * Retrieve a variable from the environment ($_SERVER) even if mod_rewrite mangled it.
+ *
+ * Shibboleth and mod_rewrite is responsible for filtering out evil environment variables.
+ *
+ * @param string $var
+ *
+ * @return
+ *  The value of the environment variable.
+ */
+function shib_auth_getenv($var=false) {
+  if (!$var)
+    return NULL;
+
+  // foo-bar
+  if (array_key_exists($var,$_SERVER))
+    return $_SERVER[$var];
+
+  // REDIRECT_foo_bar
+  $var = "REDIRECT_" . str_replace('-','_',$var);
+  if (array_key_exists($var,$_SERVER))
+    return $_SERVER[$var];
+
+  // HTTP_FOO_BAR
+  $var = strtoupper($var);
+  $var = preg_replace('/^REDIRECT/', 'HTTP', $var);
+  if (array_key_exists($var,$_SERVER))
+    return $_SERVER[$var];
+
+  return NULL;
+} //function shib_auth_getenv()

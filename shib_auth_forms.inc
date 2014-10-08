@@ -133,7 +133,7 @@ function shib_auth_custom_data($form, &$form_state) {
   //Decide if the user is already registered, but a new consent version is present
   $authmap_username = db_select('shib_authmap', 'c')
                           ->fields('c')
-                          ->condition('targeted_id', $_SERVER[shib_auth_config('username_variable')], '=')
+                          ->condition('targeted_id', shib_auth_getenv(shib_auth_config('username_variable')), '=')
                           ->execute()
                           ->fetchAssoc();
   //if the user already registered, display a message about consent version change
@@ -149,7 +149,7 @@ function shib_auth_custom_data($form, &$form_state) {
       $form['custom_username'] = array(
         '#type'          => 'textfield',
         '#title'         => t('Desired username'),
-        '#default_value' => $_SERVER[shib_auth_config('username_variable')],
+        '#default_value' => shib_auth_getenv(shib_auth_config('username_variable')),
         '#size'          => 60,
       );
     }
@@ -160,7 +160,7 @@ function shib_auth_custom_data($form, &$form_state) {
       );
 
       $form['custom_username'] = array(
-        '#markup' => $_SERVER[shib_auth_config('username_variable')],
+        '#markup' => shib_auth_getenv(shib_auth_config('username_variable')),
         '#suffix' => '<br />',
       );
     }
@@ -170,7 +170,7 @@ function shib_auth_custom_data($form, &$form_state) {
       $form['custom_mail'] = array(
         '#type'          => 'textfield',
         '#title'         => t('E-mail'),
-        '#default_value' => $_SERVER[shib_auth_config('email_variable')],
+        '#default_value' => shib_auth_getenv(shib_auth_config('email_variable')),
         '#size'          => 60,
       );
     }
@@ -181,7 +181,7 @@ function shib_auth_custom_data($form, &$form_state) {
       );
 
       $form['custom_mail'] = array(
-        '#markup' => $_SERVER[shib_auth_config('email_variable')],
+        '#markup' => shib_auth_getenv(shib_auth_config('email_variable')),
         '#suffix' => '<br />',
       );
     }
