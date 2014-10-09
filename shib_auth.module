@@ -466,7 +466,7 @@ function shib_auth_load_from_authmap($uname) {
  * @param string $custom_mail
  *  The first e-mail address of the user from the IdP.
  */
-function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
+function shib_auth_custom_mail($uname, $custom_username='', $custom_mail='') {
   if (!valid_email_address($custom_mail)) {
     shib_auth_error('Please enter a valid e-mail address');
   }
@@ -476,7 +476,7 @@ function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
     shib_auth_save_authmap($uname, $uname, $custom_mail);
   }
   //if the username is also enabled
-  elseif ((shib_auth_config('define_username') == 1) && isset($custom_username) && $custom_username) {
+  elseif ((shib_auth_config('define_username') == 1) && $custom_username) {
     shib_auth_custom_username($uname, $custom_username, $custom_mail);
   }
 } //function shib_auth_custom_mail
@@ -494,7 +494,7 @@ function shib_auth_custom_mail($uname, $custom_username, $custom_mail) {
  * @param string $umail_single
  *  The first e-mail address of the user from the IdP.
  */
-function shib_auth_custom_username($uname, $custom_username, $umail_single) {
+function shib_auth_custom_username($uname, $custom_username='', $umail_single='') {
   //validate it
   if ($error = user_validate_name($custom_username))
     shib_auth_error(filter_xss($error));
@@ -572,6 +572,9 @@ function shib_auth_cancel_custom() {
  *  Username received from IdP
  */
 function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
+  // Avoid warnings:
+  $custom_username = $custom_mail = '';
+
   if (isset($_POST['op']) && $_POST['op'] == t('Cancel')) {
     shib_auth_cancel_custom();
   }
@@ -595,7 +598,7 @@ function shib_auth_custom_form($umail_single = NULL, $uname = NULL) {
     if (!shib_auth_config('terms_accept') || (!empty($consent_accepted) && shib_auth_config('terms_accept')) ) {
       // ****** CUSTOM MAIL **********
       //if the user provided the custom mail string on the custom data form, and it is not empty
-      if (isset($custom_mail) && $custom_mail) {
+      if ($custom_mail) {
         shib_auth_custom_mail($uname, $custom_username, $custom_mail);
       }
       // ****** CUSTOM USERNAME **********
