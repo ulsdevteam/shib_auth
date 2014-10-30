@@ -88,11 +88,26 @@ function _shib_auth_update_fields($op) {
         continue;
       }
 
-      foreach ($_SERVER as $key => $val) {
-        $replace_map['['. $key .']'] = $val;
+      /*  Replace all [foo] occurences if "foo" is a Shibboleth attribute
+          (header, CGI environment variable) i.e. $_SERVER[foo] exists, with
+          the corresponding attribute value.
+          If the attribute doesn't exist, it will remain unmolested ("[foo]").
+
+          Note that an attribute name may only contain [a-zA-Z0-9_-] characters.
+      */
+      $replace_map = array();
+      if(preg_match_all('/\[([\w-]+)\]/', $value, $attributes))
+      {
+        foreach ($attributes[1] as $a) {
+          if(shib_auth_getenv($a) != NULL) {
+            $replace_map['[' . $a . ']'] = shib_auth_getenv($a);
+          }
+        }
       }
 
-      $value = str_replace(array_keys($replace_map), array_values($replace_map), $value);
+      if ($replace_map) {
+        $value = str_replace(array_keys($replace_map), array_values($replace_map), $value);
+      }
 
       $edit[ $field['field_name'] ][LANGUAGE_NONE][0]['value'] = $value;
     }
