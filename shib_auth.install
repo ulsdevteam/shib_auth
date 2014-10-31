@@ -160,6 +160,10 @@ function shib_auth_update_7000(&$sandbox) {
 
   //fill the database with unixtimestamps
   foreach ($res as $row) {
+    if (is_numeric($row->created)) {
+      // suppose it's already a timestamp, see #1380826
+      continue;
+    }
     if (!$created_unix = strtotime($row->created)) {
       $created_unix = $row->created;
     }
