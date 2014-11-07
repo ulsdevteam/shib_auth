@@ -138,7 +138,9 @@ function shib_auth_terminate_session($msg = '') {
     shib_auth_error($msg);
   }
 
-  session_destroy();
+  // Added error suppression to session destroy to suppress
+  //  warning: session_destroy() [function.session-destroy]: Trying to destroy uninitialized session ...
+  @session_destroy();
   $user = drupal_anonymous_user();
 } //function shib_auth_terminate_session
 
