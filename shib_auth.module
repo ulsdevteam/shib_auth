@@ -299,7 +299,9 @@ function shib_auth_save_authmap($uname, $custom_uname, $umail_single) {
         shib_auth_error('This user is blocked');
         return;
       }
+      $_SESSION['shib_auth_register_in_progress'] = TRUE;
       user_external_login_register($custom_uname, 'shib_auth');
+      unset($_SESSION['shib_auth_register_in_progress']);
     }
 
     if (!user_get_authmaps($user->name)) {

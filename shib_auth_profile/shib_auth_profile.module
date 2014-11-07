@@ -62,7 +62,9 @@ function shib_auth_profile_user_login(&$edit, $account) {
  * hook_user_presave()
  */
 function shib_auth_profile_user_presave(&$edit, $account, $category) {
-  if (shib_auth_session_valid() && $account->is_new) {
+  /* Use a custom session variable to avoid a newly created user inheriting the
+     Shibboleth fields of the administrator */
+  if (!empty($_SESSION['shib_auth_register_in_progress']) && $account->is_new) {
     $edit_fields = _shib_auth_update_fields('insert');
     $edit = array_merge($edit, $edit_fields);
   }
