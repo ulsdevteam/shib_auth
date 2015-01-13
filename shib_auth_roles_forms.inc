@@ -11,9 +11,13 @@
  *  HTML table containing the number of rule, attribute, RegExp, role and the actions which can be done with each role.
  */
 function _shib_auth_list_rules() {
+
   $counter = 0;
   $output = NULL;
   $rows = array();
+
+  // if the admin is not logged in through shibboleth, rolename cache has to be generated
+  shib_auth_generate_rolenames(TRUE);
 
   //create rows
   $rules = db_select('shib_auth', 'role')
@@ -66,43 +70,80 @@ function _shib_auth_list_rules() {
 } //function _shib_auth_list_rules
 
 /**
+ * This is the confirmation form for deleting a rule
+ */
+function _shib_auth_rule_delete_confirm_form($form, &$form_state) {
+  $id = $form_state['build_info']['args'][0];
+  $desc = t("The rule with id %id will be deleted permanently!", array('%id' => $id));
+
+  // Make sure the form redirects in the end
+  $form['destination'] = array('#type' => 'hidden', '#value' => 'admin/config/people/shib_auth/rules');
+
+  return confirm_form($form,
+                      filter_xss($desc),
+                      'admin/config/people/shib_auth/rules');
+} //_shib_auth_rule_delete_confirm_form
+
+/**
+ * This function deletes an existing rule
+ */
+function _shib_auth_rule_delete_confirm_form_submit($form, &$form_state) {
+  $id = $form_state['build_info']['args'][0];
+  if ($id = intval($id)) {
+    $ret = db_delete('shib_auth')
+    ->condition('id', $id)
+    ->execute();
+    if ($ret)
+      drupal_set_message(t('Rule <strong>#@id</strong> has been deleted.', array('@id' => $id)));
+    else
+      drupal_set_message(t('Failed to delete rule.'), 'error');
+  }
+  else
+    drupal_set_message(t("Invalid rule id."), 'error');
+
+  drupal_goto('admin/config/people/shib_auth/rules');
+} //_shib_auth_rule_delete_confirm_form
+
+/**
+ * This is the confirmation form for cloning a rule
+ */
+function _shib_auth_rule_clone_confirm_form($form, &$form_state) {
+  $id = $form_state['build_info']['args'][0];
+  $desc = t("The rule with id %id will be cloned", array('%id' => $id));
+
+  // Make sure the form redirects in the end
+  $form['destination'] = array('#type' => 'hidden', '#value' => 'admin/config/people/shib_auth/rules');
+
+  return confirm_form($form,
+                      filter_xss($desc),
+                      'admin/config/people/shib_auth/rules');
+} //_shib_auth_rule_clone_confirm_form
+
+/**
  * This function enables the administrator to clone an existing rule, this is useful,
  * when we want to create a rule, which is simiral to another one
- *
- * @param integer $id
- *  Rule identifier.
  */
-function _shib_auth_clone_rule($id) {
-  $rule = db_select('shib_auth', 'c')
+function _shib_auth_rule_clone_confirm_form_submit($form, &$form_state) {
+  $id = $form_state['build_info']['args'][0];
+  if($id = intval($id)) {
+    $rule = db_select('shib_auth', 'c')
             ->fields('c')
             ->condition('id', $id, '=')
             ->execute()
             ->fetchAssoc();
-  unset($rule['id']);
+    unset($rule['id']);
 
-  $ret = drupal_write_record('shib_auth', $rule);
-  if ($ret === SAVED_NEW) {
-    drupal_set_message(t('The rule has been successfully cloned.'));
+    $ret = drupal_write_record('shib_auth', $rule);
+    if ($ret === SAVED_NEW)
+      drupal_set_message(t('The rule has been successfully cloned.'));
+    else
+      drupal_set_message(t('Unexpected error has been detected.'));
   }
-  else {
-    drupal_set_message(t('Unexpected error has been detected.'));
-  }
-  drupal_goto('admin/config/people/shib_auth/rules');
-} //function _shib_auth_clone_rule
+  else
+    drupal_set_message(t("Invalid rule id."), 'error');
 
-/**
- * This function lets the admin to delete an existing rule
- *
- * @param integer $id
- *  Rule identifier.
- */
-function _shib_auth_delete_rule($id) {
-  db_delete('shib_auth')
-    ->condition('id', $id)
-    ->execute();
-  drupal_set_message(t('Rule <strong>#@id</strong> has been deleted.', array('@id' => $id)), 'warning');
   drupal_goto('admin/config/people/shib_auth/rules');
-} //function _shib_auth_delete_rule
+} //function _shib_auth_rule_clone_confirm_form_submit
 
 /**
  * Generate the shibboleth rule adding form

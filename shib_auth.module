@@ -1021,8 +1021,8 @@ function shib_auth_menu() {
 
   $items['admin/config/people/shib_auth/delete/%'] = array(
     'title'            => 'Delete rule',
-    'page callback'    => '_shib_auth_delete_rule',
-    'page arguments'   => array(5),
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('_shib_auth_rule_delete_confirm_form', 5),
     'access arguments' => array('administer permissions'),
     'type'             => MENU_CALLBACK,
     'file'             => 'shib_auth_roles_forms.inc'
@@ -1038,9 +1038,9 @@ function shib_auth_menu() {
   );
 
   $items['admin/config/people/shib_auth/clone/%'] = array(
-    'title'            => 'Edit rule',
-    'page callback'    => '_shib_auth_clone_rule',
-    'page arguments'   => array(5),
+    'title'            => 'Clone rule',
+    'page callback'    => 'drupal_get_form',
+    'page arguments'   => array('_shib_auth_rule_clone_confirm_form', 5),
     'access arguments' => array('administer permissions'),
     'type'             => MENU_CALLBACK,
     'file'             => 'shib_auth_roles_forms.inc'
