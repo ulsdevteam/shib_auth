@@ -11,8 +11,6 @@
  *  HTML table containing the number of rule, attribute, RegExp, role and the actions which can be done with each role.
  */
 function _shib_auth_list_rules() {
-
-  $counter = 0;
   $output = NULL;
   $rows = array();
 
@@ -38,7 +36,6 @@ function _shib_auth_list_rules() {
 
     $rule['sticky'] == 1 ? $sticky = 'Yes' : $sticky = 'No';
     $rows[] = array(
-      $counter++,
       $rule['field'],
       urldecode($rule['regexpression']),
       $roles_list,
@@ -51,7 +48,7 @@ function _shib_auth_list_rules() {
 
   //create the rule list in HTML table
   $attributes = array('class' => 'shib_auth_role_table');
-  $header = array(t('#'), t('Attribute'), t('RegExp'), t('Roles'), t('Sticky'), t('Actions'));
+  $header = array(t('Attribute'), t('RegExp'), t('Roles'), t('Sticky'), t('Actions'));
   $output = theme_table(
               array(
                 'header'     => $header,
