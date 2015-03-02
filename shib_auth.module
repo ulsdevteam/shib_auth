@@ -379,7 +379,8 @@ function shib_login_authmap($uname, $umail_single, $uid, $alreadyloggedin = Fals
   $account = user_external_load($authmap_username['name']);
   if (isset($account->uid)) {
     //We don't login user again, if there is already one logged in (made redirect loops when linking an account)
-    if (!user_is_blocked($account->name)) {
+    // Ensure the user is not blocked in the database (user_is_blocked) and is not blocked by another plugin ($account->status)
+    if (!user_is_blocked($account->name) && $account->status != 0) {
       user_external_login_register($account->name, 'shib_auth');
       if ($user->uid) {
         //set auth variable to shib_auth
